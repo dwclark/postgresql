@@ -23,10 +23,11 @@ public class KeyDataMessage extends BackEndMessage {
         this.key = key;
     }
     
-    public static KeyDataMessage read(final BackEnd backEnd, final int size,
-                                      final ScatteringByteChannel channel) throws IOException {
-        ByteBuffer payload = read(size, channel);
-        return new KeyDataMessage(backEnd, payload.getInt(), payload.getInt());
-    }
-
+    public static final BackEndBuilder builder = new BackEndBuilder() {
+            public KeyDataMessage read(final BackEnd backEnd, final int size,
+                                       final ScatteringByteChannel channel) {
+                ByteBuffer payload = BackEndFormatter.read(size, channel);
+                return new KeyDataMessage(backEnd, payload.getInt(), payload.getInt());
+            }
+        };
 }

@@ -4,9 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.List;
 
-public class FrontEndFormatter {
-
-    public static final Charset charset = Charset.forName("UTF-8");
+public class FrontEndFormatter extends Formatter {
 
     public ByteBuffer[] startup(final String user, final String[] keys, final String[] values) {
         final BufferChain chain = new BufferChain()

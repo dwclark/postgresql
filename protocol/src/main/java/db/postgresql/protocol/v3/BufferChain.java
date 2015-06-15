@@ -4,10 +4,10 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.ArrayList;
 import java.nio.charset.Charset;
+import static db.postgresql.protocol.v3.Formatter.NULL;
 
 public class BufferChain {
-
-    private static final byte NULL = (byte) 0;
+    
     private static final int BLOCK_SIZE = 1024;
 
     private final List<ByteBuffer> chain;
