@@ -1,8 +1,14 @@
 package db.postgresql.protocol.v3;
 
+import java.util.Collections;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+
 public enum BackEnd {
 
-    AuthenticationOk('R'),
+    Authentication('R', -1), //dummy placeholder, never returned
+    AuthenticationOk('R', 0),
     AuthenticationKerberosV5('R', 8),
     AuthenticationCleartextPassword('R', 5),
     AuthenticationSCMCredential('R', 6),
@@ -32,14 +38,37 @@ public enum BackEnd {
     RowDescription('T');
 
     private BackEnd(char id, int subId) {
-        this.id = id;
-        this.subId = subId;
+        this.id = (byte) id;
+        this.subId = (byte) subId;
     }
 
     private BackEnd(char id) {
         this(id, 0);
     }
 
-    final char id;
-    final int subId;
+    final byte id;
+    final byte subId;
+
+    public static final List<BackEnd> backends = Collections.unmodifiableList(new ArrayList(Arrays.asList(BackEnd.values())));
+
+    public static BackEnd find(final byte id) {
+        for(BackEnd b : backends) {
+            if(b.id == id) {
+                return b;
+            }
+        }
+
+        throw new IllegalArgumentException("No BackEnd enum matches id: " + ((0xFF) & id));
+    }
+
+    public static BackEnd find(final byte id, final byte subId) {
+        for(BackEnd b : backends) {
+            if(b.id == id && b.subId == subId) {
+                return b;
+            }
+        }
+
+        throw new IllegalArgumentException("No BackEnd enum matches id: " + ((0xFF) & id) +
+                                           ", subId: " + ((0xFF) & subId));
+    }
 }
