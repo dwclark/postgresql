@@ -1,0 +1,16 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
+sourceCompatibility = 7
+targetCompatibility = 7
+
+group = 'postgresql.protocol'
+version = '0.1-SNAPSHOT'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    testCompile('org.spockframework:spock-core:1.0-groovy-2.4')
+}
