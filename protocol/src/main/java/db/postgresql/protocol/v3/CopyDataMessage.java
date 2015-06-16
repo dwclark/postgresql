@@ -20,8 +20,8 @@ public class CopyDataMessage extends BackEndMessage {
     }
 
     public static final BackEndBuilder builder = new BackEndBuilder() {
-            public CopyDataMessage read(BackEnd backEnd, int size, ScatteringByteChannel channel) {
-                return new CopyDataMessage(backEnd, BackEndFormatter.read(size, channel));
+            public CopyDataMessage read(BackEnd backEnd, int size, Session session) {
+                return new CopyDataMessage(backEnd, session.read(size));
             }
         };
 }

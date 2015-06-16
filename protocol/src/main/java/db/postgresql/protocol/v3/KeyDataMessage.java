@@ -24,9 +24,8 @@ public class KeyDataMessage extends BackEndMessage {
     }
     
     public static final BackEndBuilder builder = new BackEndBuilder() {
-            public KeyDataMessage read(final BackEnd backEnd, final int size,
-                                       final ScatteringByteChannel channel) {
-                ByteBuffer payload = BackEndFormatter.read(size, channel);
+            public KeyDataMessage read(final BackEnd backEnd, final int size, final Session session) {
+                ByteBuffer payload = session.read(size);
                 return new KeyDataMessage(backEnd, payload.getInt(), payload.getInt());
             }
         };

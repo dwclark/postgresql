@@ -1,5 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'maven'
+apply plugin: 'groovy'
 
 sourceCompatibility = 7
 targetCompatibility = 7
@@ -12,5 +13,6 @@ repositories {
 }
 
 dependencies {
+    testCompile('org.codehaus.groovy:groovy-all:2.4.3')
     testCompile('org.spockframework:spock-core:1.0-groovy-2.4')
 }

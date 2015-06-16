@@ -2,7 +2,6 @@ package db.postgresql.protocol.v3;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.ScatteringByteChannel;
-import static db.postgresql.protocol.v3.BackEndFormatter.fromNullString;
 
 public class CommandCompleteMessage extends BackEndMessage {
 
@@ -36,9 +35,9 @@ public class CommandCompleteMessage extends BackEndMessage {
     }
 
     public static final BackEndBuilder builder = new BackEndBuilder() {
-            public CommandCompleteMessage read(BackEnd backEnd, int size, ScatteringByteChannel channel) {
-                ByteBuffer buffer = BackEndFormatter.read(size, channel);
-                String[] ary = fromNullString(buffer, size).split(" ");
+            public CommandCompleteMessage read(BackEnd backEnd, int size, Session session) {
+                ByteBuffer buffer = session.read(size);
+                String[] ary = session.getFormatter().nullString(buffer, size).split(" ");
                 if(ary.length == 2) {
                     return new CommandCompleteMessage(backEnd, Action.valueOf(ary[0]), Integer.valueOf(ary[1]));
                 }

@@ -1,7 +1,6 @@
 package db.postgresql.protocol.v3;
 
 import java.nio.ByteBuffer;
-import java.nio.channels.ScatteringByteChannel;
 import java.io.IOException;
 
 public class AuthenticationMessage extends BackEndMessage {
@@ -11,9 +10,8 @@ public class AuthenticationMessage extends BackEndMessage {
     }
 
     public static final BackEndBuilder builder = new BackEndBuilder() {
-            public BackEndMessage read(final BackEnd backEnd, final int size,
-                                       final ScatteringByteChannel channel) {
-                ByteBuffer buffer = BackEndFormatter.read(size, channel);
+            public BackEndMessage read(final BackEnd backEnd, final int size, final Session session) {
+                ByteBuffer buffer = session.read(size);
                 return new AuthenticationMessage(BackEnd.find(backEnd.id, (byte) buffer.getInt(0)));
             }
         };

@@ -1,7 +1,6 @@
 package db.postgresql.protocol.v3;
 
 import java.nio.ByteBuffer;
-import java.nio.channels.ScatteringByteChannel;
 import java.util.List;
 import java.util.ArrayList;
 import java.io.IOException;
@@ -19,9 +18,9 @@ public class BackEndMessage {
     }
 
     public static final BackEndBuilder builder = new BackEndBuilder() {
-            public BackEndMessage read(BackEnd backEnd, int size, ScatteringByteChannel channel) {
+            public BackEndMessage read(BackEnd backEnd, int size, Session session) {
                 if(size > 0) {
-                    BackEndFormatter.read(size, channel);
+                    session.read(size);
                 }
                 
                 return new BackEndMessage(backEnd);
