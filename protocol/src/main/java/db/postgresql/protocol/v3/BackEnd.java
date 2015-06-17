@@ -10,7 +10,8 @@ public enum BackEnd {
     Authentication('R', -1), //dummy placeholder, never returned
     AuthenticationOk('R', 0),
     AuthenticationKerberosV5('R', 8),
-    AuthenticationCleartextPassword('R', 5),
+    AuthenticationCleartextPassword('R', 3),
+    AuthenticationMD5Password('R', 5),
     AuthenticationSCMCredential('R', 6),
     AuthenticationGSS('R', 7),
     AuthenticationSSPI('R', 9),

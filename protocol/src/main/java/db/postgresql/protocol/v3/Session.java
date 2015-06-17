@@ -338,11 +338,17 @@ public class Session implements AutoCloseable {
         return Collections.unmodifiableMap(ret);
     }
 
-    public void authenticate() {
+    public Session authenticate() {
         write(formatter.startup(initKeysValues()));
         BackEndMessage m = next();
-        if(m.getBackEnd() == BackEnd.AuthenticationOk) {
+        if((m instanceof AuthenticationMessage) &&
+           ((AuthenticationMessage) m).negotiate(this)) {
             while((m = next()).getBackEnd() != BackEnd.ReadyForQuery) { }
         }
+        else {
+            throw new ProtocolException("Could not authenticate with those credentials");
+        }
+    
+        return this;
     }
 }

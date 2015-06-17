@@ -9,7 +9,11 @@ import java.util.AbstractMap;
 public class Formatter {
 
     public static final byte NULL = (byte) 0;
-    public final Charset charset;
+    private final Charset charset;
+
+    public Charset getCharset() {
+        return charset;
+    }
 
     public Formatter(final Charset charset) {
         this.charset = charset;
