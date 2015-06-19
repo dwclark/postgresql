@@ -33,11 +33,11 @@ public class SSLEngineManager {
             }
         };
 
-    SSLEngineManager(SocketChannel channel, SSLEngine engine) {
+    public SSLEngineManager(SocketChannel channel, SSLEngine engine) {
         this(channel, engine, defaultExecutor);
     }
 
-	SSLEngineManager(SocketChannel channel, SSLEngine engine, Executor executor) {
+	public SSLEngineManager(SocketChannel channel, SSLEngine engine, Executor executor) {
 		this.channel = channel;
 		this.engine = engine;
 		SSLSession session = engine.getSession();
