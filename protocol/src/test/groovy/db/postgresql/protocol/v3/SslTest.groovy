@@ -5,48 +5,46 @@ import java.nio.channels.*;
 import java.nio.charset.*;
 import javax.net.ssl.*;
 import java.net.*;
+import java.nio.*;
 
 class SslTest extends Specification {
 
-    SSLEngineManager manager;
+    SslIo io;
     Charset charset = Charset.forName('UTF-8');
     
     def setup() {
-        SocketChannel channel = SocketChannel.open();
-        channel.connect(new InetSocketAddress(InetAddress.getByName('www.google.com'), 443));
-        SSLContext context = SSLContext.getDefault();
-        SSLEngine engine = context.createSSLEngine();
-        engine.useClientMode = true;
-        engine.wantClientAuth = false;
-        manager = new SSLEngineManager(channel, engine);
+        //io = new SslIo('www.google.com', 443, SSLContext.getDefault());
     }
 
-    def "Do Get"() {
+    def "Do Init"() {
+        setup:
+        SslIo io = new SslIo('www.google.com', 443, SSLContext.getDefault());
+
+        expect:
+        io;
+    }
+
+    /*def "Do Get"() {
         setup:
         def send = 'GET / HTTP/1.1\r\n'.getBytes(charset);
-        int sent = 0;
-        println("First Remaining: ${manager.appSendBuffer.remaining()}");
-        manager.appSendBuffer.put(send);
-        while((sent += manager.write()) != send.length) {
-            println("Total sent so far: ${sent}")
-            println("Remaining: ${manager.appSendBuffer.remaining()}");
+        ByteBuffer sendBuffer = ByteBuffer.allocate(io.appMinBufferSize);
+        ByteBuffer recvBuffer = ByteBuffer.allocate(io.appMinBufferSize);
+        sendBuffer.put(send);
+        while(sendBuffer.hasRemaining()) {
+            io.write(sendBuffer);
         }
 
         StringBuilder builder = new StringBuilder(32768);
-        def atEnd = { -> buider.indexOf('</html>') != -1; };
-        while(!atEnd()) {
-            println("Attempting to read");
-            int read = manager.read();
-            if(read > 0) {
-                manager.appRecvBuffer.flip();
-                byte[] bytes = new byte[manager.appRecvBuffer.remaining()];
-                manager.appRecvBuffer.get(bytes);
-                builder.append(new String(bytes, charset));
-                manager.appRecvBuffer.compact();
-            }
+        while(builder.indexOf('</html>') == -1) {
+            io.read(recvBuffer);
+            recvBuffer.flip();
+            byte[] bytes = new byte[recvBuffer.remaining()];
+            recvBuffer.get(bytes);
+            builder.append(new String(bytes, charset));
+            recvBuffer.compact();
         }
-
+        
         println("Received: ")
         println(builder.toString());
-    }
+        }*/
 }
