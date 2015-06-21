@@ -1,4 +1,4 @@
-package db.postresql.protocol.v3;
+package db.postgresql.protocol.v3;
 
 import spock.lang.*;
 import java.nio.channels.*;
@@ -16,13 +16,53 @@ class SslTest extends Specification {
         //io = new SslIo('www.google.com', 443, SSLContext.getDefault());
     }
 
-    def "Do Init"() {
+    def "Do Google Test"() {
         setup:
-        SslIo io = new SslIo('www.google.com', 443, SSLContext.getDefault());
+        io = new SslIo('www.google.com', 443, SSLContext.getDefault());
+        StringBuilder builder = new StringBuilder(8192);
+        ByteBuffer sendBuffer = ByteBuffer.allocate(io.appMinBufferSize);
+        ByteBuffer recvBuffer = ByteBuffer.allocate(io.appMinBufferSize);
+        sendBuffer.put('GET / HTTP/1.1\r\nContent-Length: 0\r\n\r\n'.getBytes(charset));
+        sendBuffer.flip();
+        while(sendBuffer.hasRemaining()) {
+            println("Sending sendBuffer in SslTest");
+            io.write(sendBuffer);
+        }
+
+        while(builder.indexOf('</html>') == -1) {
+            println("Reading recvBuffer in SslTest");
+            io.read(recvBuffer);
+            println("About to read ${recvBuffer.remaining()} bytes");
+            byte[] bytes = new byte[recvBuffer.remaining()];
+            recvBuffer.get(bytes);
+            recvBuffer.clear();
+            String recv = new String(bytes, charset);
+            builder.append(recv);
+            println("Received ${recv}");
+        }
 
         expect:
-        io;
+        builder.indexOf('</html>') != -1;
+        println(builder.toString());
     }
+
+    /*def "Do Init Websites"() {
+        when:
+        io = new SslIo('www.google.com', 443, SSLContext.getDefault());
+        then:
+        io;
+
+        when:
+        io = new SslIo('www.yahoo.com', 443, SSLContext.getDefault());
+        then:
+        io;
+
+        when:
+        io = new SslIo('www.amazon.com', 443, SSLContext.getDefault());
+        then:
+        io;
+        
+        }*/
 
     /*def "Do Get"() {
         setup:

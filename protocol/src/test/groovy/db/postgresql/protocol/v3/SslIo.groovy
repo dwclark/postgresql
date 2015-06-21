@@ -1,4 +1,4 @@
-package db.postresql.protocol.v3;
+package db.postgresql.protocol.v3;
 
 import java.net.*;
 import javax.net.ssl.*;
@@ -49,51 +49,70 @@ class SslIo {
         channel.register(selector, 0);
     }
 
-    /*public void write(ByteBuffer toWrite) {
+    public void write(ByteBuffer toWrite) {
+        //TODO: call wrap until no bytes remain or status != OK
         assert(toWrite.capacity() >= appMinBufferSize);
-        println("Engine starting write at: ${engine.handshakeStatus}");
-        handshake(toWrite, null);
 
-        if(toWrite.position() > 0) {
-            toWrite.flip();
-            checkWriteResult(dump(engine.wrap(toWrite, sendBuffer)));
-            toWrite.compact();
-            println("write #1: about to send io");
-            while(sendBuffer.position() != 0) {
-                io(SelectionKey.OP_WRITE);
-            }
+        if(sendBuffer.hasRemaining()) {
+            io(SelectionKey.OP_WRITE);
         }
-        }*/
+        
+        SSLEngineResult result = engine.wrap(toWrite, sendBuffer);
 
-    /*public void checkWriteResult(SSLEngineResult result) {
         if(result.status == SSLEngineResult.Status.OK) {
+            io(SelectionKey.OP_WRITE);
+        }
+        else if(result.status == SSLEngineResult.Status.BUFFER_OVERFLOW) {
+            //do nothing, we will hopefully be able to finish
+            //up the operation on the next call to write()
             return;
         }
         else if(result.status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
             throw new BufferUnderflowException();
         }
-        else if(result.status == SSLEngineResult.Status.BUFFER_OVERFLOW) {
-            throw new BufferOverflowException();
-        }
         else if(result.status == SSLEngineResult.Status.CLOSED) {
-            throw new SSLException("SSLEngine is CLOSED");
+            throw new EOFException();
         }
+
+        //TODO: need to handle re-handshake at this point
+        
     }
 
     public void read(ByteBuffer toRead) {
         assert(toRead.capacity() >= appMinBufferSize);
-        handshake(null, toRead);
 
+        println("RecvBuffer (before i/o): position(): ${recvBuffer.position()}, " +
+                "limit(): ${recvBuffer.limit()} capacity(): ${recvBuffer.capacity()}");
         io(SelectionKey.OP_READ);
-        if(recvBuffer.hasRemaining()) {
-            while(needMore(dump(engine.unwrap(recvBuffer, toRead)))) {
-                recvBuffer.compact();
-                io(SelectionKey.OP_READ);
-            }
-
-            recvBuffer.compact();
+        println("RecvBuffer (after i/o): position(): ${recvBuffer.position()}, " +
+                "limit(): ${recvBuffer.limit()} capacity(): ${recvBuffer.capacity()}");
+        recvBuffer.flip();
+        println("RecvBuffer (after flip): position(): ${recvBuffer.position()}, " +
+                "limit(): ${recvBuffer.limit()} capacity(): ${recvBuffer.capacity()}");
+        SSLEngineResult result;
+        while(recvBuffer.hasRemaining() &&
+              (result = engine.unwrap(recvBuffer, toRead)).status == SSLEngineResult.Status.OK) {
+            println("RecvBuffer (after unwrap): position(): ${recvBuffer.position()}, " +
+                    "limit(): ${recvBuffer.limit()} capacity(): ${recvBuffer.capacity()}");
         }
-        }*/
+        
+        recvBuffer.compact();
+        println("RecvBuffer (after compact): position(): ${recvBuffer.position()}, " +
+                "limit(): ${recvBuffer.limit()} capacity(): ${recvBuffer.capacity()}");
+        toRead.flip();
+        if(result.status == SSLEngineResult.Status.OK ||
+           result.status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
+            println("Read status is: ${result.status}");
+        }
+        else if(result.status == SSLEngineResult.Status.BUFFER_OVERFLOW) {
+            throw new BufferOverflowException();
+        }
+        else if(result.status == SSLEngineResult.Status.CLOSED) {
+            throw new EOFException();
+        }
+        
+        //TODO: Need to handle re-handshake at this point
+    }
 
     public boolean needMore(SSLEngineResult result) {
         if(result.status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
@@ -104,7 +123,7 @@ class SslIo {
         }
     }
 
-    /*private void io(int ops) {
+    private void io(int ops) {
         println("Registering channel with selector, ops: ${ops}");
         channel.register(selector, ops);
         int count = selector.select(30_000);
@@ -127,8 +146,6 @@ class SslIo {
             if(numBytes == -1) {
                 throw new EOFException("Reading on closed channel");
             }
-            
-            recvBuffer.flip();
         }
 
         if(key.writable) {
@@ -137,7 +154,7 @@ class SslIo {
             println("Sent ${numBytes} bytes");
             sendBuffer.compact();
         }
-        }*/
+    }
 
     private ByteBuffer netBuffer() {
         return ByteBuffer.allocate(netMinBufferSize);
@@ -166,6 +183,8 @@ class SslIo {
                 hstatus = sslWrap(appSendBuffer, sendBuffer);
             }
         }
+
+        sendBuffer.clear(); recvBuffer.clear();
     }
 
     private void assertNotEof(final int num) {
