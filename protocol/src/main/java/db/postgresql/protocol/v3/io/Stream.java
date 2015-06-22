@@ -24,6 +24,12 @@ public class Stream {
         sendBuffer.compact();
     }
 
+    public void sendAll() {
+        while(sendBuffer.hasRemaining()) {
+            send();
+        }
+    }
+
     public void recv() {
         recvBuffer.compact();
         io.read(recvBuffer);
