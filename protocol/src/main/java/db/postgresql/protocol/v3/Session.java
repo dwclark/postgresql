@@ -11,6 +11,8 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import db.postgresql.protocol.v3.io.*;
+import javax.net.ssl.SSLContext;
 
 public class Session implements AutoCloseable {
     
@@ -19,13 +21,11 @@ public class Session implements AutoCloseable {
     private final String user;
     private final String password;
     private final String database;
-    private final String host;
-    private final int port;
     private final String application;
     private final Charset charset;
     private final String postgresCharset;
     private final Map<BackEnd, BackEndBuilder> builders;
-    private final SocketChannel channel;
+    private final IO io;
     private final Formatter formatter;
     private final Map<String,String> parameterStatuses = new LinkedHashMap<>();
 
@@ -34,13 +34,11 @@ public class Session implements AutoCloseable {
     private Session(final String user,
                     final String password,
                     final String database,
-                    final String host,
-                    final int port,
                     final String application,
                     final Charset charset,
                     final String postgresCharset,
                     final Map<BackEnd,BackEndBuilder> builders,
-                    final SocketChannel channel) {
+                    final IO io) {
         Map<BackEnd,BackEndBuilder> finalBuilders = new LinkedHashMap<>(builders);
         finalBuilders.put(BackEnd.ParameterStatus, parameterStatusBuilder);
         finalBuilders.put(BackEnd.ReadyForQuery, readyForQueryBuilder);
@@ -48,21 +46,19 @@ public class Session implements AutoCloseable {
         this.user = user;
         this.password = password;
         this.database = database;
-        this.host = host;
-        this.port = port;
         this.application = application;
         this.charset = charset;
         this.postgresCharset = postgresCharset;
         this.builders = Collections.unmodifiableMap(finalBuilders);
-        this.channel = channel;
+        this.io = io;
         this.formatter = new Formatter(charset);
     }
 
     public boolean compatible(Session rhs) {
         return (user.equals(rhs.user) &&
                 database.equals(rhs.database) &&
-                host.equals(rhs.host) &&
-                port == rhs.port &&
+                io.getHost().equals(rhs.io.getHost()) &&
+                io.getPort() == rhs.getPort() &&
                 application.equals(rhs.application) &&
                 postgresCharset.equals(rhs.postgresCharset));
     }
@@ -80,11 +76,11 @@ public class Session implements AutoCloseable {
     }
     
     public String getHost() {
-        return host;
+        return io.getHost();
     }
     
     public int getPort() {
-        return port;
+        return io.getPort();
     }
     
     public String getApplication() {
@@ -262,18 +258,32 @@ public class Session implements AutoCloseable {
             return this;
         }
 
+        private SessionIO sessionIo = SessionIO.CLEAR;
+
+        public Builder sessionIo(SessionIO sessionIo) {
+            this.sessionIo = sessionIo;
+            return this;
+        }
+
+        private IO makeIo() {
+            if(sessionIO == SessionIO.CLEAR) {
+                return new ClearIO(host, port);
+            }
+            else {
+                return new SslIO(host, port, SSLContext.getDefault());
+            }
+        }
+
         public Session build() {
             try {
                 return new Session(user,
                                    password,
                                    database,
-                                   host,
-                                   port,
                                    application,
                                    charset,
                                    postgresCharset,
                                    Collections.unmodifiableMap(builders),
-                                   SocketChannel.open());
+                                   makeIo());
             }
             catch(IOException ioe) {
                 throw new ProtocolException(ioe);
