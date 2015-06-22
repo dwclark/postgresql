@@ -17,7 +17,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLException;
 
-public class SslIO implements IO {
+public class SslIO extends IO {
 
     //truly private
     private final SSLEngine engine;
@@ -27,18 +27,8 @@ public class SslIO implements IO {
     private final Selector selector;
 
     //expose as properties
-    private final String host;
-    private final int port;
     private final int appMinBufferSize;
     private final int netMinBufferSize;
-
-    public String getHost() {
-        return host;
-    }
-
-    public int getPort() {
-        return port;
-    }
 
     public int getAppMinBufferSize() {
         return appMinBufferSize;
@@ -49,8 +39,7 @@ public class SslIO implements IO {
     }
 
     public SslIO(final String host, final int port, final SSLContext context) {
-        this.host = host;
-        this.port = port;
+        super(host, port);
 
         try {
             //Start with the channel in blocking mode, the application is going to have

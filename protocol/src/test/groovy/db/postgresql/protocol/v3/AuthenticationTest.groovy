@@ -65,6 +65,6 @@ class AuthenticationTest extends Specification {
         session.parameterStatuses;
 
         cleanup:
-        session.close();
+        session?.close();
     }
 }

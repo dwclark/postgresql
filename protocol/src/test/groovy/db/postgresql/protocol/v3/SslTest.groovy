@@ -26,6 +26,8 @@ class SslTest extends Specification {
             io.write(sendBuffer);
         }
 
+        sendBuffer.clear();
+
         while(builder.indexOf('</html>') == -1) {
             println("Reading recvBuffer in SslTest");
             io.read(recvBuffer);
