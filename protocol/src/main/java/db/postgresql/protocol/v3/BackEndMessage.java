@@ -1,5 +1,7 @@
 package db.postgresql.protocol.v3;
 
+import db.postresql.protocol.v3.io.Stream;
+
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.ArrayList;
@@ -18,11 +20,8 @@ public class BackEndMessage {
     }
 
     public static final BackEndBuilder builder = new BackEndBuilder() {
-            public BackEndMessage read(BackEnd backEnd, int size, Session session) {
-                if(size > 0) {
-                    session.read(size);
-                }
-                
+            public BackEndMessage read(BackEnd backEnd, int size, Stream stream) {
+                stream.advance(size);
                 return new BackEndMessage(backEnd);
             }
         };

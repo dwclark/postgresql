@@ -1,7 +1,7 @@
 package db.postgresql.protocol.v3;
 
-import java.nio.channels.ScatteringByteChannel;
+import db.postgresql.protocol.v3.io.Stream;
 
 public interface BackEndBuilder {
-    BackEndMessage read(BackEnd backEnd, int size, Session session);
+    BackEndMessage read(BackEnd backEnd, int size, Stream stream);
 }

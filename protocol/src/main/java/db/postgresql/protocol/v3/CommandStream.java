@@ -167,14 +167,14 @@ public class CommandStream extends Stream {
         return this;
     }
 
-    public ByteBuffer sync() {
+    public CommandStream sync() {
         put(FrontEnd.Sync.toByte());
         putInt(4);
         sendAll();
         return this;
     }
 
-    public ByteBuffer terminate() {
+    public CommandStream terminate() {
         put(FrontEnd.Terminate.toByte());
         putInt(4);
         sendAll();

@@ -35,6 +35,20 @@ public class Stream {
         io.read(recvBuffer);
     }
 
+    public void advance(final int size) {
+        int left = safeAdvance(size);
+        while(left != 0) {
+            recv();
+            left = safeAdvance(left);
+        }
+    }
+
+    private int safeAdvance(final int left) {
+        final int advanceBy = Math.min(left, recvBuffer.remaining());
+        recvBuffer.position(recvBuffer.position() + advanceBy);;
+        return left - advanceBy;
+    }
+
     private void ensureForSend(final int size) {
         if(size > sendBuffer.capacity()) {
             String msg = String.format("Stream can only hold %d bytes, " +
