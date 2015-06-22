@@ -57,15 +57,13 @@ class SslIo {
             io(SelectionKey.OP_WRITE);
         }
         
-        SSLEngineResult result = engine.wrap(toWrite, sendBuffer);
+        SSLEngineResult result;
+        while(toWrite.hasRemaining() &&
+              (result = engine.wrap(toWrite, sendBuffer)).status == SSLEngineResult.Status.OK) { }
 
-        if(result.status == SSLEngineResult.Status.OK) {
+        if(result.status == SSLEngineResult.Status.OK ||
+           result.status == SSLEngineResult.Status.BUFFER_OVERFLOW) {
             io(SelectionKey.OP_WRITE);
-        }
-        else if(result.status == SSLEngineResult.Status.BUFFER_OVERFLOW) {
-            //do nothing, we will hopefully be able to finish
-            //up the operation on the next call to write()
-            return;
         }
         else if(result.status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
             throw new BufferUnderflowException();
@@ -112,15 +110,6 @@ class SslIo {
         }
         
         //TODO: Need to handle re-handshake at this point
-    }
-
-    public boolean needMore(SSLEngineResult result) {
-        if(result.status == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
-            return true;
-        }
-        else {
-            return false;
-        }
     }
 
     private void io(int ops) {
@@ -198,6 +187,7 @@ class SslIo {
         println("@@@@@@@@@@@@@@@@@@ Starting sslWrap()");
         app.clear(); net.clear();
         SSLEngineResult result = engine.wrap(app, net);
+        
         net.flip();
         while(net.hasRemaining()) {
             assertNotEof(channel.write(net))

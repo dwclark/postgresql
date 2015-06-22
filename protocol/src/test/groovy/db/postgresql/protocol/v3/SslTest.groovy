@@ -1,5 +1,6 @@
 package db.postgresql.protocol.v3;
 
+import db.postgresql.protocol.v3.io.SslIO;
 import spock.lang.*;
 import java.nio.channels.*;
 import java.nio.charset.*;
@@ -9,16 +10,12 @@ import java.nio.*;
 
 class SslTest extends Specification {
 
-    SslIo io;
+    SslIO io;
     Charset charset = Charset.forName('UTF-8');
     
-    def setup() {
-        //io = new SslIo('www.google.com', 443, SSLContext.getDefault());
-    }
-
     def "Do Google Test"() {
         setup:
-        io = new SslIo('www.google.com', 443, SSLContext.getDefault());
+        io = new SslIO('www.google.com', 443, SSLContext.getDefault());
         StringBuilder builder = new StringBuilder(8192);
         ByteBuffer sendBuffer = ByteBuffer.allocate(io.appMinBufferSize);
         ByteBuffer recvBuffer = ByteBuffer.allocate(io.appMinBufferSize);
@@ -46,23 +43,23 @@ class SslTest extends Specification {
         println(builder.toString());
     }
 
-    /*def "Do Init Websites"() {
+    def "Do Init Websites"() {
         when:
-        io = new SslIo('www.google.com', 443, SSLContext.getDefault());
+        io = new SslIO('www.google.com', 443, SSLContext.getDefault());
         then:
         io;
 
         when:
-        io = new SslIo('www.yahoo.com', 443, SSLContext.getDefault());
+        io = new SslIO('www.yahoo.com', 443, SSLContext.getDefault());
         then:
         io;
 
         when:
-        io = new SslIo('www.amazon.com', 443, SSLContext.getDefault());
+        io = new SslIO('www.amazon.com', 443, SSLContext.getDefault());
         then:
         io;
         
-        }*/
+    }
 
     /*def "Do Get"() {
         setup:
