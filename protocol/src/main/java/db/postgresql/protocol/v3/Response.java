@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.io.IOException;
 
-public class BackEndMessage {
+public class Response {
 
     public BackEnd getBackEnd() {
         return backEnd;
@@ -15,14 +15,14 @@ public class BackEndMessage {
 
     private final BackEnd backEnd;
 
-    protected BackEndMessage(final BackEnd backEnd) {
+    protected Response(final BackEnd backEnd) {
         this.backEnd = backEnd;
     }
 
-    public static final BackEndBuilder builder = new BackEndBuilder() {
-            public BackEndMessage read(BackEnd backEnd, int size, Stream stream) {
+    public static final ResponseBuilder builder = new ResponseBuilder() {
+            public Response read(BackEnd backEnd, int size, Stream stream) {
                 stream.advance(size);
-                return new BackEndMessage(backEnd);
+                return new Response(backEnd);
             }
         };
 }

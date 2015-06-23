@@ -2,6 +2,7 @@ package db.postgresql.protocol.v3.io;
 
 import java.nio.ByteBuffer;
 import db.postgresql.protocol.v3.ProtocolException;
+import java.nio.charset.Charset;
 
 public class Stream {
 
@@ -10,12 +11,22 @@ public class Stream {
     private final ByteBuffer sendBuffer;
     private final ByteBuffer recvBuffer;
     private final IO io;
+    private final Charset encoding;
     
-    public Stream(IO io) {
+    public Stream(IO io, Charset encoding) {
         this.io = io;
         int size = Math.max(io.getAppMinBufferSize(), 65_536);
         this.sendBuffer = ByteBuffer.allocate(size);
         this.recvBuffer = ByteBuffer.allocate(size);
+        this.encoding = encoding;
+    }
+
+    public ByteBuffer getRecvBuffer() {
+        return recvBuffer;
+    }
+
+    public Charset getEncoding() {
+        return encoding;
     }
 
     public void send() {
@@ -45,7 +56,7 @@ public class Stream {
 
     private int safeAdvance(final int left) {
         final int advanceBy = Math.min(left, recvBuffer.remaining());
-        recvBuffer.position(recvBuffer.position() + advanceBy);;
+        recvBuffer.position(recvBuffer.position() + advanceBy);
         return left - advanceBy;
     }
 
@@ -96,46 +107,101 @@ public class Stream {
         return this;
     }
 
-    private void ensureForRecv(final int size) {
+    protected void ensureForRecv(final int size) {
+        ensureForRecv(size, Integer.MAX_VALUE);
+    }
+
+    private boolean enoughInRecvBuffer(final int size) {
+        return size >= (recvBuffer.capacity() - recvBuffer.limit());
+    }
+    
+    protected void ensureForRecv(final int size, final int tries) {
         if(size > recvBuffer.capacity()) {
              String msg = String.format("Stream can only hold %d bytes, " +
                                        "request payload into pieces no larger than this", recvBuffer.capacity());
             throw new ProtocolException(msg);
         }
 
-        while(size > (recvBuffer.capacity() - recvBuffer.limit())) {
+        int passes = 0;
+        while(!enoughInRecvBuffer(size) && (passes++ < tries)) {
             recv();
+        }
+
+        if(!enoughInRecvBuffer(size)) {
+            NoData.now();
         }
     }
 
-    public ByteBuffer getBuffer(ByteBuffer buffer) {
-        ensureForRecv(buffer.remaining());
+    public ByteBuffer getBuffer(final ByteBuffer buffer) {
+        return getBuffer(buffer, Integer.MAX_VALUE);
+    }
+
+    public ByteBuffer getBuffer(final ByteBuffer buffer, final int tries) {
+        ensureForRecv(buffer.remaining(), tries);
         buffer.put(recvBuffer);
         return buffer;
     }
 
     public byte get() {
-        ensureForRecv(1);
+        return get(Integer.MAX_VALUE);
+    }
+
+    public byte get(final int tries) {
+        ensureForRecv(1, tries);
         return recvBuffer.get();
     }
 
-    public byte[] get(byte[] dst, int offset, int length) {
-        ensureForRecv(length);
-        sendBuffer.put(dst, offset, length);
+    public byte[] get(final byte[] dst, final int offset, final int length) {
+        return get(dst, offset, length, Integer.MAX_VALUE);
+    }
+
+    public byte[] get(final byte[] dst, final int offset, final int length, final int tries) {
+        ensureForRecv(length, tries);
+        recvBuffer.get(dst, offset, length);
         return dst;
     }
 
+    public byte[] get(final byte[] dst) {
+        return get(dst, 0, 0, Integer.MAX_VALUE);
+    }
+
+    public byte[] get(final byte[] dst, final int tries) {
+        return get(dst, 0, 0, tries);
+    }
+
+    public String nullString(final int size) {
+        return nullString(size, Integer.MAX_VALUE);
+    }
+
+    public String nullString(final int size, final int tries) {
+        byte[] bytes = get(new byte[size], tries);
+        int length = (bytes[bytes.length - 1] == (byte) 0) ? bytes.length - 1 : bytes.length;
+        return new String(bytes, 0, length, encoding);
+    }
+
     public short getShort() {
-        ensureForRecv(2);
-        return sendBuffer.getShort();
+        return getShort(Integer.MAX_VALUE);
+    }
+
+    public short getShort(final int tries) {
+        ensureForRecv(2, tries);
+        return recvBuffer.getShort();
     }
 
     public int getInt() {
-        ensureForRecv(4);
-        return sendBuffer.getInt();
+        return getInt(Integer.MAX_VALUE);
+    }
+
+    public int getInt(final int tries) {
+        ensureForRecv(4, tries);
+        return recvBuffer.getInt();
     }
 
     public byte getNull() {
         return get();
+    }
+
+    public byte getNull(final int tries) {
+        return get(tries);
     }
 }
