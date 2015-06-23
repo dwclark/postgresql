@@ -217,6 +217,8 @@ public class PostgresqlStream extends Stream {
     private final ReentrantLock pollingLock = new ReentrantLock();
 
     public Response next(EnumSet<BackEnd> willHandle) {
+        assert(lock.isHeldByCurrentThread());
+        
         try {
             //be sure to not wait forever for response
             BackEnd backEnd = BackEnd.find(get(1));
@@ -228,10 +230,6 @@ public class PostgresqlStream extends Stream {
 
         //something is there, we have to finish the action
         return builders.get(backEnd).build(backEnd, getInt() - 4, this);
-    }
-
-    private void defaultHandler(Response response) {
-        
     }
 
     public void foreground() {
