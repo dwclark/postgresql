@@ -52,6 +52,7 @@ public class PostgresqlStream extends Stream {
             putNull();
         }
 
+        putNull();
         sendAll();
         return this;
     }
