@@ -1,11 +1,10 @@
 package db.postgresql.protocol.v3;
 
-import db.postresql.protocol.v3.io.Stream;
-
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.ArrayList;
+import db.postgresql.protocol.v3.io.Stream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Response {
 
@@ -20,9 +19,10 @@ public class Response {
     }
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public Response read(BackEnd backEnd, int size, Stream stream) {
+            public Response build(final BackEnd backEnd, final int size, final Stream stream) {
                 stream.advance(size);
                 return new Response(backEnd);
             }
         };
+
 }

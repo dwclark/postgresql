@@ -1,9 +1,9 @@
 package db.postgresql.protocol.v3;
 
+import db.postgresql.protocol.v3.io.Stream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ScatteringByteChannel;
-import java.io.IOException;
-import db.postgresql.protocol.v3.io.Stream;
 
 public class KeyData extends Response {
 

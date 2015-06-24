@@ -1,15 +1,15 @@
 package db.postgresql.protocol.v3.io;
 
 import db.postgresql.protocol.v3.ProtocolException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
-import java.nio.channels.Selector;
-import java.nio.channels.SelectionKey;
-import java.util.Iterator;
-import java.io.IOException;
 import java.io.EOFException;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
+import java.util.Iterator;
 
 public class ClearIO extends IO {
 
@@ -81,6 +81,16 @@ public class ClearIO extends IO {
             if(numBytes == -1) {
                 throw new EOFException("Writing on closed channel");
             }
+        }
+    }
+
+    public void close() {
+        try {
+            selector.close();
+            channel.close();
+        }
+        catch(IOException ex) {
+            throw new ProtocolException(ex);
         }
     }
 }

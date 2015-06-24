@@ -23,4 +23,5 @@ public abstract class IO {
     public abstract int getAppMinBufferSize();
     public abstract void write(ByteBuffer toWrite);
     public abstract void read(ByteBuffer toRead);
+    public abstract void close();
 }

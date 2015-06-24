@@ -1,19 +1,19 @@
 package db.postgresql.protocol.v3.io;
 
 import db.postgresql.protocol.v3.ProtocolException;
-import java.io.IOException;
 import java.io.EOFException;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.BufferUnderflowException;
 import java.nio.BufferOverflowException;
-import java.nio.channels.SocketChannel;
-import java.nio.channels.Selector;
+import java.nio.BufferUnderflowException;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLException;
 
@@ -168,6 +168,16 @@ public class SslIO extends IO {
         }
     }
 
+    public void close() {
+        try {
+            //TODO: Add SSL shutdown logic
+            selector.close();
+            channel.close();
+        }
+        catch(IOException ex) {
+            throw new ProtocolException(ex);
+        }
+    }
     
     //SSL Methods below this point
     private void ssl() {

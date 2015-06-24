@@ -30,8 +30,8 @@ public enum FrontEnd {
         this.size = 1;
     }
 
-    final int code;
-    final int size;
+    public final int code;
+    public final int size;
 
     public byte toByte() {
         return (byte) code;

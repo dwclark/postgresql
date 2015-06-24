@@ -1,8 +1,8 @@
 package db.postgresql.protocol.v3;
 
-import java.util.Collections;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public enum BackEnd {
@@ -26,7 +26,8 @@ public enum BackEnd {
     CopyOutResponse('H'),
     CopyBothResponse('W'),
     DataRow('D'),
-    EmptyQueryResponse('E'),
+    EmptyQueryResponse('I'),
+    ErrorResponse('E'),
     FunctionCallResponse('V'),
     NoData('n'),
     NoticeResponse('N'),
@@ -47,8 +48,8 @@ public enum BackEnd {
         this(id, 0);
     }
 
-    final byte id;
-    final byte subId;
+    public final byte id;
+    public final byte subId;
 
     public static final List<BackEnd> backends = Collections.unmodifiableList(new ArrayList(Arrays.asList(BackEnd.values())));
 

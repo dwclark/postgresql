@@ -1,6 +1,6 @@
 package db.postgresql.protocol.v3;
 
-import db.postresql.protocol.v3.io.Stream;
+import db.postgresql.protocol.v3.io.Stream;
 import java.nio.ByteBuffer;
 import java.nio.channels.ScatteringByteChannel;
 

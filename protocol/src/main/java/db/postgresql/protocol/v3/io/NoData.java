@@ -1,6 +1,6 @@
 package db.postgresql.protocol.v3.io;
 
-class NoData extends RuntimeException {
+public class NoData extends RuntimeException {
 
     private static final NoData instance = new NoData();
 

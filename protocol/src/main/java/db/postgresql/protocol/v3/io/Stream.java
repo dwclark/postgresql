@@ -3,6 +3,8 @@ package db.postgresql.protocol.v3.io;
 import java.nio.ByteBuffer;
 import db.postgresql.protocol.v3.ProtocolException;
 import java.nio.charset.Charset;
+import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
 
 public class Stream {
 
@@ -19,6 +21,10 @@ public class Stream {
         this.sendBuffer = ByteBuffer.allocate(size);
         this.recvBuffer = ByteBuffer.allocate(size);
         this.encoding = encoding;
+    }
+
+    public void close() {
+        io.close();
     }
 
     public ByteBuffer getRecvBuffer() {
@@ -167,6 +173,21 @@ public class Stream {
 
     public byte[] get(final byte[] dst, final int tries) {
         return get(dst, 0, 0, tries);
+    }
+
+    public String nullString() {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream(256);
+            byte b = get();
+            while(b != NULL) {
+                baos.write(b);
+            }
+            
+            return baos.toString(encoding.name());
+        }
+        catch(UnsupportedEncodingException ex) {
+            throw new ProtocolException(ex);
+        }
     }
 
     public String nullString(final int size) {

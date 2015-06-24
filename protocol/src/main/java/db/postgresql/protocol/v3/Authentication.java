@@ -1,12 +1,12 @@
 package db.postgresql.protocol.v3;
 
 import db.postgresql.protocol.v3.io.Stream;
-import java.nio.ByteBuffer;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.math.BigInteger;
-import java.nio.charset.Charset;
 
 public abstract class Authentication extends Response {
 
@@ -15,7 +15,7 @@ public abstract class Authentication extends Response {
     }
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public Authentication build(final BackEnd ignore, final int size, final Stream) {
+            public Authentication build(final BackEnd ignore, final int size, final Stream stream) {
                 BackEnd backEnd = BackEnd.find(ignore.id, (byte) stream.getInt());
                 switch(backEnd) {
                 case AuthenticationOk: return new Ok();
