@@ -66,6 +66,10 @@ public class Session implements AutoCloseable {
         this.sessionIo = sessionIo;
         this.stream = new PostgresqlStream(makeIo(), encoding, finalHandlers);
     }
+
+    public PostgresqlStream getStream() {
+        return stream;
+    }
     
     private IO makeIo() {
         if(sessionIo == SessionIO.CLEAR) {

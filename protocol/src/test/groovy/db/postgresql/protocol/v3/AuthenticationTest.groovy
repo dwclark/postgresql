@@ -20,7 +20,8 @@ class AuthenticationTest extends Specification {
     
     def "No Authentication"() {
         setup:
-        Session session = sb.user('noauth').build().connect().authenticate();
+        Session session = sb.user('noauth').build();
+        session.stream.startup(session.initKeysValues);
 
         expect:
         session.parameterStatuses;
@@ -29,7 +30,7 @@ class AuthenticationTest extends Specification {
         session.close();
     }
 
-    def "MD5 Payload"() {
+    /*def "MD5 Payload"() {
         setup:
         String user = 'david';
         String password = 'qwerty12345';
@@ -39,13 +40,19 @@ class AuthenticationTest extends Specification {
 
         expect:
         payload == 'md53021e9c7078798c92184ad247ec9e6b6';
-    }
+        }*/
 
     def "Clear Text Password"() {
         setup:
         def user = 'clearauth';
         def password = 'clearauth';
-        Session session = sb.user(user).password(password).build().connect().authenticate();
+        Session session = sb.user(user).password(password).build();
+        def stream = session.stream;
+        stream.startup(session.initKeysValues);
+        EnumSet<BackEnd> willHandle = EnumSet.of(BackEnd.AuthenticationOk, BackEnd.ReadyForQuery);
+        assert(stream.next(willHandle).backEnd == BackEnd.AuthenticationOk);
+        assert(stream.next(willHandle).backEnd == BackEnd.ReadyForQuery);
+        
 
         expect:
         session.parameterStatuses;
