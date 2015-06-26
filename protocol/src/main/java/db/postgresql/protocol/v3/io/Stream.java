@@ -9,6 +9,7 @@ import java.io.UnsupportedEncodingException;
 public class Stream {
 
     public static final byte NULL = (byte) 0;
+    public static final int DEFAULT_TRIES = 5;
     
     private final ByteBuffer sendBuffer;
     private final ByteBuffer recvBuffer;
@@ -21,6 +22,10 @@ public class Stream {
         this.sendBuffer = ByteBuffer.allocate(size);
         this.recvBuffer = ByteBuffer.allocate(size);
         this.encoding = encoding;
+
+        //position the recvBuffer at the end so that the first attempt
+        //to recv shows that there isn't anything there.
+        recvBuffer.position(recvBuffer.limit());
     }
 
     public void close() {
@@ -35,21 +40,35 @@ public class Stream {
         return encoding;
     }
 
-    public void send() {
+    public void send(boolean sendAll) {
         sendBuffer.flip();
         io.write(sendBuffer);
+
+        if(sendAll) {
+            while(sendBuffer.hasRemaining()) {
+                io.write(sendBuffer);
+            }
+        }
+        
         sendBuffer.compact();
     }
 
-    public void sendAll() {
-        while(sendBuffer.hasRemaining()) {
-            send();
-        }
+    public void recv() {
+        recv(0, 1);
+    }
+    
+    public void recv(final int atLeast) {
+        recv(atLeast, DEFAULT_TRIES);
     }
 
-    public void recv() {
+    public void recv(final int atLeast, final int tries) {
         recvBuffer.compact();
         io.read(recvBuffer);
+        int passes = 1;
+        while((recvBuffer.position() < atLeast) && (passes < tries)) {
+            io.read(recvBuffer);
+        }
+        recvBuffer.flip();
     }
 
     public void advance(final int size) {
@@ -74,7 +93,7 @@ public class Stream {
         }
 
         while(size > sendBuffer.remaining()) {
-            send();
+            send(false);
         }
     }
 
@@ -114,32 +133,29 @@ public class Stream {
     }
 
     protected void ensureForRecv(final int size) {
-        ensureForRecv(size, Integer.MAX_VALUE);
+        ensureForRecv(size, DEFAULT_TRIES);
     }
 
-    private boolean enoughInRecvBuffer(final int size) {
-        return size >= (recvBuffer.capacity() - recvBuffer.limit());
-    }
-    
     protected void ensureForRecv(final int size, final int tries) {
         if(size > recvBuffer.capacity()) {
              String msg = String.format("Stream can only hold %d bytes, " +
-                                       "request payload into pieces no larger than this", recvBuffer.capacity());
+                                        "request payload into pieces no larger than this", recvBuffer.capacity());
             throw new ProtocolException(msg);
         }
 
-        int passes = 0;
-        while(!enoughInRecvBuffer(size) && (passes++ < tries)) {
-            recv();
+        if(recvBuffer.remaining() >= size) {
+            return;
         }
 
-        if(!enoughInRecvBuffer(size)) {
+        recv(size, tries);
+
+        if(recvBuffer.remaining() < size) {
             NoData.now();
         }
     }
 
     public ByteBuffer getBuffer(final ByteBuffer buffer) {
-        return getBuffer(buffer, Integer.MAX_VALUE);
+        return getBuffer(buffer, DEFAULT_TRIES);
     }
 
     public ByteBuffer getBuffer(final ByteBuffer buffer, final int tries) {
@@ -149,7 +165,7 @@ public class Stream {
     }
 
     public byte get() {
-        return get(Integer.MAX_VALUE);
+        return get(DEFAULT_TRIES);
     }
 
     public byte get(final int tries) {
@@ -158,7 +174,7 @@ public class Stream {
     }
 
     public byte[] get(final byte[] dst, final int offset, final int length) {
-        return get(dst, offset, length, Integer.MAX_VALUE);
+        return get(dst, offset, length, DEFAULT_TRIES);
     }
 
     public byte[] get(final byte[] dst, final int offset, final int length, final int tries) {
@@ -168,7 +184,7 @@ public class Stream {
     }
 
     public byte[] get(final byte[] dst) {
-        return get(dst, 0, 0, Integer.MAX_VALUE);
+        return get(dst, 0, dst.length, DEFAULT_TRIES);
     }
 
     public byte[] get(final byte[] dst, final int tries) {
@@ -191,7 +207,7 @@ public class Stream {
     }
 
     public String nullString(final int size) {
-        return nullString(size, Integer.MAX_VALUE);
+        return nullString(size, DEFAULT_TRIES);
     }
 
     public String nullString(final int size, final int tries) {
@@ -201,7 +217,7 @@ public class Stream {
     }
 
     public short getShort() {
-        return getShort(Integer.MAX_VALUE);
+        return getShort(DEFAULT_TRIES);
     }
 
     public short getShort(final int tries) {
@@ -210,7 +226,7 @@ public class Stream {
     }
 
     public int getInt() {
-        return getInt(Integer.MAX_VALUE);
+        return getInt(DEFAULT_TRIES);
     }
 
     public int getInt(final int tries) {

@@ -48,7 +48,6 @@ public class ClearIO extends IO {
     public void read(ByteBuffer toRead) {
         try {
             io(SelectionKey.OP_READ, toRead);
-            toRead.flip();
         }
         catch(IOException ex) {
             throw new ProtocolException(ex);
@@ -70,17 +69,17 @@ public class ClearIO extends IO {
         }
 
         if(key.isReadable()) {
-            int numBytes = channel.read(buffer);
-            if(numBytes == -1) {
-                throw new EOFException("Reading on closed channel");
-            }
+            checkEof(channel.read(buffer));
         }
 
         if(key.isWritable()) {
-            int numBytes = channel.write(buffer);
-            if(numBytes == -1) {
-                throw new EOFException("Writing on closed channel");
-            }
+            checkEof(channel.write(buffer));
+        }
+    }
+
+    private void checkEof(int numBytes) throws EOFException {
+        if(numBytes == -1) {
+            throw new EOFException();
         }
     }
 

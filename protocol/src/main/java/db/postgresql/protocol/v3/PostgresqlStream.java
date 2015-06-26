@@ -79,7 +79,7 @@ public class PostgresqlStream extends Stream {
         }
 
         putNull();
-        sendAll();
+        send(true);
         return this;
     }
 
@@ -92,7 +92,7 @@ public class PostgresqlStream extends Stream {
         put((byte) type);
         put(bytes);
         putNull();
-        sendAll();
+        send(true);
 
         return this;
     }
@@ -117,14 +117,14 @@ public class PostgresqlStream extends Stream {
             put(buffer);
         }
 
-        sendAll();
+        send(true);
         return this;
     }
 
     public PostgresqlStream copyDone() {
         put(FrontEnd.CopyDone.toByte());
         putInt(4);
-        sendAll();
+        send(true);
         return this;
     }
 
@@ -133,7 +133,7 @@ public class PostgresqlStream extends Stream {
         put(FrontEnd.CopyFail.toByte());
         putInt(4 + bytes.length + 1); //header + message length + null char
         putNull();
-        sendAll();
+        send(true);
         return this;
     }
 
@@ -144,7 +144,7 @@ public class PostgresqlStream extends Stream {
         put((byte) type);
         put(bytes);
         putNull();
-        sendAll();
+        send(true);
         return this;
     }
 
@@ -167,14 +167,14 @@ public class PostgresqlStream extends Stream {
         put(bytes);
         putNull();
         putInt(maxRows);
-        sendAll();
+        send(true);
         return this;
     }
 
     public PostgresqlStream flush() {
         put(FrontEnd.Flush.toByte());
         putInt(4);
-        sendAll();
+        send(true);
         return this;
     }
 
@@ -186,7 +186,7 @@ public class PostgresqlStream extends Stream {
         put(FrontEnd.Password.toByte());
         putInt(4 + bytes.length);
         put(bytes);
-        sendAll();
+        send(true);
         return this;
     }
 
@@ -202,10 +202,14 @@ public class PostgresqlStream extends Stream {
         }
     }
 
+    public static String md5Hash(Charset c, String user, String password, byte[] salt) {
+        byte[] userBytes = user.getBytes(c);
+        byte[] passwordBytes = password.getBytes(c);
+        return "md5" + compute(compute(passwordBytes, userBytes).getBytes(c), salt);
+    }
+
     public PostgresqlStream md5(String user, String password, byte[] salt) {
-        byte[] userBytes = user.getBytes(getEncoding());
-        byte[] passwordBytes = password.getBytes(getEncoding());
-        return password("md5" + compute(compute(passwordBytes, userBytes).getBytes(getEncoding()), salt));
+        return password(md5Hash(getEncoding(), user, password, salt));
     }
 
     public PostgresqlStream query(String str) {
@@ -213,28 +217,28 @@ public class PostgresqlStream extends Stream {
         put(FrontEnd.Query.toByte());
         putInt(4 + bytes.length + 1); //header + bytes + null
         putNull();
-        sendAll();
+        send(true);
         return this;
     }
 
     public PostgresqlStream ssl() {
         putInt(8);
         putInt(FrontEnd.SSLRequest.code);
-        sendAll();
+        send(true);
         return this;
     }
 
     public PostgresqlStream sync() {
         put(FrontEnd.Sync.toByte());
         putInt(4);
-        sendAll();
+        send(true);
         return this;
     }
 
     public PostgresqlStream terminate() {
         put(FrontEnd.Terminate.toByte());
         putInt(4);
-        sendAll();
+        send(true);
         close();
         return this;
     }
@@ -258,12 +262,18 @@ public class PostgresqlStream extends Stream {
         }
 
         //something is there, we have to finish the action
-        return builders.get(backEnd).build(backEnd, getInt() - 4, this);
+        Response r = builders.get(backEnd).build(backEnd, getInt() - 4, this);
+        if(!willHandle.contains(r.getBackEnd())) {
+            handlers.get(r.getBackEnd()).handle(r);
+        }
+
+        return r;
     }
 
-    public void foreground() {
+    public PostgresqlStream foreground() {
         continueBackground.set(false);
         pollingLock.lock();
+        return this;
     }
 
     private final Runnable backgroundRunner = new Runnable() {
@@ -284,10 +294,11 @@ public class PostgresqlStream extends Stream {
             }
         };
     
-    public void background() {
+    public PostgresqlStream background() {
         pollingLock.unlock();
         continueBackground.set(true);
         new Thread(backgroundRunner).start();
+        return this;
     }
 
     public static Map.Entry<String,String> nullPair(final byte[] bytes, final Charset encoding) {

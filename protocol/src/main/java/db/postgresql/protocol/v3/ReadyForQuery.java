@@ -15,7 +15,7 @@ public class ReadyForQuery extends Response {
         this.status = status;
     }
     
-    public final ResponseBuilder readyForQueryBuilder = new ResponseBuilder() {
+    public static final ResponseBuilder builder = new ResponseBuilder() {
             public ReadyForQuery build(final BackEnd backEnd, final int size, final Stream stream) {
                 return new ReadyForQuery(backEnd, TransactionStatus.from(stream.get()));
             }

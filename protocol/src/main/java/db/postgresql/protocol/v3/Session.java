@@ -35,6 +35,8 @@ public class Session implements AutoCloseable {
     private final Map<String,String> parameterStatuses = new ConcurrentHashMap<>(32, 0.75f, 1);
     private final ConcurrentLinkedQueue<Notification> notificationQueue = new ConcurrentLinkedQueue<>();
     private volatile TransactionStatus lastStatus;
+    private volatile int pid;
+    private volatile int secretKey;
     
     private Session(final String user,
                     final String password,
@@ -49,8 +51,12 @@ public class Session implements AutoCloseable {
         
         Map<BackEnd,ResponseHandler> finalHandlers = new LinkedHashMap<>();
         finalHandlers.put(BackEnd.Authentication, authenticationHandler);
+        finalHandlers.put(BackEnd.AuthenticationOk, authenticationHandler);
+        finalHandlers.put(BackEnd.AuthenticationCleartextPassword, authenticationHandler);
+        finalHandlers.put(BackEnd.AuthenticationMD5Password, authenticationHandler);
         finalHandlers.put(BackEnd.NotificationResponse, notificationHandler);
         finalHandlers.put(BackEnd.ParameterStatus, parameterStatusHandler);
+        finalHandlers.put(BackEnd.BackendKeyData, keyDataHandler);
         finalHandlers.put(BackEnd.ReadyForQuery, readyForQueryHandler);
         finalHandlers.putAll(handlers); //specified overrides default
         
@@ -295,5 +301,19 @@ public class Session implements AutoCloseable {
                 lastStatus = ((ReadyForQuery) r).getStatus();
             }
         };
+
+    private final ResponseHandler keyDataHandler = new ResponseHandler() {
+            public void handle(Response r) {
+                KeyData data = (KeyData) r;
+                pid = data.getPid();
+                secretKey = data.getSecretKey();
+            }
+        };
+
+    public static void main(String[] args) {
+        Session.Builder sb = new Session.Builder().host("localhost").port(5432).database("testdb");
+        Session session = sb.user("noauth").build();
+        session.getStream().startup(session.getInitKeysValues());
+    }
 }
 

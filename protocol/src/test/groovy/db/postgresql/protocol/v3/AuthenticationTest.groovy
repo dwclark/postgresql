@@ -21,7 +21,8 @@ class AuthenticationTest extends Specification {
     def "No Authentication"() {
         setup:
         Session session = sb.user('noauth').build();
-        session.stream.startup(session.initKeysValues);
+        session.stream.foreground().startup(session.initKeysValues);
+        while(session.stream.next(EnumSet.noneOf(BackEnd)).backEnd != BackEnd.ReadyForQuery) { }
 
         expect:
         session.parameterStatuses;
@@ -30,29 +31,25 @@ class AuthenticationTest extends Specification {
         session.close();
     }
 
-    /*def "MD5 Payload"() {
+    def "MD5 Payload"() {
         setup:
         String user = 'david';
         String password = 'qwerty12345';
         Charset c = Charset.forName('UTF-8');
         byte[] salt = 'aK*r'.getBytes(c);
-        String payload = AuthenticationMessage.Md5.payload(c, user, password, salt);
+        String payload = PostgresqlStream.md5Hash(c, user, password, salt);
 
         expect:
         payload == 'md53021e9c7078798c92184ad247ec9e6b6';
-        }*/
+    }
 
     def "Clear Text Password"() {
         setup:
         def user = 'clearauth';
         def password = 'clearauth';
         Session session = sb.user(user).password(password).build();
-        def stream = session.stream;
-        stream.startup(session.initKeysValues);
-        EnumSet<BackEnd> willHandle = EnumSet.of(BackEnd.AuthenticationOk, BackEnd.ReadyForQuery);
-        assert(stream.next(willHandle).backEnd == BackEnd.AuthenticationOk);
-        assert(stream.next(willHandle).backEnd == BackEnd.ReadyForQuery);
-        
+        session.stream.foreground().startup(session.initKeysValues);
+        while(session.stream.next(EnumSet.noneOf(BackEnd)).backEnd != BackEnd.ReadyForQuery) { }
 
         expect:
         session.parameterStatuses;
@@ -65,8 +62,8 @@ class AuthenticationTest extends Specification {
         setup:
         def user = 'md5auth';
         def password = 'md5auth';
-        Session session = sb.user(user).password(password).build().connect().authenticate();
-        println(session.parameterStatuses);
+        Session session = sb.user(user).password(password).build();
+        session.stream.foreground().startup(session.initKeysValues);
         
         expect:
         session.parameterStatuses;

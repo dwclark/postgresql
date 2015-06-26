@@ -7,21 +7,21 @@ import java.nio.channels.ScatteringByteChannel;
 
 public class KeyData extends Response {
 
-    private final int processId;
-    private final int key;
+    private final int pid;
+    private final int secretKey;
 
-    public int getProcessId() {
-        return processId;
+    public int getPid() {
+        return pid;
     }
 
-    public int getKey() {
-        return key;
+    public int getSecretKey() {
+        return secretKey;
     }
     
-    private KeyData(final BackEnd backEnd, final int processId, final int key) {
+    private KeyData(final BackEnd backEnd, final int pid, final int secretKey) {
         super(backEnd);
-        this.processId = processId;
-        this.key = key;
+        this.pid = pid;
+        this.secretKey = secretKey;
     }
     
     public static final ResponseBuilder builder = new ResponseBuilder() {
