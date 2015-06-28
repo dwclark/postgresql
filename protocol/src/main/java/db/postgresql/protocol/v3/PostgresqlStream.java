@@ -40,8 +40,10 @@ public class PostgresqlStream extends Stream {
         ret.put(BackEnd.NotificationResponse, Notification.builder);
         ret.put(BackEnd.ParameterDescription, ParameterDescription.builder);
         ret.put(BackEnd.ParameterStatus, ParameterStatus.builder);
+        ret.put(BackEnd.ParseComplete, Response.builder);
         ret.put(BackEnd.PortalSuspended, Response.builder);
         ret.put(BackEnd.ReadyForQuery, ReadyForQuery.builder);
+        ret.put(BackEnd.RowDescription, RowDescription.builder);
         return Collections.unmodifiableMap(ret);
     }
 
@@ -190,7 +192,7 @@ public class PostgresqlStream extends Stream {
         return this;
     }
 
-    private static String compute(byte[] first, byte[] second) {
+    private static String compute(ByteBuffer first, ByteBuffer second) {
         try {
             MessageDigest m = MessageDigest.getInstance("MD5");
             m.update(first);
@@ -202,10 +204,10 @@ public class PostgresqlStream extends Stream {
         }
     }
 
-    public static String md5Hash(Charset c, String user, String password, byte[] salt) {
-        byte[] userBytes = user.getBytes(c);
-        byte[] passwordBytes = password.getBytes(c);
-        return "md5" + compute(compute(passwordBytes, userBytes).getBytes(c), salt);
+    public static String md5Hash(Charset c, String user, String password, ByteBuffer salt) {
+        ByteBuffer userBytes = ByteBuffer.wrap(user.getBytes(c));
+        ByteBuffer passwordBytes = ByteBuffer.wrap(password.getBytes(c));
+        return "md5" + compute(ByteBuffer.wrap(compute(passwordBytes, userBytes).getBytes(c)), salt);
     }
 
     public PostgresqlStream md5(String user, String password, byte[] salt) {
@@ -216,14 +218,8 @@ public class PostgresqlStream extends Stream {
         byte[] bytes = str.getBytes(getEncoding());
         put(FrontEnd.Query.toByte());
         putInt(4 + bytes.length + 1); //header + bytes + null
+        put(bytes);
         putNull();
-        send(true);
-        return this;
-    }
-
-    public PostgresqlStream ssl() {
-        putInt(8);
-        putInt(FrontEnd.SSLRequest.code);
         send(true);
         return this;
     }
@@ -310,7 +306,7 @@ public class PostgresqlStream extends Stream {
         }
 
         return new AbstractMap.SimpleImmutableEntry(new String(bytes, 0, posNull, encoding),
-                                                    new String(bytes, posNull + 1, bytes.length - (posNull + 1), encoding));
+                                                    new String(bytes, posNull + 1, bytes.length - (posNull + 2), encoding));
 
     }
 }

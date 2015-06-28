@@ -4,25 +4,35 @@ import db.postgresql.protocol.v3.io.Stream;
 
 public class ParameterDescription extends Response {
 
-    private final int[] oids;
-
     public int[] getOids() {
-        return oids;
+        int[] ret = new int[buffer.remaining() / 4];
+        buffer.asIntBuffer().get(ret);
+        buffer.position(0);
     }
 
-    public ParameterDescription(final BackEnd backEnd, final int[] oids) {
-        super(backEnd);
-        this.oids = oids;
+    private ParameterDescription() {
+        super(BackEnd.ParameterDescription);
     }
+
+    private ParameterDescription(ParameterDescription toCopy) {
+        super(BackEnd.ParameterDescription, toCopy);
+    }
+
+    @Override
+    public ParameterDescription copy() {
+        return new ParameterDescription(this);
+    }
+
+    private static final ThreadLocal<ParameterDescription> tlData = new ThreadLocal<ParameterDescription>() {
+            @Override protected ParameterDescription initialValue() {
+                return new ParameterDescription();
+            }
+        }
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
             public ParameterDescription build(final BackEnd backEnd, final int size, final Stream stream) {
-                int[] oids = new int[stream.getShort() & 0xFFFF];
-                for(int i = 0; i < oids.length; ++i) {
-                    oids[i] = stream.getInt();
-                }
-
-                return new ParameterDescription(backEnd, oids);
+                final int num = stream.getShort() & 0xFFFF;
+                return (ParameterDescription) tlData.get().reset(stream.getRecord(num * 4), stream.getEncoding());
             }
         };
 }

@@ -12,7 +12,7 @@ public class Stream {
     public static final int DEFAULT_TRIES = 5;
     
     private final ByteBuffer sendBuffer;
-    private final ByteBuffer recvBuffer;
+    private ByteBuffer recvBuffer;
     private final IO io;
     private final Charset encoding;
     
@@ -132,19 +132,39 @@ public class Stream {
         return this;
     }
 
+    private ByteBuffer _record(final int size) {
+        ByteBuffer buffer = recvBuffer.slice();
+        buffer.limit(size);
+        return buffer;
+    }
+
+    public ByteBuffer getRecord(final int size) {
+        //do we already have enough data? 
+        if(recvBuffer.remaining() >= size) {
+            return _record(size);
+        }
+        
+        int needed = size - recvBuffer.remaining();
+        ensureForRecv(needed);
+        assert(size <= recvBuffer.remaining());
+        return _record(size);
+    }
+    
     protected void ensureForRecv(final int size) {
         ensureForRecv(size, DEFAULT_TRIES);
     }
 
     protected void ensureForRecv(final int size, final int tries) {
-        if(size > recvBuffer.capacity()) {
-             String msg = String.format("Stream can only hold %d bytes, " +
-                                        "request payload into pieces no larger than this", recvBuffer.capacity());
-            throw new ProtocolException(msg);
-        }
-
         if(recvBuffer.remaining() >= size) {
             return;
+        }
+        
+        //we need to ensure we have at least remaining + size space available
+        //recv will compact already used space, so we can ignore anything before position
+        if(recvBuffer.remaining() + size < recvBuffer.capacity()) {
+            ByteBuffer newRecvBuffer = ByteBuffer.allocate(recvBuffer.remaining() + size);
+            newRecvBuffer.put(recvBuffer);
+            recvBuffer = newRecvBuffer;
         }
 
         recv(size, tries);
@@ -194,8 +214,8 @@ public class Stream {
     public String nullString() {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream(256);
-            byte b = get();
-            while(b != NULL) {
+            byte b;
+            while((b = get()) != NULL) {
                 baos.write(b);
             }
             

@@ -38,9 +38,41 @@ public class SslIO extends IO {
         return netMinBufferSize;
     }
 
-    public SslIO(final String host, final int port, final SSLContext context) {
-        super(host, port);
+    public static final byte CONTINUE = (byte) 'S';
+    public static final byte STOP = (byte) 'N';
 
+    public static final SslPre postgresqlPre = new SslPre() {
+            public void pre(SocketChannel channel) {
+                try {
+                    final ByteBuffer buffer = ByteBuffer.allocate(8);
+                    buffer.putInt(8);
+                    buffer.putInt(80877103 & 0xFFFF_FFFF);
+                    buffer.flip();
+                    channel.write(buffer);
+                    buffer.clear();
+                    channel.read(buffer);
+                    buffer.flip();
+                    final byte resp = buffer.get();
+                    if(resp == STOP) {
+                        throw new ProtocolException("Server refused SSL communication");
+                    }
+                }
+                catch(IOException ioe) {
+                    throw new ProtocolException(ioe);
+                }
+            } };
+
+    public static final SslPre noPre = new SslPre() {
+            public void pre(SocketChannel channel) {}
+        };
+
+    public SslIO(final String host, final int port, final SSLContext context) {
+        this(host, port, context, postgresqlPre);
+    }
+
+    public SslIO(final String host, final int port, final SSLContext context, SslPre sslPre) {
+        super(host, port);
+                
         try {
             //Start with the channel in blocking mode, the application is going to have
             //to block initially while the ssl layer starts up.  Might as well
@@ -48,6 +80,7 @@ public class SslIO extends IO {
             channel = SocketChannel.open();
             channel.configureBlocking(true);
             channel.connect(new InetSocketAddress(InetAddress.getByName(host), port));
+            sslPre.pre(channel);
             
             this.engine = context.createSSLEngine(host, port);
             engine.setUseClientMode(true);
@@ -70,7 +103,7 @@ public class SslIO extends IO {
             throw new ProtocolException(ioe);
         }
     }
-
+    
     public void write(final ByteBuffer toWrite) {
         try {
             if(sendBuffer.hasRemaining()) {
@@ -101,8 +134,6 @@ public class SslIO extends IO {
     }
 
     public void read(final ByteBuffer toRead) {
-        assert(toRead.remaining() >= appMinBufferSize);
-
         try {
             io(SelectionKey.OP_READ);
             recvBuffer.flip();
@@ -111,7 +142,6 @@ public class SslIO extends IO {
                   (result = engine.unwrap(recvBuffer, toRead)).getStatus() == SSLEngineResult.Status.OK) { }
             
             recvBuffer.compact();
-            toRead.flip();
 
             //ignore buffer over flow, the caller should clear out their buffer and if
             //not then the assert at the beginning should catch that problem

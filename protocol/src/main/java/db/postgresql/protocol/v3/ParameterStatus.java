@@ -5,28 +5,37 @@ import java.util.Map;
 
 public class ParameterStatus extends Response {
 
-    private final String name;
-    private final String value;
-
     public String getName() {
-        return name;
+        return nullString(0, nextNull(0))
     }
 
     public String getValue() {
-        return value;
+        final int startAt = nextNull(0) + 1;
+        return nullString(startAt, nextNull(startAt));
     }
 
-    public ParameterStatus(final BackEnd backEnd, final String name, final String value) {
-        super(backEnd);
-        this.name = name;
-        this.value = value;
+    private ParameterStatus() {
+        super(BackEnd.ParameterStatus);
     }
+
+    private ParameterStatus(ParameterStatus toCopy) {
+        super(BackEnd.ParameterStatus, toCopy);xs
+    }
+
+    @Override
+    public ParameterStatus copy() {
+        return new ParameterStatus(this);
+    }
+
+    private static final ThreadLocal<ParameterStatus> tlData = new ThreadLocal<ParameterStatus>() {
+            @Override protected ParameterStatus initialValue() {
+                return new ParameterStatus();
+            }
+        };
     
     public final static ResponseBuilder builder = new ResponseBuilder() {
             public ParameterStatus build(final BackEnd backEnd, final int size, final Stream stream) {
-                byte[] bytes = stream.get(new byte[size]);
-                Map.Entry<String,String> pair = PostgresqlStream.nullPair(bytes, stream.getEncoding());
-                return new ParameterStatus(backEnd, pair.getKey(), pair.getValue());
+                return (ParameterStatus) tlData.get().reset(stream.getRecord(size), stream.getEncoding());
             }
         };
 }

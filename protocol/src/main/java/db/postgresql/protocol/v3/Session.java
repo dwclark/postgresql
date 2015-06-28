@@ -11,6 +11,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,7 +28,6 @@ public class Session implements AutoCloseable {
     private final String application;
     private final Charset encoding;
     private final String postgresEncoding;
-    private final SessionIO sessionIo;
     private final Map<BackEnd, ResponseHandler> handlers;
     private final PostgresqlStream stream;
 
@@ -47,7 +47,7 @@ public class Session implements AutoCloseable {
                     final Charset encoding,
                     final String postgresEncoding,
                     final Map<BackEnd,ResponseHandler> handlers,
-                    final SessionIO sessionIo) {
+                    final SSLContext sslContext) {
         
         Map<BackEnd,ResponseHandler> finalHandlers = new LinkedHashMap<>();
         finalHandlers.put(BackEnd.Authentication, authenticationHandler);
@@ -69,29 +69,23 @@ public class Session implements AutoCloseable {
         this.encoding = encoding;
         this.postgresEncoding = postgresEncoding;
         this.handlers = Collections.unmodifiableMap(finalHandlers);
-        this.sessionIo = sessionIo;
-        this.stream = new PostgresqlStream(makeIo(), encoding, finalHandlers);
+        this.stream = new PostgresqlStream(makeIo(sslContext), encoding, finalHandlers);
     }
 
     public PostgresqlStream getStream() {
         return stream;
     }
     
-    private IO makeIo() {
-        if(sessionIo == SessionIO.CLEAR) {
+    private IO makeIo(final SSLContext sslContext) {
+        if(sslContext == null) {
             return new ClearIO(host, port);
         }
         else {
-            try {
-                return new SslIO(host, port, SSLContext.getDefault());
-            }
-            catch(NoSuchAlgorithmException ex) {
-                throw new ProtocolException(ex);
-            }
+            return new SslIO(host, port, sslContext);
         }
     }
 
-    public boolean compatible(Session rhs) {
+    public boolean compatible(final Session rhs) {
         return (user.equals(rhs.user) &&
                 database.equals(rhs.database) &&
                 host.equals(rhs.host) &&
@@ -134,6 +128,14 @@ public class Session implements AutoCloseable {
 
     public TransactionStatus getLastStatus() {
         return lastStatus;
+    }
+
+    public int getPid() {
+        return pid;
+    }
+
+    public int getSecretKey() {
+        return secretKey;
     }
 
     private static boolean legalValue(String val) {
@@ -216,10 +218,10 @@ public class Session implements AutoCloseable {
             return this;
         }
 
-        private SessionIO sessionIo = SessionIO.CLEAR;
+        private SSLContext sslContext = null;
 
-        public Builder sessionIo(SessionIO sessionIo) {
-            this.sessionIo = sessionIo;
+        public Builder sslContext(SSLContext sslContext) {
+            this.sslContext = sslContext;
             return this;
         }
 
@@ -240,7 +242,20 @@ public class Session implements AutoCloseable {
                                encoding,
                                postgresEncoding,
                                handlers,
-                               sessionIo);
+                               sslContext);
+        }
+
+        public Session foreground() {
+            Session session = build();
+            session.stream.foreground().startup(session.getInitKeysValues());
+            while(session.getStream().next(EnumSet.noneOf(BackEnd.class)).getBackEnd() != BackEnd.ReadyForQuery) { }
+            return session;
+        }
+
+        public Session background() {
+            Session session = foreground();
+            session.stream.background();
+            return session;
         }
     }
 
@@ -274,7 +289,7 @@ public class Session implements AutoCloseable {
                     stream.password(password);
                 }
                 else if(be == BackEnd.AuthenticationMD5Password) {
-                    stream.md5(user, password, ((Authentication.Md5) a).getSalt());
+                    stream.md5(user, password, a.getBuffer());
                 }
                 else {
                     stream.terminate();

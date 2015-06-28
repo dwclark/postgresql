@@ -6,6 +6,8 @@ import java.net.InetSocketAddress;
 import java.net.InetAddress;
 import java.nio.charset.Charset;
 import java.security.*;
+import static db.postgresql.protocol.v3.ssl.ContextCreation.*;
+
 class AuthenticationTest extends Specification {
 
     def host = '127.0.0.1';
@@ -17,7 +19,7 @@ class AuthenticationTest extends Specification {
     def setup() {
         sb = new Session.Builder().host(host).port(port).database(database);
     }
-    
+
     def "No Authentication"() {
         setup:
         Session session = sb.user('noauth').build();
@@ -26,6 +28,8 @@ class AuthenticationTest extends Specification {
 
         expect:
         session.parameterStatuses;
+        session.pid;
+        session.secretKey;
         
         cleanup:
         session.close();
@@ -53,6 +57,8 @@ class AuthenticationTest extends Specification {
 
         expect:
         session.parameterStatuses;
+        session.pid;
+        session.secretKey;
 
         cleanup:
         session.close();
@@ -64,11 +70,50 @@ class AuthenticationTest extends Specification {
         def password = 'md5auth';
         Session session = sb.user(user).password(password).build();
         session.stream.foreground().startup(session.initKeysValues);
+        while(session.stream.next(EnumSet.noneOf(BackEnd)).backEnd != BackEnd.ReadyForQuery) { }
         
         expect:
         session.parameterStatuses;
+        session.pid;
+        session.secretKey;
 
         cleanup:
         session?.close();
+    }
+
+    def "SSL Clear Text Password"() {
+        setup:
+        def user = 'clearauth';
+        def password = 'clearauth';
+        Session session = sb.user(user).password(password).sslContext(noCert()).build();
+        session.stream.foreground().startup(session.initKeysValues);
+        while(session.stream.next(EnumSet.noneOf(BackEnd)).backEnd != BackEnd.ReadyForQuery) { }
+
+        expect:
+        session.parameterStatuses;
+        session.pid;
+        session.secretKey;
+
+        cleanup:
+        session?.close();
+    }
+
+    def "SSL MD5 Password"() {
+        setup:
+        def user = 'md5auth';
+        def password = 'md5auth';
+        Session session = sb.user(user).password(password).sslContext(noCert()).build();
+        session.stream.foreground().startup(session.initKeysValues);
+        while(session.stream.next(EnumSet.noneOf(BackEnd)).backEnd != BackEnd.ReadyForQuery) { }
+        
+        expect:
+        session.parameterStatuses;
+        session.pid;
+        session.secretKey;
+        session.lastStatus == TransactionStatus.IDLE;
+        
+        cleanup:
+        session?.close();
+
     }
 }

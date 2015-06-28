@@ -18,43 +18,58 @@ public abstract class Authentication extends Response {
             public Authentication build(final BackEnd ignore, final int size, final Stream stream) {
                 BackEnd backEnd = BackEnd.find(ignore.id, (byte) stream.getInt());
                 switch(backEnd) {
-                case AuthenticationOk: return new Ok();
-                case AuthenticationCleartextPassword: return new Password();
+                case AuthenticationOk:
+                    return Ok.instance;
+                case AuthenticationCleartextPassword:
+                    return Password.instance;
                 case AuthenticationMD5Password:
-                    return new Md5(stream.get(new byte[4]));
-                default: return new Fail();
+                    return (Md5) Md5.tlData.get().reset(stream.getRecord(size), stream.getEncoding());
+                default:
+                    return Fail.instance;
                 }
             }
         };
 
     public static class Fail extends Authentication {
-        public Fail() {
+        public static final Fail instance = new Fail();
+        private Fail() {
             super(null);
         }
     }
 
     public static class Ok extends Authentication {
-        public Ok() {
+        public static final Ok instance = new Ok();
+        private Ok() {
             super(BackEnd.AuthenticationOk);
         }
     }
 
     public static class Password extends Authentication {
-        public Password() {
+        public static final Password instance = new Password();
+        private Password() {
             super(BackEnd.AuthenticationCleartextPassword);
         }
     }
 
     public static class Md5 extends Authentication {
-        private final byte[] salt;
+
+        public static final ThreadLocal<Md5> tlData = new ThreadLocal<Md5>() {
+                @Override protected Md5 initialValue() {
+                    return new Md5();
+                }
+            };
         
-        public Md5(final byte[] salt) {
+        private Md5() {
             super(BackEnd.AuthenticationMD5Password);
-            this.salt = salt;
         }
 
-        public byte[] getSalt() {
-            return salt;
+        private Md5(Md5 toCopy) {
+            super(toCopy);
+        }
+
+        @Override
+        public Md5 copy() {
+            return new Md5(this);
         }
     }
 }

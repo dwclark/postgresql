@@ -4,20 +4,32 @@ import db.postgresql.protocol.v3.io.Stream;
 
 public class ReadyForQuery extends Response {
 
-    private final TransactionStatus status;
-
     public TransactionStatus getStatus() {
-        return status;
+        return TransactionStatus.from(buffer.get(0));
     }
 
-    public ReadyForQuery(final BackEnd backEnd, final TransactionStatus status) {
-        super(backEnd);
-        this.status = status;
+    private ReadyForQuery() {
+        super(BackEnd.ReadyForQuery);
     }
+    
+    private ReadyForQuery(ReadyForQuery toCopy) {
+        super(BackEnd.ReadyForQuery, toCopy);
+    }
+
+    @Override
+    public ReadyForQuery copy() {
+        return new ReadyForQuery(this);
+    }
+
+    private static final ThreadLocal<ReadyForQuery> tlData = new ThreadLocal<ReadyForQuery>() {
+            @Override protected ReadyForQuery initialValue() {
+                return new ReadyForQuery();
+            }
+        }
     
     public static final ResponseBuilder builder = new ResponseBuilder() {
             public ReadyForQuery build(final BackEnd backEnd, final int size, final Stream stream) {
-                return new ReadyForQuery(backEnd, TransactionStatus.from(stream.get()));
+                return (ReadForQuery) tlData.get().reset(stream.getRecord(size), stream.getEncoding());
             }
         };
 }

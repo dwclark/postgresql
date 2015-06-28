@@ -15,7 +15,7 @@ class SslTest extends Specification {
     
     def "Do Google Test"() {
         setup:
-        io = new SslIO('www.google.com', 443, SSLContext.getDefault());
+        io = new SslIO('www.google.com', 443, SSLContext.getDefault(), SslIO.noPre);
         StringBuilder builder = new StringBuilder(8192);
         ByteBuffer sendBuffer = ByteBuffer.allocate(io.appMinBufferSize);
         ByteBuffer recvBuffer = ByteBuffer.allocate(io.appMinBufferSize);
@@ -31,6 +31,7 @@ class SslTest extends Specification {
         while(builder.indexOf('</html>') == -1) {
             println("Reading recvBuffer in SslTest");
             io.read(recvBuffer);
+            recvBuffer.flip();
             println("About to read ${recvBuffer.remaining()} bytes");
             byte[] bytes = new byte[recvBuffer.remaining()];
             recvBuffer.get(bytes);
@@ -47,17 +48,17 @@ class SslTest extends Specification {
 
     def "Do Init Websites"() {
         when:
-        io = new SslIO('www.google.com', 443, SSLContext.getDefault());
+        io = new SslIO('www.google.com', 443, SSLContext.getDefault(), SslIO.noPre);
         then:
         io;
 
         when:
-        io = new SslIO('www.yahoo.com', 443, SSLContext.getDefault());
+        io = new SslIO('www.yahoo.com', 443, SSLContext.getDefault(), SslIO.noPre);
         then:
         io;
 
         when:
-        io = new SslIO('www.amazon.com', 443, SSLContext.getDefault());
+        io = new SslIO('www.amazon.com', 443, SSLContext.getDefault(), SslIO.noPre);
         then:
         io;
         

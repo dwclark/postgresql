@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.EnumSet;
 
 public enum BackEnd {
 
@@ -73,4 +74,12 @@ public enum BackEnd {
         throw new IllegalArgumentException("No BackEnd enum matches id: " + ((0xFF) & id) +
                                            ", subId: " + ((0xFF) & subId));
     }
+
+    public static final EnumSet<BackEnd> QUERY = EnumSet.of(BackEnd.CopyData, BackEnd.CopyDone,
+                                                            BackEnd.CopyInResponse, BackEnd.CopyOutResponse,
+                                                            BackEnd.CopyBothResponse, BackEnd.DataRow,
+                                                            BackEnd.EmptyQueryResponse, BackEnd.ErrorResponse,
+                                                            BackEnd.FunctionCallResponse, BackEnd.NoData,
+                                                            BackEnd.ParameterDescription, BackEnd.ParseComplete,
+                                                            BackEnd.PortalSuspended, BackEnd.RowDescription);
 }

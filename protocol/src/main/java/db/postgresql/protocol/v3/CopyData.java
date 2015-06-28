@@ -12,7 +12,7 @@ public class CopyData extends Response {
     private final int size;
     private final Stream stream;
 
-    public CopyData(final BackEnd backEnd, final int size, final Stream stream) {
+    private CopyData(final BackEnd backEnd, final int size, final Stream stream) {
         super(backEnd);
         this.size = size;
         this.stream = stream;
@@ -30,6 +30,16 @@ public class CopyData extends Response {
         catch(IOException ex) {
             throw new ProtocolException(ex);
         }
+    }
+
+    @Override
+    public CopyData copy() {
+        throw new UnsupportedOperationException("Streaming nature of CopyData precludes copy() operation");
+    }
+
+    @Override
+    protected Response reset(ByteBuffer buffer, Charset encoding) {
+        throw new UnsupportedOperationException("Cannot reset CopyData");
     }
     
     public static final ResponseBuilder builder = new ResponseBuilder() {

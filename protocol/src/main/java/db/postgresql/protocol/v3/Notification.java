@@ -5,35 +5,43 @@ import java.util.Map;
 
 public class Notification extends Response {
 
-    private final int pid;
-    private final String channel;
-    private final String payload;
-
     public int getPid() {
-        return pid;
+        return buffer.getInt(0);
     }
 
     public String getChannel() {
-        return channel;
+        final int next = nextNull(4);
+        return nullString(4, next);
     }
 
     public String getPayload() {
-        return payload;
+        final int startAt = nextNull(4) + 1;
+        final int next = nextNull(startAt);
+        return nullString(startAt, next);
     }
 
-    public Notification(final BackEnd backEnd, final int pid, final String channel, final String payload) {
-        super(backEnd);
-        this.pid = pid;
-        this.channel = channel;
-        this.payload = payload;
+    private Notification() {
+        super(BackEnd.NotificationResponse);
     }
+
+    private Notification(Notification toCopy) {
+        super(BackEnd.NotificationResponse, toCopy);
+    }
+
+    @Override
+    public Notification copy() {
+        return new Notification(this);
+    }
+
+    private static final ThreadLocal<Notification> tlData = new ThreadLocal<Notification>() {
+            @Override protected Notification initialValue() {
+                return new Notification()
+            }
+        };
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
             public Notification build(final BackEnd backEnd, final int size, final Stream stream) {
-                final int pid = stream.getInt();
-                final byte[] bytes = stream.get(new byte[size]);
-                Map.Entry<String,String> pair = PostgresqlStream.nullPair(bytes, stream.getEncoding());
-                return new Notification(backEnd, pid, pair.getKey(), pair.getValue());
+                return (Notification) tlData.get().reset(stream.getRecord(size), stream.getEncoding());
             }
         };
 }
