@@ -37,6 +37,7 @@ public class Response {
         else {
             ByteBuffer fresh = ByteBuffer.allocate(buffer.remaining());
             fresh.put(buffer);
+            fresh.position(0);
             return fresh;
         }
     }
@@ -50,6 +51,7 @@ public class Response {
     protected Response(final Response toCopy) {
         this.backEnd = toCopy.backEnd;
         this.buffer = toCopy.freshBuffer();
+        this.encoding = toCopy.encoding;
     }
 
     public Response copy() {

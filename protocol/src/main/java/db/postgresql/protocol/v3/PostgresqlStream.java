@@ -33,6 +33,7 @@ public class PostgresqlStream extends Stream {
         ret.put(BackEnd.CommandComplete, CommandComplete.builder);
         ret.put(BackEnd.CopyData, CopyData.builder);
         ret.put(BackEnd.CopyDone, Response.builder);
+        ret.put(BackEnd.DataRow, DataRow.builder);
         ret.put(BackEnd.EmptyQueryResponse, Response.builder);
         ret.put(BackEnd.ErrorResponse, Notice.builder);
         ret.put(BackEnd.NoData, Response.builder);
