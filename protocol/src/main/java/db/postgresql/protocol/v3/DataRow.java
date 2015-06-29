@@ -12,11 +12,11 @@ public class DataRow extends Response {
         super(BackEnd.DataRow);
     }
 
-    private DataRow(DataRow dr) {
-        super(BackEnd.DataRow, dr);
-        this.numberPositions = dr.numberPositions;
+    private DataRow(DataRow toCopy) {
+        super(toCopy);
+        this.numberPositions = toCopy.numberPositions;
         this.positions = new int[numberPositions];
-        System.arraycopy(dr.positions, 0, positions, 0, numberPositions);
+        System.arraycopy(toCopy.positions, 0, positions, 0, numberPositions);
     }
 
     public void ensurePositions(int total) {
@@ -24,16 +24,13 @@ public class DataRow extends Response {
         if(positions.length < total) {
             positions = new int[numberPositions];
         }
-
-        return positions;
     }
 
-    private void findPositions(ByteBuffer buffer) {
-        this.buffer = buffer;
+    private void findPositions() {
         for(int i = 0; i < numberPositions; ++i) {
             positions[i] = buffer.getInt();
             if(positions[i] > 0) {
-                buffer.position(buffer.position() + position[i]);
+                buffer.position(buffer.position() + positions[i]);
             }
         }
 
@@ -41,7 +38,7 @@ public class DataRow extends Response {
     }
 
     public boolean isNull(int i) {
-        if(i >= numPositions) {
+        if(i >= numberPositions) {
             throw new ArrayIndexOutOfBoundsException();
         }
         

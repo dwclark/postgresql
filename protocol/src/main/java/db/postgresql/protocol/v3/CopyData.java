@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.nio.charset.Charset;
 
 public class CopyData extends Response {
 
@@ -38,7 +39,7 @@ public class CopyData extends Response {
     }
 
     @Override
-    protected Response reset(ByteBuffer buffer, Charset encoding) {
+    public CopyData reset(ByteBuffer buffer, Charset encoding) {
         throw new UnsupportedOperationException("Cannot reset CopyData");
     }
     

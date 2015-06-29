@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Arrays;
+import java.nio.charset.Charset;
 
 public class RowDescription extends Response {
 
@@ -15,7 +16,7 @@ public class RowDescription extends Response {
         if(fields == null) {
             FieldDescriptor[] descriptors = new FieldDescriptor[num];
             for(int i = 0; i < num; ++i) {
-                descriptors[i] = new FieldDescriptor(this);
+                descriptors[i] = FieldDescriptor.from(this);
             }
 
             buffer.position(0);
@@ -30,7 +31,7 @@ public class RowDescription extends Response {
     }
 
     private RowDescription(RowDescription toCopy) {
-        super(BackEnd.RowDescription, toCopy);
+        super(toCopy);
         this.num = toCopy.num;
     }
 
@@ -39,15 +40,15 @@ public class RowDescription extends Response {
         return new RowDescription(this);
     }
 
-    @Override
     public RowDescription reset(ByteBuffer buffer, Charset encoding, int num) {
         super.reset(buffer, encoding);
         this.num = num;
         this.fields = null;
+        return this;
     }
 
     private static final ThreadLocal<RowDescription> tlData = new ThreadLocal<RowDescription>() {
-            @Override RowDescription initialValue() {
+            @Override protected RowDescription initialValue() {
                 return new RowDescription();
             }
         };

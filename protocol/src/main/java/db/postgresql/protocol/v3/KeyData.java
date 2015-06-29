@@ -13,11 +13,11 @@ public class KeyData extends Response {
     }
     
     private KeyData() {
-        super(BackEnd.BackEndKeyData);
+        super(BackEnd.BackendKeyData);
     }
 
     private KeyData(KeyData toCopy) {
-        super(BackEnd.BackEndKeyData, toCopy);
+        super(toCopy);
     }
 
     @Override
@@ -33,7 +33,7 @@ public class KeyData extends Response {
     
     public static final ResponseBuilder builder = new ResponseBuilder() {
             public KeyData build(final BackEnd backEnd, final int size, final Stream stream) {
-                return (KeyData) tlData.get().reset(stream.record(size), stream.getEncoding());
+                return (KeyData) tlData.get().reset(stream.getRecord(size), stream.getEncoding());
             }
         };
 }

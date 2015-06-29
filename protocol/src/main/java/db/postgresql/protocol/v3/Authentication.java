@@ -14,6 +14,10 @@ public abstract class Authentication extends Response {
         super(backEnd);
     }
 
+    private Authentication(Authentication toCopy) {
+        super(toCopy);
+    }
+
     public static final ResponseBuilder builder = new ResponseBuilder() {
             public Authentication build(final BackEnd ignore, final int size, final Stream stream) {
                 BackEnd backEnd = BackEnd.find(ignore.id, (byte) stream.getInt());
@@ -23,7 +27,7 @@ public abstract class Authentication extends Response {
                 case AuthenticationCleartextPassword:
                     return Password.instance;
                 case AuthenticationMD5Password:
-                    return (Md5) Md5.tlData.get().reset(stream.getRecord(size), stream.getEncoding());
+                    return (Md5) Md5.tlData.get().reset(stream.getRecord(size - 4), stream.getEncoding());
                 default:
                     return Fail.instance;
                 }
@@ -33,7 +37,7 @@ public abstract class Authentication extends Response {
     public static class Fail extends Authentication {
         public static final Fail instance = new Fail();
         private Fail() {
-            super(null);
+            super((BackEnd) null);
         }
     }
 

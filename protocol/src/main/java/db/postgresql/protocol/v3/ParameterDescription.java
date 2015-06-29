@@ -8,6 +8,7 @@ public class ParameterDescription extends Response {
         int[] ret = new int[buffer.remaining() / 4];
         buffer.asIntBuffer().get(ret);
         buffer.position(0);
+        return ret;
     }
 
     private ParameterDescription() {
@@ -15,7 +16,7 @@ public class ParameterDescription extends Response {
     }
 
     private ParameterDescription(ParameterDescription toCopy) {
-        super(BackEnd.ParameterDescription, toCopy);
+        super(toCopy);
     }
 
     @Override
@@ -27,7 +28,7 @@ public class ParameterDescription extends Response {
             @Override protected ParameterDescription initialValue() {
                 return new ParameterDescription();
             }
-        }
+        };
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
             public ParameterDescription build(final BackEnd backEnd, final int size, final Stream stream) {

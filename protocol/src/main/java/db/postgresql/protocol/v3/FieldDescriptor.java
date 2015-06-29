@@ -1,6 +1,6 @@
 package db.postgresql.protocol.v3;
 
-import db.postgresql.protocol.v3.io.Stream;
+import java.nio.ByteBuffer;
 
 public class FieldDescriptor {
     final String name;
@@ -23,8 +23,8 @@ public class FieldDescriptor {
     }
 
     public static FieldDescriptor from(Response r) {
-        Buffer b = r.getBuffer();
-        this(r.nullString(), b.getInt(), b.getShort(),
-             b.getInt(), b.getShort(), b.getInt(), Format.from(b.getShort() & 0xFFFF));
+        ByteBuffer b = r.getBuffer();
+        return new FieldDescriptor(r.nullString(), b.getInt(), b.getShort(),
+                                   b.getInt(), b.getShort(), b.getInt(), Format.from(b.getShort() & 0xFFFF));
     }
 }

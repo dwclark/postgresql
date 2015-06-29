@@ -17,7 +17,7 @@ public class CommandComplete extends Response {
             return 0;
         }
         else {
-            Integer.valueOf(ary[2]);
+            return Integer.valueOf(ary[2]);
         }
     }
 
@@ -36,7 +36,7 @@ public class CommandComplete extends Response {
     }
 
     private CommandComplete(final CommandComplete toCopy) {
-        this(BackEnd.CommandComplete, toCopy);
+        super(toCopy);
     }
 
     @Override

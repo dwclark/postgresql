@@ -6,7 +6,7 @@ import java.util.Map;
 public class ParameterStatus extends Response {
 
     public String getName() {
-        return nullString(0, nextNull(0))
+        return nullString(0, nextNull(0));
     }
 
     public String getValue() {
@@ -19,7 +19,7 @@ public class ParameterStatus extends Response {
     }
 
     private ParameterStatus(ParameterStatus toCopy) {
-        super(BackEnd.ParameterStatus, toCopy);xs
+        super(toCopy);
     }
 
     @Override

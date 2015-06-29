@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.nio.charset.Charset;
 
 public class Response {
 
@@ -23,7 +24,7 @@ public class Response {
         return encoding;
     }
 
-    final protected Response reset(final ByteBuffer buffer, final Charset encoding) {
+    protected Response reset(final ByteBuffer buffer, final Charset encoding) {
         this.buffer = buffer;
         this.encoding = encoding;
         return this;
@@ -43,7 +44,7 @@ public class Response {
     private final BackEnd backEnd;
 
     protected Response(final BackEnd backEnd) {
-        this(backEnd, null);
+        this.backEnd = backEnd;
     }
 
     protected Response(final Response toCopy) {
@@ -74,8 +75,8 @@ public class Response {
         };
 
     private static final byte[] ensureStringArea(final int size) {
-        if(stringArea.get().length <= size) {
-            return bytes;
+        if(size <= stringArea.get().length) {
+            return stringArea.get();
         }
         else {
             stringArea.set(new byte[size]);
@@ -86,7 +87,8 @@ public class Response {
     public String nullString(final int startAt, final int nullAt) {
         final int total = nullAt - startAt;
         byte[] bytes = ensureStringArea(total);
-        int pos = buffer.position(startAt);
+        int pos = buffer.position();
+        buffer.position(startAt);
         buffer.get(bytes, 0, total);
         buffer.position(pos);
         return new String(bytes, 0, total, encoding);
@@ -98,6 +100,7 @@ public class Response {
         byte[] bytes = ensureStringArea(total);
         buffer.get(bytes, 0, total);
         buffer.position(buffer.position() + 1);
+        return new String(bytes, 0, total, encoding);
     }
 
     private static final Response bindComplete = new Response(BackEnd.BindComplete);

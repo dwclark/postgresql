@@ -25,7 +25,7 @@ public class Notification extends Response {
     }
 
     private Notification(Notification toCopy) {
-        super(BackEnd.NotificationResponse, toCopy);
+        super(toCopy);
     }
 
     @Override
@@ -35,7 +35,7 @@ public class Notification extends Response {
 
     private static final ThreadLocal<Notification> tlData = new ThreadLocal<Notification>() {
             @Override protected Notification initialValue() {
-                return new Notification()
+                return new Notification();
             }
         };
 

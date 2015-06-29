@@ -29,12 +29,12 @@ public class Notice extends Response {
     }
 
     public Notice(Notice toCopy) {
-        super(BackEnd.NoticeResponse, toCopy);
+        super(toCopy);
     }
 
     @Override
     public Notice copy() {
-        reutrn new Notice(this);
+        return new Notice(this);
     }
 
     private static final ThreadLocal<Notice> tlData = new ThreadLocal<Notice>() {

@@ -210,7 +210,7 @@ public class PostgresqlStream extends Stream {
         return "md5" + compute(ByteBuffer.wrap(compute(passwordBytes, userBytes).getBytes(c)), salt);
     }
 
-    public PostgresqlStream md5(String user, String password, byte[] salt) {
+    public PostgresqlStream md5(String user, String password, ByteBuffer salt) {
         return password(md5Hash(getEncoding(), user, password, salt));
     }
 

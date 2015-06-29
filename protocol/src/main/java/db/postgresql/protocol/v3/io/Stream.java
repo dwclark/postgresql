@@ -135,6 +135,7 @@ public class Stream {
     private ByteBuffer _record(final int size) {
         ByteBuffer buffer = recvBuffer.slice();
         buffer.limit(size);
+        recvBuffer.position(recvBuffer.position() + size);
         return buffer;
     }
 
@@ -155,13 +156,13 @@ public class Stream {
     }
 
     protected void ensureForRecv(final int size, final int tries) {
-        if(recvBuffer.remaining() >= size) {
+        if(size <= recvBuffer.remaining()) {
             return;
         }
         
         //we need to ensure we have at least remaining + size space available
         //recv will compact already used space, so we can ignore anything before position
-        if(recvBuffer.remaining() + size < recvBuffer.capacity()) {
+        if(recvBuffer.capacity() < (recvBuffer.remaining() + size)) {
             ByteBuffer newRecvBuffer = ByteBuffer.allocate(recvBuffer.remaining() + size);
             newRecvBuffer.put(recvBuffer);
             recvBuffer = newRecvBuffer;

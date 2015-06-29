@@ -13,7 +13,7 @@ public class ReadyForQuery extends Response {
     }
     
     private ReadyForQuery(ReadyForQuery toCopy) {
-        super(BackEnd.ReadyForQuery, toCopy);
+        super(toCopy);
     }
 
     @Override
@@ -25,11 +25,11 @@ public class ReadyForQuery extends Response {
             @Override protected ReadyForQuery initialValue() {
                 return new ReadyForQuery();
             }
-        }
+        };
     
     public static final ResponseBuilder builder = new ResponseBuilder() {
             public ReadyForQuery build(final BackEnd backEnd, final int size, final Stream stream) {
-                return (ReadForQuery) tlData.get().reset(stream.getRecord(size), stream.getEncoding());
+                return (ReadyForQuery) tlData.get().reset(stream.getRecord(size), stream.getEncoding());
             }
         };
 }

@@ -4,6 +4,7 @@ import spock.lang.*;
 import java.nio.channels.*;
 import java.net.InetSocketAddress;
 import java.net.InetAddress;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.security.*;
 import static db.postgresql.protocol.v3.ssl.ContextCreation.*;
@@ -40,7 +41,7 @@ class AuthenticationTest extends Specification {
         String user = 'david';
         String password = 'qwerty12345';
         Charset c = Charset.forName('UTF-8');
-        byte[] salt = 'aK*r'.getBytes(c);
+        ByteBuffer salt = ByteBuffer.wrap('aK*r'.getBytes(c));
         String payload = PostgresqlStream.md5Hash(c, user, password, salt);
 
         expect:
