@@ -27,9 +27,10 @@ class QueryTest extends Specification {
         PostgresqlStream stream = session.stream;
         stream.query('select * from items;');
         RowDescription rd = stream.next(BackEnd.QUERY).copy();
-        DataRow dr1 = stream.next(BackEnd.QUERY).copy();
-        println(dr1.extractInt(rd, 0));
-        println(dr1.extractString(rd, 1));
+        DataRow dr1 = stream.next(BackEnd.QUERY);
+        dr1.rowDescription = rd;
+        println(dr1.readInt(0));
+        println(dr1.readString(1));
         DataRow dr2 = stream.next(BackEnd.QUERY);
         CommandComplete cc = stream.next(BackEnd.QUERY);
         

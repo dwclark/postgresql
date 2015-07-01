@@ -1,43 +1,82 @@
 package db.postgresql.protocol.v3;
 
 import db.postgresql.protocol.v3.io.Stream;
-import java.nio.ByteBuffer;
 
 public class DataRow extends Response {
 
-    private static final int SIZE = 0;
-    private static final int POS = 1;
-    protected int[][] positions;
-    protected int numberPositions;
+    private static class Extent {
+        public Extent() { }
+        
+        public Extent(final Extent e) {
+            this.size = e.size;
+            this.position = e.position;
+        }
+
+        public Extent copy() {
+            return new Extent(this);
+        }
+        
+        int size;
+        int position;
+    }
+
+    private static final int DEFAULT_EXTENTS = 64;
+    protected Extent[] extents;
+    protected int numberExtents;
+    private RowDescription rowDescription;
     
     private DataRow() {
         super(BackEnd.DataRow);
-        positions = new int[256][2];
+        this.numberExtents = DEFAULT_EXTENTS;
+        this.extents = copyAndAllocate(new Extent[0], DEFAULT_EXTENTS);
     }
 
-    private DataRow(DataRow toCopy) {
+    private DataRow(final DataRow toCopy) {
         super(toCopy);
-        this.numberPositions = toCopy.numberPositions;
-        this.positions = new int[numberPositions][2];
-        for(int i = 0; i < numberPositions; ++i) {
-            positions[i][SIZE] = toCopy.positions[i][SIZE];
-            positions[i][POS] = toCopy.positions[i][POS];
+        this.numberExtents = toCopy.numberExtents;
+        this.extents = copyAndAllocate(toCopy.extents, numberExtents);
+    }
+
+    public RowDescription getRowDescription() {
+        return rowDescription;
+    }
+
+    public void setRowDescription(final RowDescription val) {
+        this.rowDescription = val;
+    }
+
+    @Override
+    public DataRow copy() {
+        return new DataRow(this);
+    }
+
+    private static Extent[] copyAndAllocate(final Extent[] toCopy, final int number) {
+        Extent[] ret = new Extent[number];
+        int index;
+        for(index = 0; ((index < number) && (index < toCopy.length)); ++index) {
+            ret[index] = toCopy[index].copy();
         }
+
+        for(; index < number; ++index) {
+            ret[index] = new Extent();
+        }
+
+        return ret;
     }
 
     public void ensurePositions(int total) {
-        numberPositions = total;
-        if(positions.length < total) {
-            positions = new int[numberPositions][2];
+        numberExtents = total;
+        if(numberExtents < total) {
+            extents = copyAndAllocate(extents, total);
         }
     }
 
     private void findPositions() {
-        for(int i = 0; i < numberPositions; ++i) {
-            positions[i][SIZE] = buffer.getInt();
-            positions[i][POS] = buffer.position();
-            if(positions[i][SIZE] > 0) {
-                buffer.position(buffer.position() + positions[i][SIZE]);
+        for(int i = 0; i < numberExtents; ++i) {
+            extents[i].size = buffer.getInt();
+            extents[i].position = buffer.position();
+            if(extents[i].size > 0) {
+                buffer.position(buffer.position() + extents[i].size);
             }
         }
 
@@ -45,7 +84,7 @@ public class DataRow extends Response {
     }
 
     private int checkIndex(int pos) {
-        if(pos < numberPositions) {
+        if(pos < numberExtents) {
             return pos;
         }
         else {
@@ -54,24 +93,19 @@ public class DataRow extends Response {
     }
 
     public boolean isNull(int i) {
-        return positions[checkIndex(i)][SIZE] == -1;
+        return extents[checkIndex(i)].size == -1;
     }
 
-    public int extractInt(RowDescription rd, int pos) {
-        int[] extent = positions[checkIndex(pos)];
-        final int startAt = buffer.arrayOffset() + extent[POS];
-        return Integer.valueOf(new String(buffer.array(), startAt, extent[SIZE], encoding));
+    public int readInt(int pos) {
+        Extent extent = extents[checkIndex(pos)];
+        final int startAt = buffer.arrayOffset() + extent.position;
+        return Integer.valueOf(new String(buffer.array(), startAt, extent.size, encoding));
     }
 
-    public String extractString(RowDescription rd, int pos) {
-        int[] extent = positions[checkIndex(pos)];
-        final int startAt = buffer.arrayOffset() + extent[POS];
-        return new String(buffer.array(), startAt, extent[SIZE], encoding);
-    }
-
-    @Override
-    public DataRow copy() {
-        return new DataRow(this);
+    public String readString(int pos) {
+        Extent extent = extents[checkIndex(pos)];
+        final int startAt = buffer.arrayOffset() + extent.position;
+        return new String(buffer.array(), startAt, extent.size, encoding);
     }
 
     public static final ThreadLocal<DataRow> tlData = new ThreadLocal<DataRow>() {

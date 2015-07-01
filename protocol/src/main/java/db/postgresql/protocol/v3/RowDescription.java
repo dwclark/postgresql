@@ -33,11 +33,16 @@ public class RowDescription extends Response {
     private RowDescription(RowDescription toCopy) {
         super(toCopy);
         this.num = toCopy.num;
+        this.fields = fields;
     }
 
     @Override
     public RowDescription copy() {
-        return new RowDescription(this);
+        ByteBuffer tmp = buffer;
+        buffer = null;
+        RowDescription ret = new RowDescription(this);
+        buffer = tmp;
+        return ret;
     }
 
     public RowDescription reset(ByteBuffer buffer, Charset encoding, int num) {

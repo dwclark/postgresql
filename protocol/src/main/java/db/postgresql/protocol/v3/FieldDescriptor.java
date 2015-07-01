@@ -27,4 +27,25 @@ public class FieldDescriptor {
         return new FieldDescriptor(r.nullString(), b.getInt(), b.getShort(),
                                    b.getInt(), b.getShort(), b.getInt(), Format.from(b.getShort() & 0xFFFF));
     }
+
+    @Override
+    public int hashCode() {
+        return (name.hashCode() + tableOid + columnOid + typeOid + typeSize + typeModifier + format.ordinal());
+    }
+
+    @Override
+    public boolean equals(Object rhs) {
+        if(!(rhs instanceof FieldDescriptor)) {
+            return false;
+        }
+
+        FieldDescriptor fd = (FieldDescriptor) rhs;
+        return (name.equals(fd.name) &&
+                (tableOid == fd.tableOid) &&
+                (columnOid == fd.columnOid) &&
+                (typeOid == fd.typeOid) &&
+                (typeSize == fd.typeSize) &&
+                (typeModifier == fd.typeModifier) &&
+                (format == fd.format));
+    }
 }
