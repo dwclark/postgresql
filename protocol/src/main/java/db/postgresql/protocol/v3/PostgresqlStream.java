@@ -67,7 +67,7 @@ public class PostgresqlStream extends Stream {
             byte[] key = entry.getKey().getBytes(getEncoding());
             byte[] value = entry.getValue().getBytes(getEncoding());
             size += (key.length + 1 + value.length + 1);
-            list.add(new AbstractMap.SimpleImmutableEntry(key, value));
+            list.add(new AbstractMap.SimpleImmutableEntry<>(key, value));
         }
 
         //write it to the stream
@@ -107,7 +107,12 @@ public class PostgresqlStream extends Stream {
     public PostgresqlStream closePortal(final String name) {
         return close('P', name);
     }
-    
+
+    public PostgresqlStream bind(final String portal, final String name, final Format[] formats,
+                                 final Object[] fields, final Format[] outputFormats) {
+        return this;
+    }
+
     public PostgresqlStream copyData(final List<ByteBuffer> buffers) {
         int size = 4; //header
         for(ByteBuffer buffer : buffers) {
@@ -177,6 +182,26 @@ public class PostgresqlStream extends Stream {
     public PostgresqlStream flush() {
         put(FrontEnd.Flush.toByte());
         putInt(4);
+        send(true);
+        return this;
+    }
+
+    public PostgresqlStream parse(String name, String query, int[] oids) {
+        byte[] nameBytes = name.getBytes(getEncoding());
+        byte[] queryBytes = query.getBytes(getEncoding());
+        put(FrontEnd.Parse.toByte());
+        //length of message + portal size + null + query size + null *
+        //size of parameter length + oids size
+        putInt(4 + nameBytes.length + 1 + queryBytes.length + 1 + 2 + (4 * oids.length));
+        put(nameBytes);
+        putNull();
+        put(queryBytes);
+        putNull();
+        putShort((short) oids.length);
+        for(int oid : oids) {
+            putInt(oid);
+        }
+
         send(true);
         return this;
     }
@@ -306,8 +331,8 @@ public class PostgresqlStream extends Stream {
             }
         }
 
-        return new AbstractMap.SimpleImmutableEntry(new String(bytes, 0, posNull, encoding),
-                                                    new String(bytes, posNull + 1, bytes.length - (posNull + 2), encoding));
+        return new AbstractMap.SimpleImmutableEntry<>(new String(bytes, 0, posNull, encoding),
+                                                      new String(bytes, posNull + 1, bytes.length - (posNull + 2), encoding));
 
     }
 }

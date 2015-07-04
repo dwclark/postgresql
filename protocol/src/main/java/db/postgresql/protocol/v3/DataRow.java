@@ -4,22 +4,6 @@ import db.postgresql.protocol.v3.io.Stream;
 
 public class DataRow extends Response {
 
-    private static class Extent {
-        public Extent() { }
-        
-        public Extent(final Extent e) {
-            this.size = e.size;
-            this.position = e.position;
-        }
-
-        public Extent copy() {
-            return new Extent(this);
-        }
-        
-        int size;
-        int position;
-    }
-
     private static final int DEFAULT_EXTENTS = 64;
     protected Extent[] extents;
     protected int numberExtents;

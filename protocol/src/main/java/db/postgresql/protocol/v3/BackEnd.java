@@ -52,7 +52,7 @@ public enum BackEnd {
     public final byte id;
     public final byte subId;
 
-    public static final List<BackEnd> backends = Collections.unmodifiableList(new ArrayList(Arrays.asList(BackEnd.values())));
+    public static final List<BackEnd> backends = Collections.unmodifiableList(new ArrayList<>(Arrays.asList(BackEnd.values())));
 
     public static BackEnd find(final byte id) {
         for(BackEnd b : backends) {
