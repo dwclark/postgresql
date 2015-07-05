@@ -9,37 +9,8 @@ import java.nio.charset.Charset;
 
 public class Response {
 
-    protected ByteBuffer buffer;
-    protected Charset encoding;
-    
     public BackEnd getBackEnd() {
         return backEnd;
-    }
-
-    public ByteBuffer getBuffer() {
-        return buffer;
-    }
-
-    public Charset getEncoding() {
-        return encoding;
-    }
-
-    protected Response reset(final ByteBuffer buffer, final Charset encoding) {
-        this.buffer = buffer;
-        this.encoding = encoding;
-        return this;
-    }
-
-    final protected ByteBuffer freshBuffer() {
-        if(buffer == null) {
-            return null;
-        }
-        else {
-            ByteBuffer fresh = ByteBuffer.allocate(buffer.remaining());
-            fresh.put(buffer);
-            fresh.position(0);
-            return fresh;
-        }
     }
 
     private final BackEnd backEnd;
@@ -48,63 +19,12 @@ public class Response {
         this.backEnd = backEnd;
     }
 
-    protected Response(final Response toCopy) {
-        this.backEnd = toCopy.backEnd;
-        this.buffer = toCopy.freshBuffer();
-        this.encoding = toCopy.encoding;
-    }
-
-    public Response copy() {
-        return this;
-    }
-
     public static final byte NULL = (byte) 0;
-    
-    public int nextNull(final int startAt) {
-        for(int i = startAt; i < buffer.limit(); ++i) {
-            if(buffer.get(i) == NULL) {
-                return i;
-            }
-        }
 
-        return -1;
-    }
-
-    private static final ThreadLocal<byte[]> stringArea = new ThreadLocal<byte[]>() {
-            @Override protected byte[] initialValue() {
-                return new byte[1024];
-            }
-        };
-
-    private static final byte[] ensureStringArea(final int size) {
-        if(size <= stringArea.get().length) {
-            return stringArea.get();
-        }
-        else {
-            stringArea.set(new byte[size]);
-            return stringArea.get();
-        }
+    public boolean isNull(final int val) {
+        return val == -1;
     }
     
-    public String nullString(final int startAt, final int nullAt) {
-        final int total = nullAt - startAt;
-        byte[] bytes = ensureStringArea(total);
-        int pos = buffer.position();
-        buffer.position(startAt);
-        buffer.get(bytes, 0, total);
-        buffer.position(pos);
-        return new String(bytes, 0, total, encoding);
-    }
-
-    public String nullString() {
-        final int nullAt = nextNull(buffer.position());
-        final int total = nullAt - buffer.position();
-        byte[] bytes = ensureStringArea(total);
-        buffer.get(bytes, 0, total);
-        buffer.position(buffer.position() + 1);
-        return new String(bytes, 0, total, encoding);
-    }
-
     private static final Response bindComplete = new Response(BackEnd.BindComplete);
     private static final Response closeComplete = new Response(BackEnd.CloseComplete);
     private static final Response copyDone = new Response(BackEnd.CopyDone);

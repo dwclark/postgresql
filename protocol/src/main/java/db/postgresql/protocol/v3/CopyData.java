@@ -13,19 +13,24 @@ public class CopyData extends Response {
     private final int size;
     private final Stream stream;
 
-    private CopyData(final BackEnd backEnd, final int size, final Stream stream) {
-        super(backEnd);
-        this.size = size;
+    private CopyData(final Stream stream, final int size) {
+        super(BackEnd.CopyData);
         this.stream = stream;
+        this.size = size;
     }
 
-    public void toChannel(WritableByteChannel channel) {
+    public void toChannel(final WritableByteChannel channel) {
         try {
-            int left = size;
-            left -= channel.write(stream.getRecvBuffer());
-            while(left != 0) {
-                stream.recv();
-                left -= channel.write(stream.getRecvBuffer());
+            int remaining = size;
+            while(remaining != 0) {
+                ByteBuffer v = stream.view(remaining);
+                while(v.hasRemaining()) {
+                    remaining -= channel.write(v);
+                }
+
+                if(remaining != 0) {
+                    stream.recv();
+                }
             }
         }
         catch(IOException ex) {
@@ -33,19 +38,9 @@ public class CopyData extends Response {
         }
     }
 
-    @Override
-    public CopyData copy() {
-        throw new UnsupportedOperationException("Streaming nature of CopyData precludes copy() operation");
-    }
-
-    @Override
-    public CopyData reset(ByteBuffer buffer, Charset encoding) {
-        throw new UnsupportedOperationException("Cannot reset CopyData");
-    }
-    
     public static final ResponseBuilder builder = new ResponseBuilder() {
             public CopyData build(final BackEnd backEnd, final int size, final Stream stream) {
-                return new CopyData(backEnd, size, stream);
+                return new CopyData(stream, size);
             }
         };
 }

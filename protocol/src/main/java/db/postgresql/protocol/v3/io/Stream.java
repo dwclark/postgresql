@@ -175,6 +175,15 @@ public class Stream {
         }
     }
 
+    public ByteBuffer view(final int max) {
+        ByteBuffer v = recvBuffer.slice();
+        if(v.remaining() > max) {
+            v.limit(max);
+        }
+
+        return v;
+    }
+
     public ByteBuffer getBuffer(final ByteBuffer buffer) {
         return getBuffer(buffer, DEFAULT_TRIES);
     }

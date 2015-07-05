@@ -25,19 +25,34 @@ class QueryTest extends Specification {
         Session session = sb.user('noauth').foreground();
         PostgresqlStream stream = session.stream;
         stream.query('select * from items;');
-        RowDescription rd = stream.next(BackEnd.QUERY).copy();
-        DataRow dr1 = stream.next(BackEnd.QUERY);
-        dr1.rowDescription = rd;
-        println(dr1.readInt(0));
-        println(dr1.readString(1));
-        DataRow dr2 = stream.next(BackEnd.QUERY);
-        CommandComplete cc = stream.next(BackEnd.QUERY);
+        RowDescription rd = stream.next(BackEnd.QUERY)
+        Response r;
+        while((r = stream.next(BackEnd.QUERY)).backEnd != BackEnd.CommandComplete) {
+            DataRow.Iterator iter = r.iterator(rd);
+            assert(iter.nextInt());
+            assert(iter.nextString());
+        }
         
         expect:
-        rd && dr1 && dr2 && cc;
+        rd;
+        r;
+        r.backEnd == BackEnd.CommandComplete;
         
         cleanup:
         session.close();
+    }
+
+    def "Row Array Proccess"() {
+        setup:
+        Session session = sb.user('noauth').foreground();
+        PostgresqlStream stream = session.stream;
+        stream.query('select * from items;');
+        RowDescription rd = stream.next(BackEnd.QUERY)
+        Response r;
+        while((r = stream.next(BackEnd.QUERY)).backEnd != BackEnd.CommandComplete) {
+            Object[] ary = r.toArray(rd);
+            assert(ary.length == 2);
+        }
     }
 
 }

@@ -1,8 +1,7 @@
 package db.postgresql.protocol.v3.serializers;
 
-import db.postgresql.protocol.v3.Extent;
+import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.Format;
-import java.nio.ByteBuffer;
 import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -13,6 +12,8 @@ import db.postgresql.protocol.v3.ProtocolException;
     
 public class TimestampSerializer extends Serializer {
 
+    public static final TimestampSerializer instance = new TimestampSerializer();
+    
     public static final String ISO_STR = DateSerializer.ISO_STR + " " + TimeSerializer.ISO_STR;
     public static final Pattern ISO = Pattern.compile(ISO_STR);
 
@@ -25,7 +26,7 @@ public class TimestampSerializer extends Serializer {
         }
     }
         
-    public TimestampSerializer() {
+    private TimestampSerializer() {
         super(oids(1114), classes(Timestamp.class));
     }
 
@@ -51,12 +52,8 @@ public class TimestampSerializer extends Serializer {
         return tstamp;
     }
         
-    public Timestamp read(final ByteBuffer buffer, final Extent extent, final Format format) {
-        if(extent.isNull()) {
-            return null;
-        }
-
-        return iso(_str(buffer, extent, ASCII_ENCODING));
+    public Timestamp read(final Stream stream, final int size, final Format format) {
+        return isNull(size) ? null : iso(_str(stream, size, ASCII_ENCODING));
     }
 
     public int length(final Timestamp t, final Format format) {
@@ -65,5 +62,9 @@ public class TimestampSerializer extends Serializer {
 
     public int length(final Timestamp t, final TimeZone tz, final Format format) {
         return length(t, format) + 3;
+    }
+
+    public Object readObject(final Stream stream, final int size, final Format format) {
+        return read(stream, size, format);
     }
 }

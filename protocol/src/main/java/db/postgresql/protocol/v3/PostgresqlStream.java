@@ -286,7 +286,12 @@ public class PostgresqlStream extends Stream {
         //something is there, we have to finish the action
         Response r = builders.get(backEnd).build(backEnd, getInt() - 4, this);
         if(!willHandle.contains(r.getBackEnd())) {
-            handlers.get(r.getBackEnd()).handle(r);
+            ResponseHandler h = handlers.get(r.getBackEnd());
+            if(h == null) {
+                throw new ProtocolException("Could not find handler for " + r.getBackEnd());
+            }
+
+            h.handle(r);
         }
 
         return r;

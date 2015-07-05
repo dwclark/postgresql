@@ -7,46 +7,28 @@ import java.util.Map;
 
 public class Notice extends Response {
 
+    final private Map<NoticeType,String> messages;
+
     public Map<NoticeType,String> getMessages() {
-        final Map<NoticeType,String> ret = new LinkedHashMap<>();
-        for(int i = 0; i < buffer.limit(); ++i) {
-            byte byteType = buffer.get(i++);
-            if(byteType == NULL) {
-                break;
-            }
-            
-            NoticeType type = NoticeType.from(byteType);
-            int next = nextNull(i);
-            ret.put(type, nullString(i, next));
-            i = next;
+        return messages;
+    }
+
+    public Notice(final Stream stream, final int size) {
+        super(BackEnd.NoticeResponse);
+
+        final Map<NoticeType,String> map = new LinkedHashMap<>();
+        byte byteType;
+        while((byteType = stream.get()) != NULL) {
+            map.put(NoticeType.from(byteType), stream.nullString());
         }
 
-        return ret;
+        this.messages = Collections.unmodifiableMap(map);
     }
-
-    public Notice() {
-        super(BackEnd.NoticeResponse);
-    }
-
-    public Notice(Notice toCopy) {
-        super(toCopy);
-    }
-
-    @Override
-    public Notice copy() {
-        return new Notice(this);
-    }
-
-    private static final ThreadLocal<Notice> tlData = new ThreadLocal<Notice>() {
-            @Override protected Notice initialValue() {
-                return new Notice();
-            }
-        };
 
     public final static ResponseBuilder builder = new ResponseBuilder() {
 
             public Notice build(final BackEnd backEnd, final int size, final Stream stream) {
-                return (Notice) tlData.get().reset(stream.getRecord(size), stream.getEncoding());
+                return new Notice(stream, size);
             }
         };
 }

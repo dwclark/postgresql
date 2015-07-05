@@ -5,37 +5,26 @@ import java.util.Map;
 
 public class ParameterStatus extends Response {
 
+    private final String name;
+    private final String value;
+    
     public String getName() {
-        return nullString(0, nextNull(0));
+        return name;
     }
 
     public String getValue() {
-        final int startAt = nextNull(0) + 1;
-        return nullString(startAt, nextNull(startAt));
+        return value;
     }
 
-    private ParameterStatus() {
+    private ParameterStatus(final Stream stream) {
         super(BackEnd.ParameterStatus);
+        this.name = stream.nullString();
+        this.value = stream.nullString();
     }
 
-    private ParameterStatus(ParameterStatus toCopy) {
-        super(toCopy);
-    }
-
-    @Override
-    public ParameterStatus copy() {
-        return new ParameterStatus(this);
-    }
-
-    private static final ThreadLocal<ParameterStatus> tlData = new ThreadLocal<ParameterStatus>() {
-            @Override protected ParameterStatus initialValue() {
-                return new ParameterStatus();
-            }
-        };
-    
     public final static ResponseBuilder builder = new ResponseBuilder() {
             public ParameterStatus build(final BackEnd backEnd, final int size, final Stream stream) {
-                return (ParameterStatus) tlData.get().reset(stream.getRecord(size), stream.getEncoding());
+                return new ParameterStatus(stream);
             }
         };
 }

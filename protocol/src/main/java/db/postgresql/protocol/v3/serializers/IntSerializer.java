@@ -1,40 +1,46 @@
 package db.postgresql.protocol.v3.serializers;
 
-import java.nio.ByteBuffer;
-import db.postgresql.protocol.v3.Extent;
+import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.Format;
-import db.postgresql.protocol.v3.ProtocolException;
 
 public class IntSerializer extends Serializer {
 
+    public static final IntSerializer instance = new IntSerializer();
     
-    public IntSerializer() {
+    private IntSerializer() {
         super(oids(21,23), classes(short.class, Short.class, int.class, Integer.class));
     }
 
-    public int read(final ByteBuffer buffer, final Extent extent, final Format format) {
-        if(extent.isNull()) {
+    private static final int[] powers = { 1, 10, 100, 1_000, 10_000, 100_000, 1_000_000,
+                                          10_000_000, 100_000_000, 1_000_000_000, Integer.MAX_VALUE };
+
+    private static int pow(int i) {
+        assert(i < 11);
+        return powers[i];
+    }
+
+    public int read(final Stream stream, final int size, final Format format) {
+        if(isNull(size)) {
             return 0;
         }
             
         int accum = 0;
-        int multiplier = 1;
-        for(int i = extent.getLast(); i >= extent.getPosition(); --i) {
-            byte val = buffer.get(i);
+        int place = size;
+        boolean negate = false;
+        
+        for(int i = (size - 1); i >= 0; --i) {
+            byte val = stream.get();
             if(val == '-') {
-                return -accum;
+                negate = true;
             }
             else {
-                accum += (Character.digit(val, 10) * multiplier);
-                multiplier *= 10;
+                accum += Character.digit(val, 10) * pow(i);
             }
         }
 
         return accum;
     }
 
-    private static final int[] sizes = { 9, 99, 999, 9999, 99999, 999999, 9999999,
-                                         99999999, 999999999, Integer.MAX_VALUE };
     public int length(final int val, final Format format) {
         if(val == Integer.MIN_VALUE) {
             return 11;
@@ -42,12 +48,22 @@ public class IntSerializer extends Serializer {
 
         final int absValue = Math.abs(val);
         final boolean includeSign = (val != absValue);
-        for(int i = 0; i < sizes.length; ++i) {
-            if(absValue <= sizes[i]) {
-                return (i + 1 + (includeSign ? 1 : 0));
+        int digits;
+        for(digits = 1; digits < (powers.length - 1); ++digits) {
+            if(absValue < powers[digits]) {
+                break;
             }
         }
 
-        throw new RuntimeException(); //should never happen, keep the compiler happy
+        return digits + (includeSign ? 1 : 0);
+    }
+
+    public Object readObject(final Stream stream, final int size, final Format format) {
+        if(isNull(size)) {
+            return null;
+        }
+        else {
+            return read(stream, size, format);
+        }
     }
 }

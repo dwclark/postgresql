@@ -7,52 +7,33 @@ public class CommandComplete extends Response {
 
     enum Action { INSERT, DELETE, UPDATE, SELECT, MOVE, FETCH, COPY; }
 
-    private String[] split() {
-        return nullString(0, nextNull(0)).split(" ");
-    }
+    private final Action action;
+    private final int rows;
+    private final int oid;
     
     public int getOid() {
-        String[] ary = split();
-        if(ary.length == 2) {
-            return 0;
-        }
-        else {
-            return Integer.valueOf(ary[2]);
-        }
+        return oid;
     }
 
     public int getRows() {
-        String[] ary = split();
-        return Integer.valueOf(ary[1]);
+        return rows;
     }
 
     public Action getAction() {
-        String[] ary = split();
-        return Action.valueOf(ary[0]);
+        return action;
     }
     
-    private CommandComplete() {
+    private CommandComplete(final Stream stream) {
         super(BackEnd.CommandComplete);
+        final String[] ary = stream.nullString().split(" ");
+        this.action = Action.valueOf(ary[0]);
+        this.rows = Integer.valueOf(ary[1]);
+        this.oid = (ary.length == 3) ? Integer.valueOf(ary[2]) : 0;
     }
 
-    private CommandComplete(final CommandComplete toCopy) {
-        super(toCopy);
-    }
-
-    @Override
-    public CommandComplete copy() {
-        return new CommandComplete(this);
-    }
-    
     public static final ResponseBuilder builder = new ResponseBuilder() {
             public CommandComplete build(BackEnd backEnd, int size, Stream stream) {
-                return (CommandComplete) tlData.get().reset(stream.getRecord(size), stream.getEncoding());
-            }
-        };
-
-    private static final ThreadLocal<CommandComplete> tlData = new ThreadLocal<CommandComplete>() {
-            @Override protected CommandComplete initialValue() {
-                return new CommandComplete();
+                return new CommandComplete(stream);
             }
         };
 }

@@ -14,10 +14,6 @@ public abstract class Authentication extends Response {
         super(backEnd);
     }
 
-    private Authentication(Authentication toCopy) {
-        super(toCopy);
-    }
-
     public static final ResponseBuilder builder = new ResponseBuilder() {
             public Authentication build(final BackEnd ignore, final int size, final Stream stream) {
                 BackEnd backEnd = BackEnd.find(ignore.id, (byte) stream.getInt());
@@ -27,7 +23,7 @@ public abstract class Authentication extends Response {
                 case AuthenticationCleartextPassword:
                     return Password.instance;
                 case AuthenticationMD5Password:
-                    return (Md5) Md5.tlData.get().reset(stream.getRecord(size - 4), stream.getEncoding());
+                    return new Md5(stream);
                 default:
                     return Fail.instance;
                 }
@@ -57,23 +53,15 @@ public abstract class Authentication extends Response {
 
     public static class Md5 extends Authentication {
 
-        public static final ThreadLocal<Md5> tlData = new ThreadLocal<Md5>() {
-                @Override protected Md5 initialValue() {
-                    return new Md5();
-                }
-            };
+        final private byte[] salt;
+
+        public byte[] getSalt() {
+            return salt;
+        }
         
-        private Md5() {
+        private Md5(final Stream stream) {
             super(BackEnd.AuthenticationMD5Password);
-        }
-
-        private Md5(Md5 toCopy) {
-            super(toCopy);
-        }
-
-        @Override
-        public Md5 copy() {
-            return new Md5(this);
+            this.salt = stream.get(new byte[4]);
         }
     }
 }

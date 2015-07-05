@@ -1,57 +1,73 @@
 package db.postgresql.protocol.v3.serializers;
 
-import java.nio.ByteBuffer;
-import db.postgresql.protocol.v3.Extent;
+import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.Format;
-import db.postgresql.protocol.v3.ProtocolException;
 
 public class LongSerializer extends Serializer {
-    public LongSerializer() {
+
+    public static final LongSerializer instance = new LongSerializer();
+    
+    private LongSerializer() {
         super(oids(20, 21,23), classes(short.class, Short.class, int.class, Integer.class,
                                        long.class, Long.class));
     }
 
-    public long read(final ByteBuffer buffer, final Extent extent, final Format format) {
-        if(extent.isNull()) {
+    private static final long[] powers = { 1L, 10L, 100L, 1000L, 10000L, 100000L, 1000000L, 10000000L,
+                                           100000000L, 1000000000L, 10000000000L, 100000000000L,
+                                           1000000000000L, 10000000000000L, 100000000000000L,
+                                           1000000000000000L, 10000000000000000L,
+                                           100000000000000000L, 1000000000000000000L, Long.MAX_VALUE };
+
+    private static long pow(int i) {
+        assert(i < 19);
+        return powers[i];
+    }
+
+    public long read(final Stream stream, final int size, final Format format) {
+        if(isNull(size)) {
             return 0L;
         }
             
         long accum = 0;
-        long multiplier = 1;
-        for(int i = extent.getLast(); i >= extent.getPosition(); --i) {
-            byte val = buffer.get(i);
+        int place = size;
+        boolean negate = false;
+        
+        for(int i = (size - 1); i >= 0; --i) {
+            byte val = stream.get(i);
             if(val == '-') {
-                return -accum;
+                negate = true;
             }
             else {
-                accum += (Character.digit(val, 10) * multiplier);
-                multiplier *= 10;
+                accum += Character.digit(val, 10) * pow(i);
             }
         }
 
         return accum;
     }
 
-    private static final long[] sizes = { 9L, 99L, 999L, 9999L, 99999L, 999999L, 9999999L,
-                                          99999999L, 999999999L, 9999999999L, 99999999999L,
-                                          999999999999L, 9999999999999L, 99999999999999L, 999999999999999L,
-                                          9999999999999999L, 99999999999999999L, 999999999999999999L,
-                                          Long.MAX_VALUE };
-
-    public int length(final long l, final Format format) {
-        if(l == Long.MIN_VALUE) {
+    public int length(final long val, final Format format) {
+        if(val == Long.MIN_VALUE) {
             return 20;
         }
 
-        final long absValue = Math.abs(l);
-        final boolean includeSign = (l != absValue);
-        for(int i = 0; i < sizes.length; ++i) {
-            if(absValue <= sizes[i]) {
-                return (i + 1 + (includeSign ? 1 : 0));
+        final long absValue = Math.abs(val);
+        final boolean includeSign = (val != absValue);
+        int digits;
+        for(digits = 1; digits < (powers.length - 1); ++digits) {
+            if(absValue < powers[digits]) {
+                break;
             }
         }
 
-        throw new RuntimeException(); //keep the compiler happy
+        return digits + (includeSign ? 1 : 0);
     }
 
+    public Object readObject(final Stream stream, final int size, final Format format) {
+        if(isNull(size)) {
+            return null;
+        }
+        else {
+            return read(stream, size, format);
+        }
+    }
 }

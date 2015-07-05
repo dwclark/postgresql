@@ -1,112 +1,225 @@
 package db.postgresql.protocol.v3;
 
 import db.postgresql.protocol.v3.io.Stream;
+import db.postgresql.protocol.v3.serializers.*;
+import java.math.BigDecimal;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.sql.SQLData;
+import java.util.NoSuchElementException;
+import java.util.Map;
+import java.util.Collections;
+import java.util.HashMap;
 
 public class DataRow extends Response {
 
-    private static final int DEFAULT_EXTENTS = 64;
-    protected Extent[] extents;
-    protected int numberExtents;
-    private RowDescription rowDescription;
+    private Stream stream;
+    private final int length;
+    private boolean valid = true;
     
-    private DataRow() {
+    private DataRow(final Stream stream) {
         super(BackEnd.DataRow);
-        this.numberExtents = DEFAULT_EXTENTS;
-        this.extents = copyAndAllocate(new Extent[0], DEFAULT_EXTENTS);
+        this.stream = stream;
+        this.length = stream.getShort() & 0xFFFF;
     }
 
-    private DataRow(final DataRow toCopy) {
-        super(toCopy);
-        this.numberExtents = toCopy.numberExtents;
-        this.extents = copyAndAllocate(toCopy.extents, numberExtents);
-    }
+    public static final ResponseBuilder builder = new ResponseBuilder() {
+            public DataRow build(BackEnd backEnd, int size, Stream stream) {
+                return new DataRow(stream);
+            }
+        };
 
-    public RowDescription getRowDescription() {
-        return rowDescription;
-    }
-
-    public void setRowDescription(final RowDescription val) {
-        this.rowDescription = val;
-    }
-
-    @Override
-    public DataRow copy() {
-        return new DataRow(this);
-    }
-
-    private static Extent[] copyAndAllocate(final Extent[] toCopy, final int number) {
-        Extent[] ret = new Extent[number];
-        int index;
-        for(index = 0; ((index < number) && (index < toCopy.length)); ++index) {
-            ret[index] = toCopy[index].copy();
+    private void validate() {
+        if(!valid) {
+            throw new ProtocolException("You have already processed this DataRow");
         }
+        
+        valid = false;
+    }
+    
+    public Iterator iterator(final RowDescription rowDescription) {
+        validate();
+        return new Iterator(rowDescription);
+    }
 
-        for(; index < number; ++index) {
-            ret[index] = new Extent();
+    public void skip() {
+        validate();
+        for(int i = 0; i < length; ++i) {
+            final int size = stream.getInt();
+            stream.advance(size);
+        }
+    }
+
+    public Object[] toArray(final RowDescription rowDescription) {
+        Object [] ret = new Object[length];
+        int index = 0;
+        Iterator iter = iterator(rowDescription);
+        while(iter.hasNext()) {
+            ret[index++] = iter.next();
         }
 
         return ret;
     }
 
-    public void ensurePositions(int total) {
-        numberExtents = total;
-        if(numberExtents < total) {
-            extents = copyAndAllocate(extents, total);
+    public static final Map<Integer,Serializer> standard;
+
+    private static void put(Map<Integer,Serializer> map, Serializer serializer) {
+        assert(serializer != null);
+        assert(serializer.getOids() != null);
+        for(int oid : serializer.getOids()) {
+            map.put(oid, serializer);
         }
     }
+    
+    static {
+        Map<Integer,Serializer> tmp = new HashMap<>();
+        put(tmp, BigDecimalSerializer.instance);
+        put(tmp, BooleanSerializer.instance);
+        put(tmp, BytesSerializer.instance);
+        put(tmp, DateSerializer.instance);
+        put(tmp, DoubleSerializer.instance);
+        put(tmp, FloatSerializer.instance);
+        put(tmp, IntSerializer.instance);
+        put(tmp, LongSerializer.instance);
+        put(tmp, ShortSerializer.instance);
+        put(tmp, StringSerializer.instance);
+        put(tmp, TimeSerializer.instance);
+        put(tmp, TimestampSerializer.instance);
+        standard = Collections.unmodifiableMap(tmp);
+    }
+    
+    public class Iterator implements java.util.Iterator<Object> {
 
-    private void findPositions() {
-        for(int i = 0; i < numberExtents; ++i) {
-            extents[i].size = buffer.getInt();
-            extents[i].position = buffer.position();
-            if(extents[i].size > 0) {
-                buffer.position(buffer.position() + extents[i].size);
+        private final RowDescription rowDescription;
+        private int index = 0;
+
+        private Iterator(final RowDescription rowDescription) {
+            this.rowDescription = rowDescription;
+        }
+        
+        public boolean hasNext() {
+            return index < length;
+        }
+
+        public void guardAdvance() {
+            if(index == length) {
+                throw new NoSuchElementException();
             }
         }
-
-        buffer.position(0);
-    }
-
-    private int checkIndex(int pos) {
-        if(pos < numberExtents) {
-            return pos;
+        
+        public Object next() {
+            guardAdvance();
+            final FieldDescriptor field = rowDescription.field(index++);
+            final Serializer serializer = standard.get(field.typeOid);
+            final int size = stream.getInt();
+            return serializer.readObject(stream, size, field.format);
         }
-        else {
-            throw new ArrayIndexOutOfBoundsException();
+        
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        public BigDecimal nextBigDecimal() {
+            guardAdvance();
+            final FieldDescriptor field = rowDescription.field(index++);
+            BigDecimalSerializer.instance.checkHandles(field.typeOid);
+            final int size = stream.getInt();
+            return BigDecimalSerializer.instance.read(stream, size, field.format);
+        }
+
+        public boolean nextBoolean() {
+            guardAdvance();
+            final FieldDescriptor field = rowDescription.field(index++);
+            BooleanSerializer.instance.checkHandles(field.typeOid);
+            final int size = stream.getInt();
+            return BooleanSerializer.instance.read(stream, size, field.format);
+        }
+
+        public byte[] nextBytes() {
+            guardAdvance();
+            final FieldDescriptor field = rowDescription.field(index++);
+            BytesSerializer.instance.checkHandles(field.typeOid);
+            final int size = stream.getInt();
+            return BytesSerializer.instance.read(stream, size, field.format);
+        }
+
+        public Date nextDate() {
+            guardAdvance();
+            final FieldDescriptor field = rowDescription.field(index++);
+            DateSerializer.instance.checkHandles(field.typeOid);
+            final int size = stream.getInt();
+            return DateSerializer.instance.read(stream, size, field.format);
+        }
+
+        public double nextDouble() {
+            guardAdvance();
+            final FieldDescriptor field = rowDescription.field(index++);
+            DoubleSerializer.instance.checkHandles(field.typeOid);
+            final int size = stream.getInt();
+            return DoubleSerializer.instance.read(stream, size, field.format);
+        }
+
+        public float nextFloat() {
+            guardAdvance();
+            final FieldDescriptor field = rowDescription.field(index++);
+            FloatSerializer.instance.checkHandles(field.typeOid);
+            final int size = stream.getInt();
+            return FloatSerializer.instance.read(stream, size, field.format);
+        }
+
+        public int nextInt() {
+            guardAdvance();
+            final FieldDescriptor field = rowDescription.field(index++);
+            IntSerializer.instance.checkHandles(field.typeOid);
+            final int size = stream.getInt();
+            return IntSerializer.instance.read(stream, size, field.format);
+        }
+
+        public long nextLong() {
+            guardAdvance();
+            final FieldDescriptor field = rowDescription.field(index++);
+            LongSerializer.instance.checkHandles(field.typeOid);
+            final int size = stream.getInt();
+            return LongSerializer.instance.read(stream, size, field.format);
+        }
+
+        public short nextShort() {
+            guardAdvance();
+            final FieldDescriptor field = rowDescription.field(index++);
+            ShortSerializer.instance.checkHandles(field.typeOid);
+            final int size = stream.getInt();
+            return ShortSerializer.instance.read(stream, size, field.format);
+        }
+
+        public String nextString() {
+            guardAdvance();
+            final FieldDescriptor field = rowDescription.field(index++);
+            StringSerializer.instance.checkHandles(field.typeOid);
+            final int size = stream.getInt();
+            return StringSerializer.instance.read(stream, size, field.format);
+        }
+
+        public Time nextTime() {
+            guardAdvance();
+            final FieldDescriptor field = rowDescription.field(index++);
+            TimeSerializer.instance.checkHandles(field.typeOid);
+            final int size = stream.getInt();
+            return TimeSerializer.instance.read(stream, size, field.format);
+        }
+
+        public Timestamp nextTimestamp() {
+            guardAdvance();
+            final FieldDescriptor field = rowDescription.field(index++);
+            TimestampSerializer.instance.checkHandles(field.typeOid);
+            final int size = stream.getInt();
+            return TimestampSerializer.instance.read(stream, size, field.format);
+        }
+
+        public SQLData next(Class<? extends SQLData> type) {
+            guardAdvance();
+            throw new UnsupportedOperationException();
         }
     }
-
-    public boolean isNull(int i) {
-        return extents[checkIndex(i)].size == -1;
-    }
-
-    public int readInt(int pos) {
-        Extent extent = extents[checkIndex(pos)];
-        final int startAt = buffer.arrayOffset() + extent.position;
-        return Integer.valueOf(new String(buffer.array(), startAt, extent.size, encoding));
-    }
-
-    public String readString(int pos) {
-        Extent extent = extents[checkIndex(pos)];
-        final int startAt = buffer.arrayOffset() + extent.position;
-        return new String(buffer.array(), startAt, extent.size, encoding);
-    }
-
-    public static final ThreadLocal<DataRow> tlData = new ThreadLocal<DataRow>() {
-            @Override protected DataRow initialValue() {
-                return new DataRow();
-            }
-        };
-
-    public static final ResponseBuilder builder = new ResponseBuilder() {
-
-            public DataRow build(BackEnd backEnd, int size, Stream stream) {
-                DataRow dr = tlData.get();
-                dr.ensurePositions(stream.getShort() & 0xFFFF);
-                dr.reset(stream.getRecord(size - 2), stream.getEncoding());
-                dr.findPositions();
-                return dr;
-            }
-        };
 }
 

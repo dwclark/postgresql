@@ -289,7 +289,8 @@ public class Session implements AutoCloseable {
                     stream.password(password);
                 }
                 else if(be == BackEnd.AuthenticationMD5Password) {
-                    stream.md5(user, password, a.getBuffer());
+                    Authentication.Md5 md5 = (Authentication.Md5) a;
+                    stream.md5(user, password, ByteBuffer.wrap(md5.getSalt()));
                 }
                 else {
                     stream.terminate();

@@ -2,28 +2,30 @@ package db.postgresql.protocol.v3.serializers;
 
 import db.postgresql.protocol.v3.Extent;
 import db.postgresql.protocol.v3.Format;
-import java.nio.ByteBuffer;
+import db.postgresql.protocol.v3.io.Stream;
 
 public class DoubleSerializer extends Serializer {
-    public DoubleSerializer() {
+
+    public static final DoubleSerializer instance = new DoubleSerializer();
+    
+    private DoubleSerializer() {
         super(oids(700,701), classes(float.class, Float.class, double.class, Double.class));
     }
 
-    public double read(final ByteBuffer buffer, final Extent extent, final Format format) {
-        if(extent.isNull()) {
-            return 0.0f;
-        }
-
-        String str = _str(buffer, extent, ASCII_ENCODING);
-        switch(str) {
-        case NaN: return Double.NaN;
-        case POSITIVE_INFINITY: return Double.POSITIVE_INFINITY;
-        case NEGATIVE_INFINITY: return Double.NEGATIVE_INFINITY;
-        default: return Double.valueOf(str);
-        }
+    public double read(final Stream stream, final int size, final Format format) {
+        return isNull(size) ? 0.0d : Double.valueOf(_str(stream, size, ASCII_ENCODING));
     }
 
     public int length(final double d, final Format format) {
         return Double.toString(d).length();
+    }
+
+    public Object readObject(final Stream stream, final int size, final Format format) {
+        if(isNull(size)) {
+            return null;
+        }
+        else {
+            return read(stream, size, format);
+        }
     }
 }
