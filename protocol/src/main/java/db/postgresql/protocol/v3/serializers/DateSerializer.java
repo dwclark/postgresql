@@ -1,13 +1,13 @@
 package db.postgresql.protocol.v3.serializers;
 
 import db.postgresql.protocol.v3.io.Stream;
-import db.postgresql.protocol.v3.Extent;
 import db.postgresql.protocol.v3.Format;
 import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.sql.Date;
 import db.postgresql.protocol.v3.ProtocolException;
+import db.postgresql.protocol.v3.Bindable;
 
 public class DateSerializer extends Serializer {
 
@@ -45,5 +45,17 @@ public class DateSerializer extends Serializer {
 
     public Object readObject(final Stream stream, final int size, final Format format) {
         return read(stream, size, format);
+    }
+
+    public void write(final Stream stream, final Date val, final Format format) {
+        stream.putString(val.toString());
+    }
+
+    public Bindable bindable(final Date val, final Format format) {
+        return new Bindable() {
+            public Format getFormat() { return format; }
+            public int getLength() { return instance.length(val, format); }
+            public void write(final Stream stream) { instance.write(stream, val, format); }
+        };
     }
 }

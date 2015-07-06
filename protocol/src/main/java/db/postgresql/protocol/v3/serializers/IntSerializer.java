@@ -2,6 +2,7 @@ package db.postgresql.protocol.v3.serializers;
 
 import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.Format;
+import db.postgresql.protocol.v3.Bindable;
 
 public class IntSerializer extends Serializer {
 
@@ -65,5 +66,35 @@ public class IntSerializer extends Serializer {
         else {
             return read(stream, size, format);
         }
+    }
+
+    public static final byte[] DIGITS = { (byte) '0', (byte) '1', (byte) '2', (byte) '3', (byte) '4',
+                                          (byte) '5', (byte) '6', (byte) '7', (byte) '8', (byte) '9' };
+    
+    public void write(final Stream stream, final int val, final Format format) {
+        final int size = length(val, format);
+        final byte[] bytes = new byte[size];
+        final int startAt = size - 1;
+        final int endAt = (val < 0) ? 1 : 0;
+        
+        int accum = val;
+        for(int i = startAt; i >= endAt; --i) {
+            bytes[i] = DIGITS[val % 10];
+            accum /= 10;
+        }
+
+        if(endAt == 1) {
+            bytes[0] = (byte) '-';
+        }
+
+        stream.put(bytes);
+    }
+
+    public Bindable bindable(final int val, final Format format) {
+        return new Bindable() {
+            public Format getFormat() { return format; }
+            public int getLength() { return instance.length(val, format); }
+            public void write(final Stream stream) { instance.write(stream, val, format); }
+        };
     }
 }

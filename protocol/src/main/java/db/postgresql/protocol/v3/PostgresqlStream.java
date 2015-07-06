@@ -108,8 +108,8 @@ public class PostgresqlStream extends Stream {
         return close('P', name);
     }
 
-    public PostgresqlStream bind(final String portal, final String name, final Format[] formats,
-                                 final Object[] fields, final Format[] outputFormats) {
+    public PostgresqlStream bind(final String portal, final String name,
+                                 final Bindable[] inputs, final Format[] outputFormats) {
         return this;
     }
 

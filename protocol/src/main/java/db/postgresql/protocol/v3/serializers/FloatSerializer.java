@@ -1,10 +1,10 @@
 package db.postgresql.protocol.v3.serializers;
 
-import db.postgresql.protocol.v3.Extent;
 import db.postgresql.protocol.v3.Format;
+import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.ProtocolException;
 import db.postgresql.protocol.v3.io.Stream;
-import java.nio.ByteBuffer;
+
 
 public class FloatSerializer extends Serializer {
 
@@ -29,5 +29,17 @@ public class FloatSerializer extends Serializer {
         else {
             return read(stream, size, format);
         }
+    }
+
+    public void write(final Stream stream, final float val, final Format format) {
+        stream.putString(Float.toString(val));
+    }
+
+    public Bindable bindable(final float val, final Format format) {
+        return new Bindable() {
+            public Format getFormat() { return format; }
+            public int getLength() { return instance.length(val, format); }
+            public void write(final Stream stream) { instance.write(stream, val, format); }
+        };
     }
 }

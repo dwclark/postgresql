@@ -5,12 +5,12 @@ import db.postgresql.protocol.v3.serializers.*;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Time;
-import java.sql.Timestamp;
 import java.sql.SQLData;
 import java.util.NoSuchElementException;
 import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
+import java.time.temporal.TemporalAccessor;
 
 public class DataRow extends Response {
 
@@ -85,7 +85,7 @@ public class DataRow extends Response {
         put(tmp, ShortSerializer.instance);
         put(tmp, StringSerializer.instance);
         put(tmp, TimeSerializer.instance);
-        put(tmp, TimestampSerializer.instance);
+        put(tmp, DateTimeSerializer.instance);
         standard = Collections.unmodifiableMap(tmp);
     }
     
@@ -208,12 +208,12 @@ public class DataRow extends Response {
             return TimeSerializer.instance.read(stream, size, field.format);
         }
 
-        public Timestamp nextTimestamp() {
+        public TemporalAccessor nextDateTime() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
-            TimestampSerializer.instance.checkHandles(field.typeOid);
+            DateTimeSerializer.instance.checkHandles(field.typeOid);
             final int size = stream.getInt();
-            return TimestampSerializer.instance.read(stream, size, field.format);
+            return DateTimeSerializer.instance.read(stream, size, field.format);
         }
 
         public SQLData next(Class<? extends SQLData> type) {

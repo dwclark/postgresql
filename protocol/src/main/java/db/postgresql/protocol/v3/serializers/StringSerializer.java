@@ -1,5 +1,6 @@
 package db.postgresql.protocol.v3.serializers;
 
+import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import java.nio.charset.Charset;
@@ -42,5 +43,17 @@ public class StringSerializer extends Serializer {
 
     public Object readObject(final Stream stream, final int size, final Format format) {
         return read(stream, size, format);
+    }
+
+    public void write(final Stream stream, final String val, final Format format) {
+        stream.putString(val);
+    }
+    
+    public Bindable bindable(final String val, final Format format, final Charset encoding) {
+        return new Bindable() {
+            public Format getFormat() { return format; }
+            public int getLength() { return instance.length(val, format, encoding); }
+            public void write(final Stream stream) { instance.write(stream, val, format); }
+        };
     }
 }

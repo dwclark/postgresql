@@ -1,10 +1,13 @@
 package db.postgresql.protocol.v3.io;
 
-import java.nio.ByteBuffer;
 import db.postgresql.protocol.v3.ProtocolException;
-import java.nio.charset.Charset;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
+import java.nio.charset.CoderResult;
 
 public class Stream {
 
@@ -15,7 +18,8 @@ public class Stream {
     private ByteBuffer recvBuffer;
     private final IO io;
     private final Charset encoding;
-    
+    private final ByteBuffer fixedSizeOps = ByteBuffer.allocate(8);
+
     public Stream(IO io, Charset encoding) {
         this.io = io;
         int size = Math.max(io.getAppMinBufferSize(), 65_536);
@@ -40,7 +44,7 @@ public class Stream {
         return encoding;
     }
 
-    public void send(boolean sendAll) {
+    public void send(final boolean sendAll) {
         sendBuffer.flip();
         io.write(sendBuffer);
 
@@ -85,45 +89,65 @@ public class Stream {
         return left - advanceBy;
     }
 
-    private void ensureForSend(final int size) {
-        if(size > sendBuffer.capacity()) {
-            String msg = String.format("Stream can only hold %d bytes, " +
-                                       "break up payload into pieces no larger than this", sendBuffer.capacity());
-            throw new ProtocolException(msg);
+    public Stream put(final ByteBuffer buffer) {
+        while(buffer.hasRemaining()) {
+            final int originalLimit = buffer.limit();
+            final int newLimit = Math.min(sendBuffer.remaining(), buffer.remaining());
+            buffer.limit(buffer.position() + newLimit);
+            sendBuffer.put(buffer);
+            buffer.limit(originalLimit);
+            
+            if(buffer.hasRemaining()) {
+                send(false);
+            }
         }
 
-        while(size > sendBuffer.remaining()) {
-            send(false);
+        return this;
+    }
+
+    public Stream put(final byte b) {
+        if(sendBuffer.remaining() >= 1) {
+            sendBuffer.put(b);
         }
-    }
-
-    public Stream put(ByteBuffer buffer) {
-        ensureForSend(buffer.remaining());
-        sendBuffer.put(buffer);
+        else {
+            fixedSizeOps.clear();
+            fixedSizeOps.put(b);
+            fixedSizeOps.flip();
+            put(fixedSizeOps);
+        }
+        
         return this;
     }
 
-    public Stream put(byte b) {
-        ensureForSend(1);
-        sendBuffer.put(b);
+    public Stream put(final byte[] bytes) {
+        put(ByteBuffer.wrap(bytes));
         return this;
     }
 
-    public Stream put(byte[] bytes) {
-        ensureForSend(bytes.length);
-        sendBuffer.put(bytes);
+    public Stream putShort(final short s) {
+        if(sendBuffer.remaining() >= 2) {
+            sendBuffer.putShort(s);
+        }
+        else {
+            fixedSizeOps.clear();
+            fixedSizeOps.putShort(s);
+            fixedSizeOps.flip();
+            put(fixedSizeOps);
+        }
         return this;
     }
 
-    public Stream putShort(short s) {
-        ensureForSend(2);
-        sendBuffer.putShort(s);
-        return this;
-    }
-
-    public Stream putInt(int i) {
-        ensureForSend(4);
-        sendBuffer.putInt(i);
+    public Stream putInt(final int i) {
+        if(sendBuffer.remaining() >= 4) {
+            sendBuffer.putInt(i);
+        }
+        else {
+            fixedSizeOps.clear();
+            fixedSizeOps.putInt(i);
+            fixedSizeOps.flip();
+            put(fixedSizeOps);
+        }
+        
         return this;
     }
 
@@ -132,23 +156,25 @@ public class Stream {
         return this;
     }
 
-    private ByteBuffer _record(final int size) {
-        ByteBuffer buffer = recvBuffer.slice();
-        buffer.limit(size);
-        recvBuffer.position(recvBuffer.position() + size);
-        return buffer;
+    public Stream putCharSequence(CharSequence seq) {
+        //we don't need to ensure for this one. If we can't
+        //send it in one shot, then we can split it into multiple sends
+        final CharBuffer charBuffer = CharBuffer.wrap(seq);
+        final CharsetEncoder encoder = encoding.newEncoder();
+        
+        while(encoder.encode(charBuffer, recvBuffer, false) == CoderResult.OVERFLOW) {
+            send(false);
+        }
+
+        while(encoder.encode(charBuffer, recvBuffer, true) == CoderResult.OVERFLOW) {
+            send(false);
+        }
+
+        return this;
     }
 
-    public ByteBuffer getRecord(final int size) {
-        //do we already have enough data? 
-        if(recvBuffer.remaining() >= size) {
-            return _record(size);
-        }
-        
-        int needed = size - recvBuffer.remaining();
-        ensureForRecv(needed);
-        assert(size <= recvBuffer.remaining());
-        return _record(size);
+    public Stream putString(final String str) {
+        return putCharSequence(str);
     }
     
     protected void ensureForRecv(final int size) {

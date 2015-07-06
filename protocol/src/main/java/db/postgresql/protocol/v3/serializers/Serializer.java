@@ -1,7 +1,6 @@
 package db.postgresql.protocol.v3.serializers;
 
 import db.postgresql.protocol.v3.io.Stream;
-import db.postgresql.protocol.v3.Extent;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.ProtocolException;
 import java.nio.charset.Charset;
