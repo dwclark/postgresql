@@ -25,10 +25,11 @@ public class Notice extends Response {
         this.messages = Collections.unmodifiableMap(map);
     }
 
-    public final static ResponseBuilder builder = new ResponseBuilder() {
+    public final static ResponseBuilder builder = (final BackEnd backEnd, final int size, final Stream stream) -> {
+        return new Notice(stream, size);
+    };
 
-            public Notice build(final BackEnd backEnd, final int size, final Stream stream) {
-                return new Notice(stream, size);
-            }
-        };
+    public void throwMe() {
+        throw new PostgresqlException(messages);
+    }
 }

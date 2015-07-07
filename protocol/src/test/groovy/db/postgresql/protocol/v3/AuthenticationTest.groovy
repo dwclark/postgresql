@@ -82,6 +82,7 @@ class AuthenticationTest extends Specification {
         session?.close();
     }
 
+    @Ignore
     def "SSL Clear Text Password"() {
         setup:
         def user = 'clearauth';
@@ -99,6 +100,7 @@ class AuthenticationTest extends Specification {
         session?.close();
     }
 
+    @Ignore
     def "SSL MD5 Password"() {
         setup:
         def user = 'md5auth';

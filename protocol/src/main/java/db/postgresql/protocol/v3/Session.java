@@ -54,6 +54,7 @@ public class Session implements AutoCloseable {
         finalHandlers.put(BackEnd.AuthenticationOk, authenticationHandler);
         finalHandlers.put(BackEnd.AuthenticationCleartextPassword, authenticationHandler);
         finalHandlers.put(BackEnd.AuthenticationMD5Password, authenticationHandler);
+        finalHandlers.put(BackEnd.NoticeResponse, noticeHandler);
         finalHandlers.put(BackEnd.NotificationResponse, notificationHandler);
         finalHandlers.put(BackEnd.ParameterStatus, parameterStatusHandler);
         finalHandlers.put(BackEnd.BackendKeyData, keyDataHandler);
@@ -298,6 +299,8 @@ public class Session implements AutoCloseable {
                 }
             }
         };
+
+    private final ResponseHandler noticeHandler = (Response r) -> { ((Notice) r).throwMe(); };
 
     private final ResponseHandler parameterStatusHandler = new ResponseHandler() {
             public void handle(Response r) {
