@@ -92,4 +92,8 @@ public class ClearIO extends IO {
             throw new ProtocolException(ex);
         }
     }
+
+    public void wakeup() {
+        selector.wakeup();
+    }
 }

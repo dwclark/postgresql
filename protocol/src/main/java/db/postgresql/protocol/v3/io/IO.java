@@ -24,4 +24,5 @@ public abstract class IO {
     public abstract void write(ByteBuffer toWrite);
     public abstract void read(ByteBuffer toRead);
     public abstract void close();
+    public abstract void wakeup();
 }

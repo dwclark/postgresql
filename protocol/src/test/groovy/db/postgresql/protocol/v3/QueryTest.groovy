@@ -22,12 +22,11 @@ class QueryTest extends Specification {
     
     def "Row Process"() {
         setup:
-        Session session = sb.user('noauth').foreground();
-        PostgresqlStream stream = session.stream;
-        stream.query('select * from items;');
-        RowDescription rd = stream.next(BackEnd.QUERY)
+        Session session = sb.user('noauth').build();
+        session.query('select * from items;');
+        RowDescription rd = session.next(BackEnd.QUERY)
         Response r;
-        while((r = stream.next(BackEnd.QUERY)).backEnd != BackEnd.CommandComplete) {
+        while((r = session.next(BackEnd.QUERY)).backEnd != BackEnd.CommandComplete) {
             DataRow.Iterator iter = r.iterator(rd);
             assert(iter.nextInt());
             assert(iter.nextString());
@@ -44,12 +43,11 @@ class QueryTest extends Specification {
 
     def "Row Array Proccess"() {
         setup:
-        Session session = sb.user('noauth').foreground();
-        PostgresqlStream stream = session.stream;
-        stream.query('select * from items;');
-        RowDescription rd = stream.next(BackEnd.QUERY)
+        Session session = sb.user('noauth').build();
+        session.query('select * from items;');
+        RowDescription rd = session.next(BackEnd.QUERY)
         Response r;
-        while((r = stream.next(BackEnd.QUERY)).backEnd != BackEnd.CommandComplete) {
+        while((r = session.next(BackEnd.QUERY)).backEnd != BackEnd.CommandComplete) {
             Object[] ary = r.toArray(rd);
             assert(ary.length == 2);
         }
@@ -57,12 +55,11 @@ class QueryTest extends Specification {
 
     def "Row Array All Basic Types"() {
         setup:
-        Session session = sb.user('noauth').foreground();
-        PostgresqlStream stream = session.stream;
-        stream.query('select * from all_types;');
-        RowDescription rd = stream.next(BackEnd.QUERY)
+        Session session = sb.user('noauth').build();
+        session.query('select * from all_types;');
+        RowDescription rd = session.next(BackEnd.QUERY)
         Response r;
-        while((r = stream.next(BackEnd.QUERY)).backEnd != BackEnd.CommandComplete) {
+        while((r = session.next(BackEnd.QUERY)).backEnd != BackEnd.CommandComplete) {
             Object[] ary = r.toArray(rd);
             assert(ary.length == 18);
             println(ary);

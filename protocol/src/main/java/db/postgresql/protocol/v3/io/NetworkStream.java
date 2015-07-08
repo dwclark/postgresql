@@ -20,7 +20,7 @@ public class NetworkStream implements Stream {
     private final ByteBuffer fixedSizeOps = ByteBuffer.allocate(8);
     private final ByteArrayOutputStream baos = new ByteArrayOutputStream(256);
     
-    public NetworkStream(IO io, Charset encoding) {
+    public NetworkStream(final IO io, final Charset encoding) {
         this.io = io;
         int size = Math.max(io.getAppMinBufferSize(), 65_536);
         this.sendBuffer = ByteBuffer.allocate(size);
@@ -30,6 +30,10 @@ public class NetworkStream implements Stream {
         //position the recvBuffer at the end so that the first attempt
         //to recv shows that there isn't anything there.
         recvBuffer.position(recvBuffer.limit());
+    }
+
+    public void wakeup() {
+        io.wakeup();
     }
 
     public void close() {

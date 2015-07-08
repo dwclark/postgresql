@@ -24,8 +24,6 @@ class AuthenticationTest extends Specification {
     def "No Authentication"() {
         setup:
         Session session = sb.user('noauth').build();
-        session.stream.foreground().startup(session.initKeysValues);
-        while(session.stream.next(EnumSet.noneOf(BackEnd)).backEnd != BackEnd.ReadyForQuery) { }
 
         expect:
         session.parameterStatuses;
@@ -53,8 +51,6 @@ class AuthenticationTest extends Specification {
         def user = 'clearauth';
         def password = 'clearauth';
         Session session = sb.user(user).password(password).build();
-        session.stream.foreground().startup(session.initKeysValues);
-        while(session.stream.next(EnumSet.noneOf(BackEnd)).backEnd != BackEnd.ReadyForQuery) { }
 
         expect:
         session.parameterStatuses;
@@ -70,8 +66,6 @@ class AuthenticationTest extends Specification {
         def user = 'md5auth';
         def password = 'md5auth';
         Session session = sb.user(user).password(password).build();
-        session.stream.foreground().startup(session.initKeysValues);
-        while(session.stream.next(EnumSet.noneOf(BackEnd)).backEnd != BackEnd.ReadyForQuery) { }
         
         expect:
         session.parameterStatuses;
@@ -88,8 +82,8 @@ class AuthenticationTest extends Specification {
         def user = 'clearauth';
         def password = 'clearauth';
         Session session = sb.user(user).password(password).sslContext(noCert()).build();
-        session.stream.foreground().startup(session.initKeysValues);
-        while(session.stream.next(EnumSet.noneOf(BackEnd)).backEnd != BackEnd.ReadyForQuery) { }
+        session.foreground().startup(session.initKeysValues);
+        while(session.next(EnumSet.noneOf(BackEnd)).backEnd != BackEnd.ReadyForQuery) { }
 
         expect:
         session.parameterStatuses;
@@ -106,8 +100,8 @@ class AuthenticationTest extends Specification {
         def user = 'md5auth';
         def password = 'md5auth';
         Session session = sb.user(user).password(password).sslContext(noCert()).build();
-        session.stream.foreground().startup(session.initKeysValues);
-        while(session.stream.next(EnumSet.noneOf(BackEnd)).backEnd != BackEnd.ReadyForQuery) { }
+        session.foreground().startup(session.initKeysValues);
+        while(session.next(EnumSet.noneOf(BackEnd)).backEnd != BackEnd.ReadyForQuery) { }
         
         expect:
         session.parameterStatuses;

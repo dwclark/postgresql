@@ -208,6 +208,10 @@ public class SslIO extends IO {
             throw new ProtocolException(ex);
         }
     }
+
+    public void wakeup() {
+        selector.wakeup();
+    }
     
     //SSL Methods below this point
     private void ssl() {

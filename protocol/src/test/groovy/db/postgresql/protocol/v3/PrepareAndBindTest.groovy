@@ -22,19 +22,16 @@ class PrepareAndBindTest extends Specification {
 
     def "Test Parse"() {
         setup:
-        Session session = sb.user('noauth').foreground();
-        PostgresqlStream stream = session.stream;
+        Session session = sb.user('noauth').build();
         
         int[] oids = [ 0, 0 ] as int[];
-        stream.parse('_1', 'select * from items;', [] as int[]);
-        stream.sync();
-        Response r = stream.next(BackEnd.QUERY);
+        session.parse('_1', 'select * from items;', [] as int[]);
+        session.sync();
+        Response r = session.next(BackEnd.QUERY);
         println(r.backEnd);
 
         expect:
         r;
-        //r.backEnd == BackEnd.ReadyForQuery;
-        //pr;
     }
 }
 

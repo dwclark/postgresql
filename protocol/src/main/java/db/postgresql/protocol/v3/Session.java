@@ -17,9 +17,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import javax.net.ssl.SSLContext;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 
-public class Session implements AutoCloseable {
+public class Session extends PostgresqlStream implements AutoCloseable {
     
     private final String user;
     private final String password;
@@ -30,11 +34,11 @@ public class Session implements AutoCloseable {
     private final Charset encoding;
     private final String postgresEncoding;
     private final Map<BackEnd, ResponseHandler> handlers;
-    private final PostgresqlStream stream;
 
     //mutable state
     private final Map<String,String> parameterStatuses = new ConcurrentHashMap<>(32, 0.75f, 1);
     private final ConcurrentLinkedQueue<Notification> notificationQueue = new ConcurrentLinkedQueue<>();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private volatile TransactionStatus lastStatus;
     private volatile int pid;
     private volatile int secretKey;
@@ -52,18 +56,7 @@ public class Session implements AutoCloseable {
                     final Map<BackEnd,ResponseHandler> handlers,
                     final SSLContext sslContext) {
         
-        Map<BackEnd,ResponseHandler> finalHandlers = new LinkedHashMap<>();
-        finalHandlers.put(BackEnd.Authentication, authenticationHandler);
-        finalHandlers.put(BackEnd.AuthenticationOk, authenticationHandler);
-        finalHandlers.put(BackEnd.AuthenticationCleartextPassword, authenticationHandler);
-        finalHandlers.put(BackEnd.AuthenticationMD5Password, authenticationHandler);
-        finalHandlers.put(BackEnd.NoticeResponse, noticeHandler);
-        finalHandlers.put(BackEnd.NotificationResponse, notificationHandler);
-        finalHandlers.put(BackEnd.ParameterStatus, parameterStatusHandler);
-        finalHandlers.put(BackEnd.BackendKeyData, keyDataHandler);
-        finalHandlers.put(BackEnd.ReadyForQuery, readyForQueryHandler);
-        finalHandlers.putAll(handlers); //specified overrides default
-        
+        super(makeIo(sslContext, host, port), encoding, numericLocale, moneyLocale);
         this.user = user;
         this.password = password;
         this.database = database;
@@ -72,15 +65,37 @@ public class Session implements AutoCloseable {
         this.application = application;
         this.encoding = encoding;
         this.postgresEncoding = postgresEncoding;
-        this.handlers = Collections.unmodifiableMap(finalHandlers);
-        this.stream = new PostgresqlStream(makeIo(sslContext), encoding, numericLocale, moneyLocale, finalHandlers);
-    }
 
-    public PostgresqlStream getStream() {
-        return stream;
+        Map<BackEnd,ResponseHandler> finalHandlers = new LinkedHashMap<>();
+        
+        finalHandlers.put(BackEnd.AuthenticationOk, (Response r) -> {});
+
+        finalHandlers.put(BackEnd.AuthenticationCleartextPassword, (Response r) -> password(password));
+
+        finalHandlers.put(BackEnd.AuthenticationMD5Password, (Response r) -> {
+                Authentication.Md5 md5 = (Authentication.Md5) r;
+                md5(user, password, ByteBuffer.wrap(md5.getSalt())); });
+        
+        finalHandlers.put(BackEnd.NoticeResponse, (Response r) -> ((Notice) r).throwMe());
+        
+        finalHandlers.put(BackEnd.NotificationResponse, (Response r) -> notificationQueue.add((Notification) r));
+        
+        finalHandlers.put(BackEnd.ParameterStatus, (Response r) -> {
+                final ParameterStatus ps = (ParameterStatus) r;
+                parameterStatuses.put(ps.getName(), ps.getValue()); });
+        
+        finalHandlers.put(BackEnd.BackendKeyData, (Response r) -> {
+                KeyData data = (KeyData) r;
+                pid = data.getPid();
+                secretKey = data.getSecretKey(); });
+        
+        finalHandlers.put(BackEnd.ReadyForQuery, (Response r) -> lastStatus = ((ReadyForQuery) r).getStatus());
+        
+        finalHandlers.putAll(handlers); //specified overrides default
+        this.handlers = Collections.unmodifiableMap(finalHandlers);
     }
     
-    private IO makeIo(final SSLContext sslContext) {
+    private static IO makeIo(final SSLContext sslContext, String host, int port) {
         if(sslContext == null) {
             return new ClearIO(host, port);
         }
@@ -144,10 +159,6 @@ public class Session implements AutoCloseable {
 
     private static boolean legalValue(String val) {
         return (val != null) && !"".equals(val);
-    }
-
-    public void close() {
-        stream.close();
     }
 
     public static class Builder {
@@ -265,31 +276,9 @@ public class Session implements AutoCloseable {
         }
 
         public Session build() {
-            return new Session(user,
-                               password,
-                               database,
-                               host,
-                               port,
-                               application,
-                               encoding,
-                               numericLocale,
-                               moneyLocale,
-                               postgresEncoding,
-                               handlers,
-                               sslContext);
-        }
-
-        public Session foreground() {
-            Session session = build();
-            session.stream.foreground().startup(session.getInitKeysValues());
-            while(session.getStream().next(EnumSet.noneOf(BackEnd.class)).getBackEnd() != BackEnd.ReadyForQuery) { }
-            return session;
-        }
-
-        public Session background() {
-            Session session = foreground();
-            session.stream.background();
-            return session;
+            return new Session(user, password, database, host, port, application,
+                               encoding, numericLocale, moneyLocale, postgresEncoding,
+                               handlers, sslContext).initialize();
         }
     }
 
@@ -312,40 +301,92 @@ public class Session implements AutoCloseable {
         return Collections.unmodifiableMap(ret);
     }
 
-    private final ResponseHandler authenticationHandler = new ResponseHandler() {
-            public void handle(Response r) {
-                final Authentication a = (Authentication) r;
-                final BackEnd be = a.getBackEnd();
-                if(be == BackEnd.AuthenticationOk) {
-                    return;
-                }
-                else if(be == BackEnd.AuthenticationCleartextPassword) {
-                    stream.password(password);
-                }
-                else if(be == BackEnd.AuthenticationMD5Password) {
-                    Authentication.Md5 md5 = (Authentication.Md5) a;
-                    stream.md5(user, password, ByteBuffer.wrap(md5.getSalt()));
-                }
-                else {
-                    stream.terminate();
-                    throw new ProtocolException("Could not authenticate with those credentials");
-                }
+        //back end events
+    //next can return null if io timeout happens
+    private final AtomicBoolean continueBackground = new AtomicBoolean(true);
+    private final ReentrantLock pollingLock = new ReentrantLock();
+
+    public Response next(final EnumSet<BackEnd> willHandle) {
+        assert(pollingLock.isHeldByCurrentThread());
+
+        BackEnd backEnd;
+        try {
+            //be sure to not wait forever for response
+            backEnd = BackEnd.find(get(1));
+        }
+        catch(NoData noData) {
+            //definitely nothing there
+            return null;
+        }
+
+        //something is there, we have to finish the action
+        Response r = builders.get(backEnd).build(backEnd, getInt() - 4, this);
+        if(!willHandle.contains(r.getBackEnd())) {
+            ResponseHandler h = handlers.get(r.getBackEnd());
+            if(h == null) {
+                throw new ProtocolException("Could not find handler for " + r.getBackEnd());
             }
-        };
 
-    private final ResponseHandler noticeHandler = (Response r) -> ((Notice) r).throwMe();
+            h.handle(r);
+        }
+
+        return r;
+    }
+
+    private Session initialize() {
+        foreground();
+        startup(getInitKeysValues());
+        while(next(EnumSet.noneOf(BackEnd.class)).getBackEnd() != BackEnd.ReadyForQuery) { }
+        return this;
+    }
     
-    private final ResponseHandler parameterStatusHandler = (Response r) -> {
-        final ParameterStatus ps = (ParameterStatus) r;
-        parameterStatuses.put(ps.getName(), ps.getValue()); };
-    
-    private final ResponseHandler notificationHandler = (Response r) ->  notificationQueue.add((Notification) r);
+    public Session foreground() {
+        continueBackground.set(false);
+        wakeup();
+        pollingLock.lock();
+        return this;
+    }
 
-    private final ResponseHandler readyForQueryHandler = (Response r) -> lastStatus = ((ReadyForQuery) r).getStatus();
+    public void inForeground(Runnable r) {
+        try {
+            foreground();
+            r.run();
+        }
+        finally {
+            background();
+        }
+    }
 
-    private final ResponseHandler keyDataHandler = (Response r) -> {
-        KeyData data = (KeyData) r;
-        pid = data.getPid();
-        secretKey = data.getSecretKey(); };
+    public Session background() {
+        if(pollingLock.isLocked()) {
+            pollingLock.unlock();
+        }
+        
+        continueBackground.set(true);
+        executor.submit(() -> {
+                try {
+                    pollingLock.lock();
+                    EnumSet<BackEnd> none = EnumSet.noneOf(BackEnd.class);
+                    while(continueBackground.get()) {
+                        Response r = next(none);
+                        if(r != null) {
+                            handlers.get(r.getBackEnd()).handle(r);
+                        }
+                    }
+                }
+                finally {
+                    pollingLock.unlock();
+                } });
+
+        return this;
+    }
+
+    public void close() {
+        continueBackground.set(false);
+        wakeup();
+        pollingLock.lock();
+        super.close();
+        pollingLock.unlock();
+    }
 }
 

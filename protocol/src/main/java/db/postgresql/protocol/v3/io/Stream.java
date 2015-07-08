@@ -12,7 +12,7 @@ import java.nio.charset.CoderResult;
 public interface Stream {
 
     public static final byte NULL = (byte) 0;
-    
+
     void close();
     Charset getEncoding();
     void send(boolean sendAll);

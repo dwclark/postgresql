@@ -19,16 +19,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class PostgresqlStream extends NetworkStream {
     
     private final static int VERSION = 196608;
 
-    private final Map<BackEnd,ResponseHandler> handlers;
-
-    private Map<BackEnd,ResponseBuilder> builders() {
+    protected Map<BackEnd,ResponseBuilder> builders() {
         Map<BackEnd, ResponseBuilder> ret = new LinkedHashMap<>();
         ret.put(BackEnd.Authentication, Authentication.builder);
         ret.put(BackEnd.BackendKeyData, KeyData.builder);
@@ -52,7 +48,7 @@ public class PostgresqlStream extends NetworkStream {
         return Collections.unmodifiableMap(ret);
     }
 
-    private final Map<BackEnd,ResponseBuilder> builders = builders();
+    protected final Map<BackEnd,ResponseBuilder> builders = builders();
 
     private static void put(Map<Integer,Serializer> map, Serializer serializer) {
         assert(serializer != null);
@@ -89,10 +85,8 @@ public class PostgresqlStream extends NetworkStream {
         return Collections.unmodifiableMap(tmp);
     }
 
-    public PostgresqlStream(IO io, final Charset encoding, final Locale numericLocale, final Locale moneyLocale,
-                            final Map<BackEnd,ResponseHandler> handlers) {
+    public PostgresqlStream(IO io, final Charset encoding, final Locale numericLocale, final Locale moneyLocale) {
         super(io, encoding);
-        this.handlers = Collections.unmodifiableMap(handlers);
         this.standardSerializers = standardSerializers(encoding, numericLocale, moneyLocale);
     }
     
@@ -301,69 +295,6 @@ public class PostgresqlStream extends NetworkStream {
         putInt(4);
         send(true);
         close();
-        return this;
-    }
-
-    //back end events
-    //next can return null if io timeout happens
-    private final AtomicBoolean continueBackground = new AtomicBoolean(true);
-    private final ReentrantLock pollingLock = new ReentrantLock();
-
-    public Response next(EnumSet<BackEnd> willHandle) {
-        assert(pollingLock.isHeldByCurrentThread());
-
-        BackEnd backEnd;
-        try {
-            //be sure to not wait forever for response
-            backEnd = BackEnd.find(get(1));
-        }
-        catch(NoData noData) {
-            //definitely nothing there
-            return null;
-        }
-
-        //something is there, we have to finish the action
-        Response r = builders.get(backEnd).build(backEnd, getInt() - 4, this);
-        if(!willHandle.contains(r.getBackEnd())) {
-            ResponseHandler h = handlers.get(r.getBackEnd());
-            if(h == null) {
-                throw new ProtocolException("Could not find handler for " + r.getBackEnd());
-            }
-
-            h.handle(r);
-        }
-
-        return r;
-    }
-
-    public PostgresqlStream foreground() {
-        continueBackground.set(false);
-        pollingLock.lock();
-        return this;
-    }
-
-    private final Runnable backgroundRunner = new Runnable() {
-            public void run() {
-                try {
-                    pollingLock.lock();
-                    EnumSet<BackEnd> none = EnumSet.noneOf(BackEnd.class);
-                    while(continueBackground.get()) {
-                        Response r = next(none);
-                        if(r != null) {
-                            handlers.get(r.getBackEnd()).handle(r);
-                        }
-                    }
-                }
-                finally {
-                    pollingLock.unlock();
-                }
-            }
-        };
-    
-    public PostgresqlStream background() {
-        pollingLock.unlock();
-        continueBackground.set(true);
-        new Thread(backgroundRunner).start();
         return this;
     }
 
