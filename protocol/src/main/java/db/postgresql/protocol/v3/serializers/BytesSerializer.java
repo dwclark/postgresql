@@ -8,9 +8,7 @@ import java.nio.ByteBuffer;
 
 public class BytesSerializer extends Serializer {
 
-    public static final BytesSerializer instance = new BytesSerializer();
-    
-    private BytesSerializer() {
+    public BytesSerializer() {
         super(oids(17), classes(byte.class, byte[].class));
     }
         
@@ -21,7 +19,7 @@ public class BytesSerializer extends Serializer {
 
         stream.get(); stream.get(); //advance past escape sequence
         byte[] ret = new byte[(size - 2) / 2];
-        for(int i = 0; i < (size - 2); ++i) {
+        for(int i = 0; i < ret.length; ++i) {
             ret[i] = (byte) ((Character.digit(stream.get(), 16) << 4) + Character.digit(stream.get(), 16));
         }
 
@@ -51,8 +49,8 @@ public class BytesSerializer extends Serializer {
     public Bindable bindable(final byte[] val, final Format format) {
         return new Bindable() {
             public Format getFormat() { return format; }
-            public int getLength() { return instance.length(val, format); }
-            public void write(final Stream stream) { instance.write(stream, val, format); }
+            public int getLength() { return BytesSerializer.this.length(val, format); }
+            public void write(final Stream stream) { BytesSerializer.this.write(stream, val, format); }
         };
     }
 }

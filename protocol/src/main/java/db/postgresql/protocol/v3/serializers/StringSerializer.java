@@ -11,20 +11,23 @@ import java.nio.ByteBuffer;
 
 public class StringSerializer extends Serializer {
 
-    public static final StringSerializer instance = new StringSerializer();
+    private final Charset encoding;
+    private final CharsetEncoder encoder;
     
-    private StringSerializer() {
+    public StringSerializer(final Charset encoding) {
         super(oids(25,1043), classes(String.class));
+        this.encoding = encoding;
+        this.encoder = encoding.newEncoder();
     }
         
     public String read(final Stream stream, final int size, final Format format) {
         return isNull(size) ? null : _str(stream, size);
     }
 
-    public int length(final String str, final Format format, final Charset encoding) {
+    public int length(final String str, final Format format) {
+        encoder.reset();
         final CharBuffer charBuffer = CharBuffer.wrap(str);
         final ByteBuffer tmp = ByteBuffer.allocate(64);
-        final CharsetEncoder encoder = encoding.newEncoder();
         int total = 0;
         while(charBuffer.hasRemaining()) {
             encoder.encode(charBuffer, tmp, false);
@@ -49,11 +52,11 @@ public class StringSerializer extends Serializer {
         stream.putString(val);
     }
     
-    public Bindable bindable(final String val, final Format format, final Charset encoding) {
+    public Bindable bindable(final String val, final Format format) {
         return new Bindable() {
             public Format getFormat() { return format; }
-            public int getLength() { return instance.length(val, format, encoding); }
-            public void write(final Stream stream) { instance.write(stream, val, format); }
+            public int getLength() { return StringSerializer.this.length(val, format); }
+            public void write(final Stream stream) { StringSerializer.this.write(stream, val, format); }
         };
     }
 }

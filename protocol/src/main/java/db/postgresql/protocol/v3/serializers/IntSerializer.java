@@ -6,10 +6,8 @@ import db.postgresql.protocol.v3.Bindable;
 
 public class IntSerializer extends Serializer {
 
-    public static final IntSerializer instance = new IntSerializer();
-    
-    private IntSerializer() {
-        super(oids(21,23), classes(short.class, Short.class, int.class, Integer.class));
+    public IntSerializer() {
+        super(oids(23), classes(int.class, Integer.class));
     }
 
     private static final int[] powers = { 1, 10, 100, 1_000, 10_000, 100_000, 1_000_000,
@@ -93,8 +91,8 @@ public class IntSerializer extends Serializer {
     public Bindable bindable(final int val, final Format format) {
         return new Bindable() {
             public Format getFormat() { return format; }
-            public int getLength() { return instance.length(val, format); }
-            public void write(final Stream stream) { instance.write(stream, val, format); }
+            public int getLength() { return IntSerializer.this.length(val, format); }
+            public void write(final Stream stream) { IntSerializer.this.write(stream, val, format); }
         };
     }
 }

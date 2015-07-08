@@ -13,6 +13,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -45,6 +46,8 @@ public class Session implements AutoCloseable {
                     final int port,
                     final String application,
                     final Charset encoding,
+                    final Locale numericLocale,
+                    final Locale moneyLocale,
                     final String postgresEncoding,
                     final Map<BackEnd,ResponseHandler> handlers,
                     final SSLContext sslContext) {
@@ -70,7 +73,7 @@ public class Session implements AutoCloseable {
         this.encoding = encoding;
         this.postgresEncoding = postgresEncoding;
         this.handlers = Collections.unmodifiableMap(finalHandlers);
-        this.stream = new PostgresqlStream(makeIo(sslContext), encoding, finalHandlers);
+        this.stream = new PostgresqlStream(makeIo(sslContext), encoding, numericLocale, moneyLocale, finalHandlers);
     }
 
     public PostgresqlStream getStream() {
@@ -172,6 +175,34 @@ public class Session implements AutoCloseable {
             return this;
         }
 
+        private static Locale localeFromString(final String str) {
+            String[] ary = str.split("_");
+
+            if(ary.length == 1) {
+                return new Locale(ary[0]);
+            }
+            else if(ary.length == 2) {
+                return new Locale(ary[0], ary[1]);
+            }
+            else {
+                return new Locale(ary[0], ary[1], ary[2]);
+            }
+        }
+        
+        private Locale numericLocale = Locale.getDefault();
+
+        public Builder numericLocale(final String val) {
+            numericLocale = localeFromString(val);
+            return this;
+        }
+
+        private Locale moneyLocale = Locale.getDefault();
+
+        public Builder moneyLocale(final String val) {
+            moneyLocale = localeFromString(val);
+            return this;
+        }
+
         private String user = "";
 
         public Builder user(String val) {
@@ -241,6 +272,8 @@ public class Session implements AutoCloseable {
                                port,
                                application,
                                encoding,
+                               numericLocale,
+                               moneyLocale,
                                postgresEncoding,
                                handlers,
                                sslContext);
@@ -308,24 +341,11 @@ public class Session implements AutoCloseable {
     
     private final ResponseHandler notificationHandler = (Response r) ->  notificationQueue.add((Notification) r);
 
-    private final ResponseHandler readyForQueryHandler = new ResponseHandler() {
-            public void handle(Response r) {
-                lastStatus = ((ReadyForQuery) r).getStatus();
-            }
-        };
+    private final ResponseHandler readyForQueryHandler = (Response r) -> lastStatus = ((ReadyForQuery) r).getStatus();
 
-    private final ResponseHandler keyDataHandler = new ResponseHandler() {
-            public void handle(Response r) {
-                KeyData data = (KeyData) r;
-                pid = data.getPid();
-                secretKey = data.getSecretKey();
-            }
-        };
-
-    public static void main(String[] args) {
-        Session.Builder sb = new Session.Builder().host("localhost").port(5432).database("testdb");
-        Session session = sb.user("noauth").build();
-        session.getStream().startup(session.getInitKeysValues());
-    }
+    private final ResponseHandler keyDataHandler = (Response r) -> {
+        KeyData data = (KeyData) r;
+        pid = data.getPid();
+        secretKey = data.getSecretKey(); };
 }
 

@@ -55,4 +55,18 @@ class QueryTest extends Specification {
         }
     }
 
+    def "Row Array All Basic Types"() {
+        setup:
+        Session session = sb.user('noauth').foreground();
+        PostgresqlStream stream = session.stream;
+        stream.query('select * from all_types;');
+        RowDescription rd = stream.next(BackEnd.QUERY)
+        Response r;
+        while((r = stream.next(BackEnd.QUERY)).backEnd != BackEnd.CommandComplete) {
+            Object[] ary = r.toArray(rd);
+            assert(ary.length == 18);
+            println(ary);
+        }
+    }
+
 }

@@ -6,9 +6,7 @@ import db.postgresql.protocol.v3.Bindable;
 
 public class ShortSerializer extends Serializer {
 
-    public static final ShortSerializer instance = new ShortSerializer();
-    
-    private ShortSerializer() {
+    public ShortSerializer() {
         super(oids(21), classes(short.class, Short.class));
     }
 
@@ -89,8 +87,8 @@ public class ShortSerializer extends Serializer {
     public Bindable bindable(final short val, final Format format) {
         return new Bindable() {
             public Format getFormat() { return format; }
-            public int getLength() { return instance.length(val, format); }
-            public void write(final Stream stream) { instance.write(stream, val, format); }
+            public int getLength() { return ShortSerializer.this.length(val, format); }
+            public void write(final Stream stream) { ShortSerializer.this.write(stream, val, format); }
         };
     }
 }

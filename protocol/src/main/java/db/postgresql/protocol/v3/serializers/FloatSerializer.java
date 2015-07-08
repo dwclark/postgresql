@@ -5,12 +5,9 @@ import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.ProtocolException;
 import db.postgresql.protocol.v3.io.Stream;
 
-
 public class FloatSerializer extends Serializer {
 
-    public static final FloatSerializer instance = new FloatSerializer();
-    
-    private FloatSerializer() {
+    public FloatSerializer() {
         super(oids(700), classes(float.class, Float.class));
     }
 
@@ -38,8 +35,8 @@ public class FloatSerializer extends Serializer {
     public Bindable bindable(final float val, final Format format) {
         return new Bindable() {
             public Format getFormat() { return format; }
-            public int getLength() { return instance.length(val, format); }
-            public void write(final Stream stream) { instance.write(stream, val, format); }
+            public int getLength() { return FloatSerializer.this.length(val, format); }
+            public void write(final Stream stream) { FloatSerializer.this.write(stream, val, format); }
         };
     }
 }

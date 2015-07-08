@@ -9,11 +9,10 @@ import java.time.format.DateTimeFormatter;
 
 public class DateSerializer extends Serializer {
 
-    public static final DateSerializer instance = new DateSerializer();
     private static final String STR = "uuuu-MM-dd";
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern(STR);
     
-    private DateSerializer() {
+    public DateSerializer() {
         super(oids(1082), classes(LocalDate.class));
     }
     
@@ -42,8 +41,8 @@ public class DateSerializer extends Serializer {
     public Bindable bindable(final LocalDate val, final Format format) {
         return new Bindable() {
             public Format getFormat() { return format; }
-            public int getLength() { return instance.length(val, format); }
-            public void write(final Stream stream) { instance.write(stream, val, format); }
+            public int getLength() { return DateSerializer.this.length(val, format); }
+            public void write(final Stream stream) { DateSerializer.this.write(stream, val, format); }
         };
     }
 }

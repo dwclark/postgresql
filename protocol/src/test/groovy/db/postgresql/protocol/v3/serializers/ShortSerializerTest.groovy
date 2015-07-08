@@ -8,7 +8,7 @@ import java.nio.ByteBuffer;
 
 class ShortSerializerTest extends Specification {
     
-    def s = ShortSerializer.instance;
+    def s = new ShortSerializer();
     def f = Format.TEXT;
     def ascii = Charset.forName('US-ASCII');
 

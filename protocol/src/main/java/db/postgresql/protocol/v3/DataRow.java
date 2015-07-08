@@ -3,30 +3,37 @@ package db.postgresql.protocol.v3;
 import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.serializers.*;
 import java.math.BigDecimal;
-import java.util.NoSuchElementException;
-import java.util.Map;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.temporal.TemporalAccessor;
 import java.util.Collections;
 import java.util.HashMap;
-import java.time.temporal.TemporalAccessor;
-import java.time.LocalDate;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 public class DataRow extends Response {
 
     private Stream stream;
     private final int length;
     private boolean valid = true;
+    public final Map<Integer,Serializer> serializers;
     
     private DataRow(final Stream stream) {
+        this(stream, ((PostgresqlStream) stream).getStandardSerializers());
+    }
+
+    public DataRow(final Stream stream, final Map<Integer,Serializer> serializers) {
         super(BackEnd.DataRow);
+        this.serializers = serializers;
         this.stream = stream;
         this.length = stream.getShort() & 0xFFFF;
     }
 
-    public static final ResponseBuilder builder = new ResponseBuilder() {
-            public DataRow build(BackEnd backEnd, int size, Stream stream) {
-                return new DataRow(stream);
-            }
-        };
+    public static final ResponseBuilder builder = (BackEnd backEnd, int size, Stream stream) -> {
+        return new DataRow(stream); };
 
     private void validate() {
         if(!valid) {
@@ -59,33 +66,6 @@ public class DataRow extends Response {
 
         return ret;
     }
-
-    public static final Map<Integer,Serializer> standard;
-
-    private static void put(Map<Integer,Serializer> map, Serializer serializer) {
-        assert(serializer != null);
-        assert(serializer.getOids() != null);
-        for(int oid : serializer.getOids()) {
-            map.put(oid, serializer);
-        }
-    }
-    
-    static {
-        Map<Integer,Serializer> tmp = new HashMap<>();
-        put(tmp, BigDecimalSerializer.instance);
-        put(tmp, BooleanSerializer.instance);
-        put(tmp, BytesSerializer.instance);
-        put(tmp, DateSerializer.instance);
-        put(tmp, DoubleSerializer.instance);
-        put(tmp, FloatSerializer.instance);
-        put(tmp, IntSerializer.instance);
-        put(tmp, LongSerializer.instance);
-        put(tmp, ShortSerializer.instance);
-        put(tmp, StringSerializer.instance);
-        put(tmp, TimeSerializer.instance);
-        put(tmp, DateTimeSerializer.instance);
-        standard = Collections.unmodifiableMap(tmp);
-    }
     
     public class Iterator implements java.util.Iterator<Object> {
 
@@ -109,7 +89,7 @@ public class DataRow extends Response {
         public Object next() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
-            final Serializer serializer = standard.get(field.typeOid);
+            final Serializer serializer = serializers.get(field.typeOid);
             final int size = stream.getInt();
             return serializer.readObject(stream, size, field.format);
         }
@@ -118,100 +98,116 @@ public class DataRow extends Response {
             throw new UnsupportedOperationException();
         }
 
-        public BigDecimal nextBigDecimal() {
+        public BigDecimal nextNumeric() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
-            BigDecimalSerializer.instance.checkHandles(field.typeOid);
             final int size = stream.getInt();
-            return BigDecimalSerializer.instance.read(stream, size, field.format);
+            final MoneySerializer s = (MoneySerializer) serializers.get(field.typeOid);
+            return s.read(stream, size, field.format);
         }
 
         public boolean nextBoolean() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
-            BooleanSerializer.instance.checkHandles(field.typeOid);
             final int size = stream.getInt();
-            return BooleanSerializer.instance.read(stream, size, field.format);
+            final BooleanSerializer s = (BooleanSerializer) serializers.get(field.typeOid);
+            return s.read(stream, size, field.format);
         }
 
         public byte[] nextBytes() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
-            BytesSerializer.instance.checkHandles(field.typeOid);
             final int size = stream.getInt();
-            return BytesSerializer.instance.read(stream, size, field.format);
+            final BytesSerializer s = (BytesSerializer) serializers.get(field.typeOid);
+            return s.read(stream, size, field.format);
         }
 
         public LocalDate nextDate() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
-            DateSerializer.instance.checkHandles(field.typeOid);
             final int size = stream.getInt();
-            return DateSerializer.instance.read(stream, size, field.format);
+            final DateSerializer s = (DateSerializer) serializers.get(field.typeOid);
+            return s.read(stream, size, field.format);
         }
 
         public double nextDouble() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
-            DoubleSerializer.instance.checkHandles(field.typeOid);
             final int size = stream.getInt();
-            return DoubleSerializer.instance.read(stream, size, field.format);
+            final DoubleSerializer s = (DoubleSerializer) serializers.get(field.typeOid);
+            return s.read(stream, size, field.format);
         }
 
         public float nextFloat() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
-            FloatSerializer.instance.checkHandles(field.typeOid);
             final int size = stream.getInt();
-            return FloatSerializer.instance.read(stream, size, field.format);
+            final FloatSerializer s = (FloatSerializer) serializers.get(field.typeOid);
+            return s.read(stream, size, field.format);
         }
 
         public int nextInt() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
-            IntSerializer.instance.checkHandles(field.typeOid);
             final int size = stream.getInt();
-            return IntSerializer.instance.read(stream, size, field.format);
+            final IntSerializer s = (IntSerializer) serializers.get(field.typeOid);
+            return s.read(stream, size, field.format);
         }
 
         public long nextLong() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
-            LongSerializer.instance.checkHandles(field.typeOid);
             final int size = stream.getInt();
-            return LongSerializer.instance.read(stream, size, field.format);
+            final LongSerializer s = (LongSerializer) serializers.get(field.typeOid);
+            return s.read(stream, size, field.format);
         }
 
         public short nextShort() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
-            ShortSerializer.instance.checkHandles(field.typeOid);
             final int size = stream.getInt();
-            return ShortSerializer.instance.read(stream, size, field.format);
+            final ShortSerializer s = (ShortSerializer) serializers.get(field.typeOid);
+            return s.read(stream, size, field.format);
         }
 
         public String nextString() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
-            StringSerializer.instance.checkHandles(field.typeOid);
             final int size = stream.getInt();
-            return StringSerializer.instance.read(stream, size, field.format);
+            final StringSerializer s = (StringSerializer) serializers.get(field.typeOid);
+            return s.read(stream, size, field.format);
         }
 
-        public TemporalAccessor nextTime() {
+        public TemporalAccessor _nextTime() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
-            TimeSerializer.instance.checkHandles(field.typeOid);
             final int size = stream.getInt();
-            return TimeSerializer.instance.read(stream, size, field.format);
+            final TimeSerializer s = (TimeSerializer) serializers.get(field.typeOid);
+            return s.read(stream, size, field.format);
         }
 
-        public TemporalAccessor nextDateTime() {
+        public LocalTime nextLocalTime() {
+            return (LocalTime) _nextTime();
+        }
+
+        public OffsetTime nextOffsetTime() {
+            return (OffsetTime) _nextTime();
+        }
+
+        public TemporalAccessor _nextDateTime() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
-            DateTimeSerializer.instance.checkHandles(field.typeOid);
             final int size = stream.getInt();
-            return DateTimeSerializer.instance.read(stream, size, field.format);
+            final DateTimeSerializer s = (DateTimeSerializer) serializers.get(field.typeOid);
+            return s.read(stream, size, field.format);
+        }
+
+        public LocalDateTime nextLocalDateTime() {
+            return (LocalDateTime) _nextDateTime();
+        }
+
+        public OffsetDateTime nextOffsetDateTime() {
+            return (OffsetDateTime) _nextDateTime();
         }
     }
 }

@@ -17,8 +17,8 @@ public class TimeSerializer extends Serializer {
     private static final DateTimeFormatter LOCAL = DateTimeFormatter.ofPattern(STR);
     private static final DateTimeFormatter OFFSET = DateTimeFormatter.ofPattern(STR + "x");
 
-    private TimeSerializer() {
-        super(oids(1083), classes(LocalTime.class, OffsetTime.class));
+    public TimeSerializer() {
+        super(oids(1083,1266), classes(LocalTime.class, OffsetTime.class));
     }
 
     public TemporalAccessor read(final Stream stream, final int size, final Format format) {
@@ -66,8 +66,8 @@ public class TimeSerializer extends Serializer {
     public Bindable bindable(final TemporalAccessor val, final boolean hasTimeZone, final Format format) {
         return new Bindable() {
             public Format getFormat() { return format; }
-            public int getLength() { return instance.length(val, format); }
-            public void write(final Stream stream) { instance.write(stream, val, format); }
+            public int getLength() { return TimeSerializer.this.length(val, format); }
+            public void write(final Stream stream) { TimeSerializer.this.write(stream, val, format); }
         };
     }
 }

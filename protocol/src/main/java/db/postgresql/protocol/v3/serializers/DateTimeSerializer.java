@@ -14,14 +14,12 @@ import java.util.regex.Pattern;
 
 public class DateTimeSerializer extends Serializer {
 
-    public static final DateTimeSerializer instance = new DateTimeSerializer();
-
     private static final String STR = "uuuu-MM-dd HH:mm:ss.n";
     private static final DateTimeFormatter LOCAL = DateTimeFormatter.ofPattern(STR);
     private static final DateTimeFormatter OFFSET = DateTimeFormatter.ofPattern(STR + "x");
 
-    private DateTimeSerializer() {
-        super(oids(1114), classes(LocalDateTime.class,OffsetDateTime.class));
+    public DateTimeSerializer() {
+        super(oids(1114,1184), classes(LocalDateTime.class,OffsetDateTime.class));
     }
 
     public TemporalAccessor read(final Stream stream, final int size, final Format format) {
@@ -65,8 +63,8 @@ public class DateTimeSerializer extends Serializer {
     public Bindable bindable(final TemporalAccessor date, final Format format) {
         return new Bindable() {
             public Format getFormat() { return format; }
-            public int getLength() { return instance.length(date, format); }
-            public void write(final Stream stream) { instance.write(stream, date, format); }
+            public int getLength() { return DateTimeSerializer.this.length(date, format); }
+            public void write(final Stream stream) { DateTimeSerializer.this.write(stream, date, format); }
         };
     }
 }

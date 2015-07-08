@@ -13,11 +13,14 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
+import db.postgresql.protocol.v3.serializers.*;
+import java.util.Locale;
 
 public class PostgresqlStream extends NetworkStream {
     
@@ -25,7 +28,7 @@ public class PostgresqlStream extends NetworkStream {
 
     private final Map<BackEnd,ResponseHandler> handlers;
 
-    private static Map<BackEnd,ResponseBuilder> builders() {
+    private Map<BackEnd,ResponseBuilder> builders() {
         Map<BackEnd, ResponseBuilder> ret = new LinkedHashMap<>();
         ret.put(BackEnd.Authentication, Authentication.builder);
         ret.put(BackEnd.BackendKeyData, KeyData.builder);
@@ -49,13 +52,46 @@ public class PostgresqlStream extends NetworkStream {
         return Collections.unmodifiableMap(ret);
     }
 
-    private static Map<BackEnd,ResponseBuilder> builders = builders();
+    private final Map<BackEnd,ResponseBuilder> builders = builders();
 
-    public PostgresqlStream(IO io, final Charset encoding,
+    private static void put(Map<Integer,Serializer> map, Serializer serializer) {
+        assert(serializer != null);
+        assert(serializer.getOids() != null);
+        for(int oid : serializer.getOids()) {
+            map.put(oid, serializer);
+        }
+    }
+
+    private final Map<Integer,Serializer> standardSerializers;
+
+    public Map<Integer,Serializer> getStandardSerializers() {
+        return standardSerializers;
+    }
+    
+    private Map<Integer,Serializer> standardSerializers(final Charset encoding, final Locale numericLocale,
+                                                        final Locale moneyLocale) {
+        Map<Integer,Serializer> tmp = new HashMap<>();
+        put(tmp, new NumericSerializer(numericLocale));
+        put(tmp, new MoneySerializer(moneyLocale));
+        put(tmp, new BooleanSerializer());
+        put(tmp, new BytesSerializer());
+        put(tmp, new DateSerializer());
+        put(tmp, new DoubleSerializer());
+        put(tmp, new FloatSerializer());
+        put(tmp, new IntSerializer());
+        put(tmp, new LongSerializer());
+        put(tmp, new ShortSerializer());
+        put(tmp, new StringSerializer(encoding));
+        put(tmp, new TimeSerializer());
+        put(tmp, new DateTimeSerializer());
+        return Collections.unmodifiableMap(tmp);
+    }
+
+    public PostgresqlStream(IO io, final Charset encoding, final Locale numericLocale, final Locale moneyLocale,
                             final Map<BackEnd,ResponseHandler> handlers) {
         super(io, encoding);
-        //TODO: Add default null handler for all types
         this.handlers = Collections.unmodifiableMap(handlers);
+        this.standardSerializers = standardSerializers(encoding, numericLocale, moneyLocale);
     }
     
     //front end requests

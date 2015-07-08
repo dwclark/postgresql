@@ -7,12 +7,10 @@ import db.postgresql.protocol.v3.ProtocolException;
 
 public class BooleanSerializer extends Serializer {
 
-    public static final BooleanSerializer instance = new BooleanSerializer();
-    
     private static final byte T = (byte) 't';
     private static final byte F = (byte) 'f';
     
-    private BooleanSerializer() {
+    public BooleanSerializer() {
         super(oids(16), classes(boolean.class, Boolean.class));
     }
     
@@ -49,8 +47,8 @@ public class BooleanSerializer extends Serializer {
     public Bindable bindable(final boolean val, final Format format) {
         return new Bindable() {
             public Format getFormat() { return format; }
-            public int getLength() { return instance.length(val, format); }
-            public void write(final Stream stream) { instance.write(stream, val, format); }
+            public int getLength() { return BooleanSerializer.this.length(val, format); }
+            public void write(final Stream stream) { BooleanSerializer.this.write(stream, val, format); }
         };
     }
 }

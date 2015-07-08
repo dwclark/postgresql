@@ -6,11 +6,8 @@ import db.postgresql.protocol.v3.Bindable;
 
 public class LongSerializer extends Serializer {
 
-    public static final LongSerializer instance = new LongSerializer();
-    
-    private LongSerializer() {
-        super(oids(20, 21,23), classes(short.class, Short.class, int.class, Integer.class,
-                                       long.class, Long.class));
+    public LongSerializer() {
+        super(oids(20), classes(long.class, Long.class));
     }
 
     private static final long[] powers = { 1L, 10L, 100L, 1000L, 10000L, 100000L, 1000000L, 10000000L,
@@ -94,8 +91,8 @@ public class LongSerializer extends Serializer {
     public Bindable bindable(final long val, final Format format) {
         return new Bindable() {
             public Format getFormat() { return format; }
-            public int getLength() { return instance.length(val, format); }
-            public void write(final Stream stream) { instance.write(stream, val, format); }
+            public int getLength() { return LongSerializer.this.length(val, format); }
+            public void write(final Stream stream) { LongSerializer.this.write(stream, val, format); }
         };
     }
 }

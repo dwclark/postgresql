@@ -1,0 +1,2 @@
+drop table if exists items;
+drop table if exists all_types;

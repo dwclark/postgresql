@@ -6,9 +6,7 @@ import db.postgresql.protocol.v3.Bindable;
 
 public class DoubleSerializer extends Serializer {
 
-    public static final DoubleSerializer instance = new DoubleSerializer();
-    
-    private DoubleSerializer() {
+    public DoubleSerializer() {
         super(oids(700,701), classes(float.class, Float.class, double.class, Double.class));
     }
 
@@ -36,8 +34,8 @@ public class DoubleSerializer extends Serializer {
     public Bindable bindable(final double val, final Format format) {
         return new Bindable() {
             public Format getFormat() { return format; }
-            public int getLength() { return instance.length(val, format); }
-            public void write(final Stream stream) { instance.write(stream, val, format); }
+            public int getLength() { return DoubleSerializer.this.length(val, format); }
+            public void write(final Stream stream) { DoubleSerializer.this.write(stream, val, format); }
         };
     }
 }
