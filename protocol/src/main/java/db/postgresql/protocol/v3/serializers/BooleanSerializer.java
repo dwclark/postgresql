@@ -1,9 +1,9 @@
 package db.postgresql.protocol.v3.serializers;
 
-import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.ProtocolException;
+import db.postgresql.protocol.v3.io.Stream;
 
 public class BooleanSerializer extends Serializer {
 

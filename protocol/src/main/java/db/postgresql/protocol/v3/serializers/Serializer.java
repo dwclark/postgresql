@@ -1,12 +1,12 @@
 package db.postgresql.protocol.v3.serializers;
 
-import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.ProtocolException;
+import db.postgresql.protocol.v3.io.Stream;
 import java.nio.charset.Charset;
-import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 public abstract class Serializer {
 

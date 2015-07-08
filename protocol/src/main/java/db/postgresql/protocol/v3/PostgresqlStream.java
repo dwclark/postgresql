@@ -1,9 +1,10 @@
 package db.postgresql.protocol.v3;
 
 import db.postgresql.protocol.v3.io.IO;
+import db.postgresql.protocol.v3.io.NetworkStream;
 import db.postgresql.protocol.v3.io.NoData;
 import db.postgresql.protocol.v3.io.Stream;
-import db.postgresql.protocol.v3.io.NetworkStream;
+import db.postgresql.protocol.v3.serializers.*;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -16,11 +17,10 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
-import db.postgresql.protocol.v3.serializers.*;
-import java.util.Locale;
 
 public class PostgresqlStream extends NetworkStream {
     
@@ -82,8 +82,10 @@ public class PostgresqlStream extends NetworkStream {
         put(tmp, new LongSerializer());
         put(tmp, new ShortSerializer());
         put(tmp, new StringSerializer(encoding));
-        put(tmp, new TimeSerializer());
-        put(tmp, new DateTimeSerializer());
+        put(tmp, new LocalTimeSerializer());
+        put(tmp, new OffsetTimeSerializer());
+        put(tmp, new LocalDateTimeSerializer());
+        put(tmp, new OffsetDateTimeSerializer());
         return Collections.unmodifiableMap(tmp);
     }
 

@@ -3,11 +3,11 @@ package db.postgresql.protocol.v3.serializers;
 import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CoderResult;
-import java.nio.CharBuffer;
-import java.nio.ByteBuffer;
 
 public class StringSerializer extends Serializer {
 

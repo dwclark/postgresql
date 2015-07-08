@@ -4,11 +4,11 @@ import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import java.math.BigDecimal;
-import java.util.Locale;
-import java.text.NumberFormat;
 import java.text.DecimalFormat;
 import java.text.FieldPosition;
+import java.text.NumberFormat;
 import java.text.ParsePosition;
+import java.util.Locale;
 
 public class NumericSerializer extends Serializer {
 

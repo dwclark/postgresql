@@ -178,36 +178,36 @@ public class DataRow extends Response {
             return s.read(stream, size, field.format);
         }
 
-        public TemporalAccessor _nextTime() {
+        public LocalTime nextLocalTime() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
             final int size = stream.getInt();
-            final TimeSerializer s = (TimeSerializer) serializers.get(field.typeOid);
+            final LocalTimeSerializer s = (LocalTimeSerializer) serializers.get(field.typeOid);
             return s.read(stream, size, field.format);
         }
 
-        public LocalTime nextLocalTime() {
-            return (LocalTime) _nextTime();
-        }
-
         public OffsetTime nextOffsetTime() {
-            return (OffsetTime) _nextTime();
-        }
-
-        public TemporalAccessor _nextDateTime() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
             final int size = stream.getInt();
-            final DateTimeSerializer s = (DateTimeSerializer) serializers.get(field.typeOid);
+            final OffsetTimeSerializer s = (OffsetTimeSerializer) serializers.get(field.typeOid);
             return s.read(stream, size, field.format);
         }
 
         public LocalDateTime nextLocalDateTime() {
-            return (LocalDateTime) _nextDateTime();
+            guardAdvance();
+            final FieldDescriptor field = rowDescription.field(index++);
+            final int size = stream.getInt();
+            final LocalDateTimeSerializer s = (LocalDateTimeSerializer) serializers.get(field.typeOid);
+            return s.read(stream, size, field.format);
         }
 
         public OffsetDateTime nextOffsetDateTime() {
-            return (OffsetDateTime) _nextDateTime();
+            guardAdvance();
+            final FieldDescriptor field = rowDescription.field(index++);
+            final int size = stream.getInt();
+            final OffsetDateTimeSerializer s = (OffsetDateTimeSerializer) serializers.get(field.typeOid);
+            return s.read(stream, size, field.format);
         }
     }
 }
