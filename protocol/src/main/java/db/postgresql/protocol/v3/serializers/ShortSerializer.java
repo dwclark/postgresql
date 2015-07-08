@@ -38,7 +38,7 @@ public class ShortSerializer extends Serializer {
             }
         }
 
-        return accum;
+        return negate ? (short) -accum : accum;
     }
 
     public int length(final short val, final Format f) {
@@ -75,7 +75,7 @@ public class ShortSerializer extends Serializer {
         
         short accum = val;
         for(int i = startAt; i >= endAt; --i) {
-            bytes[i] = IntSerializer.DIGITS[(int) (val % 10)];
+            bytes[i] = IntSerializer.DIGITS[(int) (accum % 10)];
             accum /= 10;
         }
 

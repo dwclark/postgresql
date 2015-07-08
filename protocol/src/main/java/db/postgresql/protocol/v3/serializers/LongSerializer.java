@@ -43,7 +43,7 @@ public class LongSerializer extends Serializer {
             }
         }
 
-        return accum;
+        return negate ? -accum : accum;
     }
 
     public int length(final long val, final Format format) {
@@ -80,7 +80,7 @@ public class LongSerializer extends Serializer {
         
         long accum = val;
         for(int i = startAt; i >= endAt; --i) {
-            bytes[i] = IntSerializer.DIGITS[(int) (val % 10)];
+            bytes[i] = IntSerializer.DIGITS[Math.abs((int) (accum % 10))];
             accum /= 10;
         }
 

@@ -3,6 +3,7 @@ package db.postgresql.protocol.v3;
 import db.postgresql.protocol.v3.io.IO;
 import db.postgresql.protocol.v3.io.NoData;
 import db.postgresql.protocol.v3.io.Stream;
+import db.postgresql.protocol.v3.io.NetworkStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -18,7 +19,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class PostgresqlStream extends Stream {
+public class PostgresqlStream extends NetworkStream {
     
     private final static int VERSION = 196608;
 

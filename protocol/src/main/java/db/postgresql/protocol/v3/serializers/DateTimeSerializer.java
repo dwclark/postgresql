@@ -29,13 +29,14 @@ public class DateTimeSerializer extends Serializer {
             return null;
         }
 
-        String str = _str(stream, size, ASCII_ENCODING);
+        final String str = _str(stream, size, ASCII_ENCODING);
         final int index = str.lastIndexOf('-');
-        if(str.lastIndexOf('-') > 7) {
-            return OFFSET.parse(str.substring(0, index) + "000" + str.substring(index));
+            
+        if(index > 7) {
+            return OffsetDateTime.parse(str.substring(0, index) + "000" + str.substring(index), OFFSET);
         }
         else {
-            return LOCAL.parse(str);
+            return LocalDateTime.parse(str + "000", LOCAL);
         }
     }
 
@@ -49,10 +50,12 @@ public class DateTimeSerializer extends Serializer {
 
     public void write(final Stream stream, final TemporalAccessor date, final Format format) {
         if(date instanceof LocalDateTime) {
-            stream.putString(LOCAL.format(date));
+            LocalDateTime ldt = (LocalDateTime) date;
+            stream.putString(ldt.format(LOCAL));
         }
-        else if(date instanceof LocalDateTime) {
-            stream.putString(OFFSET.format(date));
+        else if(date instanceof OffsetDateTime) {
+            OffsetDateTime odt = (OffsetDateTime) date;
+            stream.putString(odt.format(OFFSET));
         }
         else {
             throw new IllegalArgumentException("date must be either LocalDateTime or OffsetDateTime");

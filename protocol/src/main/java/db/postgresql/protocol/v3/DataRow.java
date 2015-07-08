@@ -3,14 +3,12 @@ package db.postgresql.protocol.v3;
 import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.serializers.*;
 import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.SQLData;
 import java.util.NoSuchElementException;
 import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
 import java.time.temporal.TemporalAccessor;
+import java.time.LocalDate;
 
 public class DataRow extends Response {
 
@@ -144,7 +142,7 @@ public class DataRow extends Response {
             return BytesSerializer.instance.read(stream, size, field.format);
         }
 
-        public Date nextDate() {
+        public LocalDate nextDate() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
             DateSerializer.instance.checkHandles(field.typeOid);
@@ -200,7 +198,7 @@ public class DataRow extends Response {
             return StringSerializer.instance.read(stream, size, field.format);
         }
 
-        public Time nextTime() {
+        public TemporalAccessor nextTime() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
             TimeSerializer.instance.checkHandles(field.typeOid);
@@ -214,11 +212,6 @@ public class DataRow extends Response {
             DateTimeSerializer.instance.checkHandles(field.typeOid);
             final int size = stream.getInt();
             return DateTimeSerializer.instance.read(stream, size, field.format);
-        }
-
-        public SQLData next(Class<? extends SQLData> type) {
-            guardAdvance();
-            throw new UnsupportedOperationException();
         }
     }
 }

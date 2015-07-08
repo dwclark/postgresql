@@ -1,44 +1,32 @@
 package db.postgresql.protocol.v3.serializers;
 
-import db.postgresql.protocol.v3.io.Stream;
-import db.postgresql.protocol.v3.Format;
-import java.util.Calendar;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.sql.Date;
-import db.postgresql.protocol.v3.ProtocolException;
 import db.postgresql.protocol.v3.Bindable;
+import db.postgresql.protocol.v3.Format;
+import db.postgresql.protocol.v3.ProtocolException;
+import db.postgresql.protocol.v3.io.Stream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class DateSerializer extends Serializer {
 
     public static final DateSerializer instance = new DateSerializer();
-    
-    public static final String ISO_STR = "(\\d{4})-(\\d{2})-(\\d{2})";
-    public static final Pattern ISO = Pattern.compile(ISO_STR);
+    private static final String STR = "uuuu-MM-dd";
+    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern(STR);
     
     private DateSerializer() {
-        super(oids(1082), classes(Date.class));
+        super(oids(1082), classes(LocalDate.class));
     }
     
-    public static Date iso(final String str) {
-        final Matcher m = ISO.matcher(str);
-        if(!m.matches()) {
-            throw new ProtocolException(str + " is not a valid iso date format");
+    public LocalDate read(final Stream stream, final int size, final Format format) {
+        if(isNull(size)) {
+            return null;
         }
-
-        final Calendar cal = Calendar.getInstance();
-        final int years = Integer.valueOf(m.group(1));
-        final int months = Integer.valueOf(m.group(2));
-        final int days = Integer.valueOf(m.group(3));
-        cal.set(years, months, days, 0, 0, 0);
-        return new Date(cal.getTime().getTime());
+        else {
+            return LocalDate.parse(_str(stream, size, ASCII_ENCODING), DATE);
+        }
     }
 
-    public Date read(final Stream stream, final int size, final Format format) {
-        return isNull(size) ? null : iso(_str(stream, size, ASCII_ENCODING));
-    }
-
-    public int length(final Date d, final Format format) {
+    public int length(final LocalDate d, final Format format) {
         //yyyy-mm-dd -> 10
         return (d == null) ? -1 : 10;
     }
@@ -47,11 +35,11 @@ public class DateSerializer extends Serializer {
         return read(stream, size, format);
     }
 
-    public void write(final Stream stream, final Date val, final Format format) {
-        stream.putString(val.toString());
+    public void write(final Stream stream, final LocalDate val, final Format format) {
+        stream.putString(val.format(DATE));
     }
 
-    public Bindable bindable(final Date val, final Format format) {
+    public Bindable bindable(final LocalDate val, final Format format) {
         return new Bindable() {
             public Format getFormat() { return format; }
             public int getLength() { return instance.length(val, format); }

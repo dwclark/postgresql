@@ -39,7 +39,7 @@ public class IntSerializer extends Serializer {
             }
         }
 
-        return accum;
+        return negate ? -accum : accum;
     }
 
     public int length(final int val, final Format format) {
@@ -79,7 +79,7 @@ public class IntSerializer extends Serializer {
         
         int accum = val;
         for(int i = startAt; i >= endAt; --i) {
-            bytes[i] = DIGITS[val % 10];
+            bytes[i] = DIGITS[Math.abs(accum % 10)];
             accum /= 10;
         }
 
