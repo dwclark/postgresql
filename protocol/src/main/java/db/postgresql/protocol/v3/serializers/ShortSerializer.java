@@ -75,7 +75,7 @@ public class ShortSerializer extends Serializer {
         
         short accum = val;
         for(int i = startAt; i >= endAt; --i) {
-            bytes[i] = IntSerializer.DIGITS[(int) (accum % 10)];
+            bytes[i] = IntSerializer.DIGITS[Math.abs((int) (accum % 10))];
             accum /= 10;
         }
 

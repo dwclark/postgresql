@@ -12,18 +12,17 @@ class ShortSerializerTest extends Specification {
     def f = Format.TEXT;
     def ascii = Charset.forName('US-ASCII');
 
-    @Ignore
     def "Test Length"() {
         expect:
-        s.length(0, f) == 1;
+        s.length((short) 0, f) == 1;
         s.length(Short.MIN_VALUE, f) == 6;
-        s.length(Integer.MAX_VALUE, f) == 5;
-        s.length(9_999, f) == 4;
-        s.length(10_000, f) == 5;
-        s.length(-9_999, f) == 5;
-        s.length(-10_000, f) == 6;
-        s.length(9, f) == 1;
-        s.length(10, f) == 2;
+        s.length(Short.MAX_VALUE, f) == 5;
+        s.length((short) 9_999, f) == 4;
+        s.length((short) 10_000, f) == 5;
+        s.length((short) -9_999, f) == 5;
+        s.length((short) -10_000, f) == 6;
+        s.length((short) 9, f) == 1;
+        s.length((short) 10, f) == 2;
     }
 
     private String toString(final FixedStream fs) {
@@ -40,13 +39,12 @@ class ShortSerializerTest extends Specification {
         fs.recvBuffer.flip();
     }
 
-    @Ignore
     def "Test Write"() {
         setup:
         def fs = new FixedStream(20, ascii);
 
         when:
-        s.write(fs, 100, f);
+        s.write(fs, (short) 100, f);
         then:
         toString(fs) == '100';
 
@@ -56,12 +54,12 @@ class ShortSerializerTest extends Specification {
         toString(fs)  == '32767';
 
         when:
-        s.write(fs, 9_999, f);
+        s.write(fs, (short) 9_999, f);
         then:
         toString(fs) == '9999';
 
         when:
-        s.write(fs, -10_001, f);
+        s.write(fs, (short) -10_001, f);
         then:
         toString(fs) == '-10001';
     }

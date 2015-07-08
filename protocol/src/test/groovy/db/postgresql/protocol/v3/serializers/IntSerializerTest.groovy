@@ -12,7 +12,6 @@ class IntSerializerTest extends Specification {
     def f = Format.TEXT;
     def ascii = Charset.forName('US-ASCII');
 
-    @Ignore
     def "Test Length"() {
         expect:
         s.length(0, f) == 1;
@@ -40,7 +39,6 @@ class IntSerializerTest extends Specification {
         fs.recvBuffer.flip();
     }
 
-    @Ignore
     def "Test Write"() {
         setup:
         def fs = new FixedStream(20, ascii);

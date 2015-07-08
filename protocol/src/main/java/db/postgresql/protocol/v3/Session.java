@@ -300,20 +300,13 @@ public class Session implements AutoCloseable {
             }
         };
 
-    private final ResponseHandler noticeHandler = (Response r) -> { ((Notice) r).throwMe(); };
-
-    private final ResponseHandler parameterStatusHandler = new ResponseHandler() {
-            public void handle(Response r) {
-                final ParameterStatus ps = (ParameterStatus) r;
-                parameterStatuses.put(ps.getName(), ps.getValue());
-            }
-        };
-
-    private final ResponseHandler notificationHandler = new ResponseHandler() {
-            public void handle(Response r) {
-                notificationQueue.add((Notification) r);
-            }
-        };
+    private final ResponseHandler noticeHandler = (Response r) -> ((Notice) r).throwMe();
+    
+    private final ResponseHandler parameterStatusHandler = (Response r) -> {
+        final ParameterStatus ps = (ParameterStatus) r;
+        parameterStatuses.put(ps.getName(), ps.getValue()); };
+    
+    private final ResponseHandler notificationHandler = (Response r) ->  notificationQueue.add((Notification) r);
 
     private final ResponseHandler readyForQueryHandler = new ResponseHandler() {
             public void handle(Response r) {
