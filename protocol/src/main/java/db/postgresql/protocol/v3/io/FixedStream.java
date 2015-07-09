@@ -41,6 +41,10 @@ public class FixedStream implements Stream {
     public Stream putNull() { sendBuffer.put(NULL); return this; }
 
     public Stream putCharSequence(final CharSequence seq) {
+        return putCharSequence(seq, encoding);
+    }
+
+    public Stream putCharSequence(final CharSequence seq, final Charset encoding) {
         final CharBuffer charBuffer = CharBuffer.wrap(seq);
         final CharsetEncoder encoder = encoding.newEncoder();
         encoder.encode(charBuffer, recvBuffer, false);

@@ -75,7 +75,7 @@ public enum BackEnd {
                                            ", subId: " + ((0xFF) & subId));
     }
 
-    public static final EnumSet<BackEnd> QUERY = EnumSet.of(BackEnd.CommandComplete,
+    public static final EnumSet<BackEnd> QUERY = EnumSet.of(BackEnd.BindComplete, BackEnd.CommandComplete,
                                                             BackEnd.CopyData, BackEnd.CopyDone,
                                                             BackEnd.CopyInResponse, BackEnd.CopyOutResponse,
                                                             BackEnd.CopyBothResponse, BackEnd.DataRow,

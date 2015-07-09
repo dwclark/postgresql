@@ -27,6 +27,7 @@ public interface Stream {
     Stream putInt(int i);
     Stream putNull();
     Stream putCharSequence(CharSequence seq);
+    Stream putCharSequence(CharSequence seq, Charset encoding);
     Stream putString(String str);
     ByteBuffer view(int max);
     ByteBuffer getBuffer(ByteBuffer buffer);

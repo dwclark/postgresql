@@ -160,7 +160,11 @@ public class NetworkStream implements Stream {
         return this;
     }
 
-    public Stream putCharSequence(CharSequence seq) {
+    public Stream putCharSequence(final CharSequence seq) {
+        return putCharSequence(seq, encoding);
+    }
+
+    public Stream putCharSequence(final CharSequence seq, final Charset encoding) {
         //we don't need to ensure for this one. If we can't
         //send it in one shot, then we can split it into multiple sends
         final CharBuffer charBuffer = CharBuffer.wrap(seq);

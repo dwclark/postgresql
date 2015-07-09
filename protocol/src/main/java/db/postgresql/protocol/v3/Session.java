@@ -333,6 +333,16 @@ public class Session extends PostgresqlStream implements AutoCloseable {
         return r;
     }
 
+    public Response until(final EnumSet<BackEnd> waitFor) {
+        do {
+            Response r = next(waitFor);
+            if(waitFor.contains(r.backEnd)) {
+                return r;
+            }
+        } while(true);
+              
+    }
+
     private Session initialize() {
         foreground();
         startup(getInitKeysValues());

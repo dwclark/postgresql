@@ -63,6 +63,23 @@ public class PostgresqlStream extends NetworkStream {
     public Map<Integer,Serializer> getStandardSerializers() {
         return standardSerializers;
     }
+
+    private final Map<Class,Serializer> serializersByType;
+
+    private Map<Class,Serializer> serializersByType() {
+        Map<Class,Serializer> ret = new HashMap<>();
+        
+        for(Serializer s : standardSerializers.values()) {
+            ret.put(s.getClass(), s);
+        }
+
+        return Collections.unmodifiableMap(ret);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends Serializer> T serializer(Class<T> serializerType) {
+        return (T) serializersByType.get(serializerType);
+    }
     
     private Map<Integer,Serializer> standardSerializers(final Charset encoding, final Locale numericLocale,
                                                         final Locale moneyLocale) {
@@ -88,6 +105,7 @@ public class PostgresqlStream extends NetworkStream {
     public PostgresqlStream(IO io, final Charset encoding, final Locale numericLocale, final Locale moneyLocale) {
         super(io, encoding);
         this.standardSerializers = standardSerializers(encoding, numericLocale, moneyLocale);
+        this.serializersByType = serializersByType();
     }
     
     //front end requests
@@ -142,7 +160,50 @@ public class PostgresqlStream extends NetworkStream {
     }
 
     public PostgresqlStream bind(final String portal, final String name,
-                                 final Bindable[] inputs, final Format[] outputFormats) {
+                                 final Bindable[] inputs, final Format[] outputs) {
+
+        //lengths
+        int total = 4 + portal.length() + 1 + name.length() + 1; //header + lengths + null terminators;
+        total += 2 + (2 * inputs.length); //format code header + format code size
+        int[] sizes = new int[inputs.length];
+        total += 2; //header/size actual parameters
+        for(int i = 0; i < inputs.length; ++i) {
+            sizes[i] = inputs[i].getLength();
+            total += 4;
+            if(sizes[i] > 0) {
+                total += sizes[i];
+            }
+        }
+
+        total += 2 + (2 * outputs.length);
+
+        //format stream;
+        put(FrontEnd.Bind.toByte());
+        putInt(total);
+        putCharSequence(portal, Serializer.ASCII_ENCODING);
+        putNull();
+        putCharSequence(name, Serializer.ASCII_ENCODING);
+        putNull();
+
+        //formats
+        putShort((short) inputs.length);
+        for(Bindable b : inputs) {
+            putShort((short) b.getFormat().id);
+        }
+
+        //parameters
+        putShort((short) inputs.length);
+        for(int i = 0; i < inputs.length; ++i) {
+            putInt(sizes[i]);
+            inputs[i].write(this);
+        }
+
+        //results
+        putShort((short) outputs.length);
+        for(Format f : outputs) {
+            putShort((short) f.id);
+        }
+
         return this;
     }
 
@@ -219,6 +280,9 @@ public class PostgresqlStream extends NetworkStream {
         return this;
     }
 
+    public static final int[] EMPTY_OIDS = new int[0];
+    public static final Format[] EMPTY_FORMATS = new Format[0];
+    
     public PostgresqlStream parse(String name, String query, int[] oids) {
         byte[] nameBytes = name.getBytes(getEncoding());
         byte[] queryBytes = query.getBytes(getEncoding());

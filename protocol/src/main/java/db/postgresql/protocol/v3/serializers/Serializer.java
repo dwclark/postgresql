@@ -1,5 +1,6 @@
 package db.postgresql.protocol.v3.serializers;
 
+import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.ProtocolException;
 import db.postgresql.protocol.v3.io.Stream;
@@ -53,7 +54,7 @@ public abstract class Serializer {
         return vals;
     }
 
-    protected static final Charset ASCII_ENCODING = Charset.forName("US-ASCII");
+    public static final Charset ASCII_ENCODING = Charset.forName("US-ASCII");
 
     private static class StringArea extends ThreadLocal<byte[]> {
         @Override
@@ -83,5 +84,13 @@ public abstract class Serializer {
 
     protected static boolean isNull(final int size) {
         return size == -1;
+    }
+
+    public Bindable nullBindable(final Format format) {
+        return new Bindable() {
+            public Format getFormat() { return format; }
+            public int getLength() { return -1; }
+            public void write(final Stream stream) { }
+        };
     }
 }
