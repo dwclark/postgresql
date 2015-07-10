@@ -77,6 +77,8 @@ public class Session extends PostgresqlStream implements AutoCloseable {
                 md5(user, password, ByteBuffer.wrap(md5.getSalt())); });
         
         finalHandlers.put(BackEnd.NoticeResponse, (Response r) -> ((Notice) r).throwMe());
+
+        finalHandlers.put(BackEnd.ErrorResponse, (Response r) -> ((Notice) r).throwMe());
         
         finalHandlers.put(BackEnd.NotificationResponse, (Response r) -> notificationQueue.add((Notification) r));
         
@@ -309,38 +311,31 @@ public class Session extends PostgresqlStream implements AutoCloseable {
     public Response next(final EnumSet<BackEnd> willHandle) {
         assert(pollingLock.isHeldByCurrentThread());
 
-        BackEnd backEnd;
-        try {
-            //be sure to not wait forever for response
-            backEnd = BackEnd.find(get(1));
-        }
-        catch(NoData noData) {
-            //definitely nothing there
-            return null;
-        }
-
-        //something is there, we have to finish the action
-        Response r = builders.get(backEnd).build(backEnd, getInt() - 4, this);
-        if(!willHandle.contains(r.getBackEnd())) {
-            ResponseHandler h = handlers.get(r.getBackEnd());
-            if(h == null) {
-                throw new ProtocolException("Could not find handler for " + r.getBackEnd());
+        while(true) {
+            BackEnd backEnd;
+            try {
+                //be sure to not wait forever for response
+                backEnd = BackEnd.find(get(1));
             }
-
-            h.handle(r);
-        }
-
-        return r;
-    }
-
-    public Response until(final EnumSet<BackEnd> waitFor) {
-        do {
-            Response r = next(waitFor);
-            if(waitFor.contains(r.backEnd)) {
+            catch(NoData noData) {
+                //definitely nothing there
+                return null;
+            }
+            
+            //something is there, we have to finish the action
+            Response r = builders.get(backEnd).build(backEnd, getInt() - 4, this);
+            if(willHandle.contains(r.getBackEnd())) {
                 return r;
             }
-        } while(true);
-              
+            else {
+                ResponseHandler h = handlers.get(r.getBackEnd());
+                if(h == null) {
+                    throw new ProtocolException("Could not find handler for " + r.getBackEnd());
+                }
+                
+                h.handle(r);
+            }
+        }
     }
 
     private Session initialize() {

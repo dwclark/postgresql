@@ -14,6 +14,7 @@ public interface Stream {
     public static final byte NULL = (byte) 0;
 
     void close();
+    byte peek();
     Charset getEncoding();
     void send(boolean sendAll);
     void recv();

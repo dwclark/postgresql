@@ -13,8 +13,8 @@ public class Notice extends Response {
         return messages;
     }
 
-    public Notice(final Stream stream, final int size) {
-        super(BackEnd.NoticeResponse);
+    public Notice(final BackEnd backEnd, final Stream stream, final int size) {
+        super(backEnd);
 
         final Map<NoticeType,String> map = new LinkedHashMap<>();
         byte byteType;
@@ -26,7 +26,7 @@ public class Notice extends Response {
     }
 
     public final static ResponseBuilder builder = (final BackEnd backEnd, final int size, final Stream stream) -> {
-        return new Notice(stream, size);
+        return new Notice(backEnd, stream, size);
     };
 
     public void throwMe() {
