@@ -92,6 +92,10 @@ public class Session extends PostgresqlStream implements AutoCloseable {
                 secretKey = data.getSecretKey(); });
         
         finalHandlers.put(BackEnd.ReadyForQuery, (Response r) -> lastStatus = ((ReadyForQuery) r).getStatus());
+
+        finalHandlers.put(BackEnd.ParseComplete, (Response r) -> {});
+
+        finalHandlers.put(BackEnd.BindComplete, (Response r) -> {});
         
         finalHandlers.putAll(handlers); //specified overrides default
         this.handlers = Collections.unmodifiableMap(finalHandlers);
@@ -341,7 +345,7 @@ public class Session extends PostgresqlStream implements AutoCloseable {
     private Session initialize() {
         foreground();
         startup(getInitKeysValues());
-        while(next(EnumSet.noneOf(BackEnd.class)).getBackEnd() != BackEnd.ReadyForQuery) { }
+        next(EnumSet.of(BackEnd.ReadyForQuery));
         return this;
     }
     

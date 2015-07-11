@@ -228,12 +228,6 @@ public class NetworkStream implements Stream {
         return buffer;
     }
 
-    public byte peek() {
-        byte b = get();
-        recvBuffer.position(recvBuffer.position() - 1);
-        return b;
-    }
-
     public byte get() {
         return get(DEFAULT_TRIES);
     }

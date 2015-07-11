@@ -27,10 +27,6 @@ public class FixedStream implements Stream {
     public void close() { }
     public Charset getEncoding() { return encoding; }
 
-    public byte peek() {
-        return recvBuffer.get(recvBuffer.position());
-    }
-
     public void send(final boolean sendAll) { }
     public void recv() { }
     public void recv(final int atLeast) { }

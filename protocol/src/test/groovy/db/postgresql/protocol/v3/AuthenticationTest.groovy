@@ -83,7 +83,7 @@ class AuthenticationTest extends Specification {
         def password = 'clearauth';
         Session session = sb.user(user).password(password).sslContext(noCert()).build();
         session.foreground().startup(session.initKeysValues);
-        while(session.next(EnumSet.noneOf(BackEnd)).backEnd != BackEnd.ReadyForQuery) { }
+        ReadyForQuery rfq = session.next(EnumSet.of(BackEnd.ReadyForQuery));
 
         expect:
         session.parameterStatuses;

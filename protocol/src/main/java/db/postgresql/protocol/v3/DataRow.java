@@ -20,6 +20,7 @@ public class DataRow extends Response {
     private final int length;
     private boolean valid = true;
     public final Map<Integer,Serializer> serializers;
+    private RowDescription rowDescription;
     
     private DataRow(final Stream stream) {
         this(stream, ((PostgresqlStream) stream).getStandardSerializers());
@@ -30,6 +31,11 @@ public class DataRow extends Response {
         this.serializers = serializers;
         this.stream = stream;
         this.length = stream.getShort() & 0xFFFF;
+    }
+
+    public DataRow setRowDescription(final RowDescription val) {
+        this.rowDescription = val;
+        return this;
     }
 
     public static final ResponseBuilder builder = (BackEnd backEnd, int size, Stream stream) -> {
@@ -43,9 +49,9 @@ public class DataRow extends Response {
         valid = false;
     }
     
-    public Iterator iterator(final RowDescription rowDescription) {
+    public Iterator iterator() {
         validate();
-        return new Iterator(rowDescription);
+        return new Iterator();
     }
 
     public void skip() {
@@ -56,10 +62,10 @@ public class DataRow extends Response {
         }
     }
 
-    public Object[] toArray(final RowDescription rowDescription) {
+    public Object[] toArray() {
         Object [] ret = new Object[length];
         int index = 0;
-        Iterator iter = iterator(rowDescription);
+        Iterator iter = iterator();
         while(iter.hasNext()) {
             ret[index++] = iter.next();
         }
@@ -69,13 +75,8 @@ public class DataRow extends Response {
     
     public class Iterator implements java.util.Iterator<Object> {
 
-        private final RowDescription rowDescription;
         private int index = 0;
 
-        private Iterator(final RowDescription rowDescription) {
-            this.rowDescription = rowDescription;
-        }
-        
         public boolean hasNext() {
             return index < length;
         }
@@ -98,11 +99,19 @@ public class DataRow extends Response {
             throw new UnsupportedOperationException();
         }
 
-        public BigDecimal nextNumeric() {
+        public Money nextMoney() {
             guardAdvance();
             final FieldDescriptor field = rowDescription.field(index++);
             final int size = stream.getInt();
             final MoneySerializer s = (MoneySerializer) serializers.get(field.typeOid);
+            return s.read(stream, size, field.format);
+        }
+
+        public BigDecimal nextNumeric() {
+            guardAdvance();
+            final FieldDescriptor field = rowDescription.field(index++);
+            final int size = stream.getInt();
+            final NumericSerializer s = (NumericSerializer) serializers.get(field.typeOid);
             return s.read(stream, size, field.format);
         }
 
