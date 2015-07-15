@@ -7,7 +7,9 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
+import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
+import java.nio.charset.CharacterCodingException;
 
 public class FixedStream implements Stream {
 
@@ -120,4 +122,18 @@ public class FixedStream implements Stream {
     public int getInt(final int tries) { return getInt(); }
     public byte getNull() { return get(); }
     public byte getNull(int tries) { return get(); }
+
+    public CharBuffer getCharBuffer(final int numBytes) {
+        ByteBuffer view = recvBuffer.slice();
+        view.limit(numBytes);
+        advance(numBytes);
+
+        try {
+            final CharsetDecoder decoder = encoding.newDecoder();
+            return decoder.decode(view);
+        }
+        catch(CharacterCodingException ex) {
+            throw new ProtocolException(ex);
+        }
+    }
 }

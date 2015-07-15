@@ -8,6 +8,7 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CoderResult;
+import java.nio.charset.CharsetDecoder;
 
 public interface Stream {
 
@@ -46,4 +47,5 @@ public interface Stream {
     int getInt(final int tries);
     byte getNull();
     byte getNull(int tries);
+    CharBuffer getCharBuffer(int numBytes);
 }

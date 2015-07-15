@@ -6,8 +6,10 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CoderResult;
+import java.nio.charset.CharacterCodingException;
 
 public class NetworkStream implements Stream {
 
@@ -216,6 +218,21 @@ public class NetworkStream implements Stream {
         }
 
         return v;
+    }
+
+    public CharBuffer getCharBuffer(final int numBytes) {
+        ensureForRecv(numBytes);
+        ByteBuffer view = recvBuffer.slice();
+        view.limit(numBytes);
+        advance(numBytes);
+
+        try {
+            final CharsetDecoder decoder = encoding.newDecoder();
+            return decoder.decode(view);
+        }
+        catch(CharacterCodingException ex) {
+            throw new ProtocolException(ex);
+        }
     }
 
     public ByteBuffer getBuffer(final ByteBuffer buffer) {

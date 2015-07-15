@@ -7,8 +7,8 @@ import db.postgresql.protocol.v3.io.Stream;
 
 public class BooleanSerializer extends Serializer {
 
-    private static final byte T = (byte) 't';
-    private static final byte F = (byte) 'f';
+    public static final byte T = (byte) 't';
+    public static final byte F = (byte) 'f';
     
     public BooleanSerializer() {
         super(oids(16), classes(boolean.class, Boolean.class));
