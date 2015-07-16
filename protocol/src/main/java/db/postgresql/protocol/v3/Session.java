@@ -34,6 +34,7 @@ public class Session extends PostgresqlStream implements AutoCloseable {
     private final Charset encoding;
     private final String postgresEncoding;
     private final Map<BackEnd, ResponseHandler> handlers;
+    private final Builder builder;
 
     //mutable state
     private final Map<String,String> parameterStatuses = new ConcurrentHashMap<>(32, 0.75f, 1);
@@ -43,7 +44,8 @@ public class Session extends PostgresqlStream implements AutoCloseable {
     private volatile int pid;
     private volatile int secretKey;
     
-    private Session(final String user,
+    private Session(final Builder builder,
+                    final String user,
                     final String password,
                     final String database,
                     final String host,
@@ -57,6 +59,7 @@ public class Session extends PostgresqlStream implements AutoCloseable {
                     final SSLContext sslContext) {
         
         super(makeIo(sslContext, host, port), encoding, numericLocale, moneyLocale);
+        this.builder = builder;
         this.user = user;
         this.password = password;
         this.database = database;
@@ -282,7 +285,7 @@ public class Session extends PostgresqlStream implements AutoCloseable {
         }
 
         public Session build() {
-            return new Session(user, password, database, host, port, application,
+            return new Session(this, user, password, database, host, port, application,
                                encoding, numericLocale, moneyLocale, postgresEncoding,
                                handlers, sslContext).initialize();
         }
@@ -388,6 +391,10 @@ public class Session extends PostgresqlStream implements AutoCloseable {
                 } });
 
         return this;
+    }
+
+    public Session duplicate() {
+        return builder.build();
     }
 
     public void close() {

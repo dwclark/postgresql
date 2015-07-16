@@ -76,14 +76,33 @@ class AuthenticationTest extends Specification {
         session?.close();
     }
 
-    @Ignore
+    def "Duplicate With MD5 Password"() {
+        setup:
+        def user = 'md5auth';
+        def password = 'md5auth';
+        Session session = sb.user(user).password(password).build();
+        Session session2 = session.duplicate();
+        
+        expect:
+        session.parameterStatuses;
+        session.pid;
+        session.secretKey;
+        session2.parameterStatuses;
+        session2.pid;
+        session2.secretKey;
+        session.pid != session2.pid;
+        session.secretKey != session2.secretKey;
+
+        cleanup:
+        session?.close();
+        session2?.close();
+    }
+
     def "SSL Clear Text Password"() {
         setup:
         def user = 'clearauth';
         def password = 'clearauth';
         Session session = sb.user(user).password(password).sslContext(noCert()).build();
-        session.foreground().startup(session.initKeysValues);
-        ReadyForQuery rfq = session.next(EnumSet.of(BackEnd.ReadyForQuery));
 
         expect:
         session.parameterStatuses;
@@ -94,23 +113,18 @@ class AuthenticationTest extends Specification {
         session?.close();
     }
 
-    @Ignore
     def "SSL MD5 Password"() {
         setup:
         def user = 'md5auth';
         def password = 'md5auth';
         Session session = sb.user(user).password(password).sslContext(noCert()).build();
-        session.foreground().startup(session.initKeysValues);
-        while(session.next(EnumSet.noneOf(BackEnd)).backEnd != BackEnd.ReadyForQuery) { }
         
         expect:
         session.parameterStatuses;
         session.pid;
         session.secretKey;
-        session.lastStatus == TransactionStatus.IDLE;
         
         cleanup:
         session?.close();
-
     }
 }

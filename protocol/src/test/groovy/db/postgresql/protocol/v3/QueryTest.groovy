@@ -108,5 +108,4 @@ class QueryTest extends Specification {
             }
         }
     }
-
 }
