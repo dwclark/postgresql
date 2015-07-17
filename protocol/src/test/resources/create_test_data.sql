@@ -46,4 +46,5 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO md5auth;
 commit;
 
 -- select oid, typname, typarray from pg_type order by oid asc;
+-- select oid, typname, typarray, typrelid from pg_type order by oid asc;
 -- select * from pg_attribute where atttypid = 600;
