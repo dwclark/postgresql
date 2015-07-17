@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import javax.net.ssl.SSLContext;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
 public class Session extends PostgresqlStream implements AutoCloseable {
     
@@ -395,6 +396,12 @@ public class Session extends PostgresqlStream implements AutoCloseable {
 
     public Session duplicate() {
         return builder.build();
+    }
+
+    public void withDuplicateSession(Consumer<Session> consumer) {
+        try(Session dup = duplicate()) {
+            consumer.accept(dup);
+        }
     }
 
     public void close() {

@@ -1,5 +1,7 @@
 package db.postgresql.protocol.v3.typeinfo;
 
+import db.postgresql.protocol.v3.Session;
+
 public class PgType {
 
     final private int oid;
@@ -19,6 +21,7 @@ public class PgType {
     public int getArrayId() { return arrayId; }
     public int getRelId() { return relId; }
     public boolean isComposite() { return relId != 0; }
+    public boolean isArray() { return arrayId == 0; };
 
     @Override
     public boolean equals(Object rhs) {
@@ -36,6 +39,15 @@ public class PgType {
     @Override
     public int hashCode() {
         return oid + name.hashCode() + arrayId + relId;
+    }
+
+    public PgComplexType pgComplexType(final Session session) {
+        if(isComposite()) {
+            return Registry.pgComplexType(session, relId);
+        }
+        else {
+            return null;
+        }
     }
 }
 

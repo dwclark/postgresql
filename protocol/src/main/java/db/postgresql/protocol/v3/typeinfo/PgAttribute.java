@@ -1,5 +1,7 @@
 package db.postgresql.protocol.v3.typeinfo;
 
+import db.postgresql.protocol.v3.Session;
+
 public class PgAttribute {
 
     private final int relId;
@@ -35,5 +37,9 @@ public class PgAttribute {
     @Override
     public int hashCode() {
         return relId + name.hashCode() + typeId + num;
+    }
+
+    public PgType pgType(final Session session) {
+        return Registry.pgType(session, typeId);
     }
 }
