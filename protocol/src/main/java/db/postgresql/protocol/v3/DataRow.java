@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.function.Function;
 
 public class DataRow extends Response {
 
@@ -63,14 +64,18 @@ public class DataRow extends Response {
     }
 
     public Object[] toArray() {
-        Object [] ret = new Object[length];
-        int index = 0;
-        Iterator iter = iterator();
-        while(iter.hasNext()) {
-            ret[index++] = iter.next();
-        }
+        return toObject((Iterator iter) -> {
+                Object [] ret = new Object[length];
+                int index = 0;
+                while(iter.hasNext()) {
+                    ret[index++] = iter.next();
+                }
 
-        return ret;
+                return ret; });
+    }
+
+    public <R> R toObject(Function<Iterator,R> func) {
+        return func.apply(iterator());
     }
     
     public class Iterator implements java.util.Iterator<Object> {

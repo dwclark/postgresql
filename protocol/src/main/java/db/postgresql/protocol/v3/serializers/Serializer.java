@@ -39,6 +39,10 @@ public abstract class Serializer {
         }
     }
 
+    public Serializer() {
+        this(null, new Class[0]);
+    }
+    
     public Serializer(final int[] oids, final Class... types) {
         this.oids = oids;
         this.types = types;

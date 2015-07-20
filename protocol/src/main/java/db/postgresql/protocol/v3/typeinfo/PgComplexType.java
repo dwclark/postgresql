@@ -5,15 +5,42 @@ import java.util.Collections;
 
 public class PgComplexType {
 
-    private final int relId;
+    public static class Key {
+        final String database;
+        final int relId;
+
+        public Key(final String database, final int relId) {
+            this.database = database;
+            this.relId = relId;
+        }
+
+        @Override
+        public boolean equals(Object rhs) {
+            if(!(rhs instanceof Key)) {
+                return false;
+            }
+
+            Key o = (Key) rhs;
+            return database.equals(o.database) && relId == o.relId;
+        }
+
+        @Override
+        public int hashCode() {
+            return database.hashCode() + relId;
+        }
+    }
+    
+    private final Key key;
     private List<PgAttribute> attributes;
 
-    public PgComplexType(final int relId, final List<PgAttribute> attributes) {
-        this.relId = relId;
+    public PgComplexType(final String database, final int relId, final List<PgAttribute> attributes) {
+        this.key = new Key(database, relId);
         this.attributes = Collections.unmodifiableList(attributes);
     }
 
-    public int getRelId() { return relId; }
+    public Key getKey() { return key; }
+    public String getDatabase() { return key.database; }
+    public int getRelId() { return key.relId; }
     public List<PgAttribute> getAttributes() { return attributes; }
 
     @Override
@@ -23,11 +50,11 @@ public class PgComplexType {
         }
 
         final PgComplexType o = (PgComplexType) rhs;
-        return relId == o.relId && attributes.equals(o.attributes); 
+        return key.equals(o.key);
     }
 
     @Override
     public int hashCode() {
-        return relId + attributes.hashCode();
+        return key.hashCode();
     }
 }

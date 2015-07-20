@@ -21,24 +21,6 @@ public class PgAttribute {
     public int getTypeId() { return typeId; }
     public int getNum() { return num; }
 
-    @Override
-    public boolean equals(final Object rhs) {
-        if(!(rhs instanceof PgAttribute)) {
-            return false;
-        }
-
-        final PgAttribute o = (PgAttribute) rhs;
-        return (relId == o.relId &&
-                name.equals(o.name) &&
-                typeId == o.typeId &&
-                num == o.num);
-    }
-
-    @Override
-    public int hashCode() {
-        return relId + name.hashCode() + typeId + num;
-    }
-
     public PgType pgType(final Session session) {
         return Registry.pgType(session, typeId);
     }

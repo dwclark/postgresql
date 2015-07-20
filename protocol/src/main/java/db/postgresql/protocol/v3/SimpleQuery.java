@@ -1,8 +1,10 @@
 package db.postgresql.protocol.v3;
 
 import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.EnumSet;
+import java.util.function.Function;
 
 public class SimpleQuery implements ResultProvider {
 
@@ -44,5 +46,32 @@ public class SimpleQuery implements ResultProvider {
     public Results nextResults() {
         advance();
         return Results.nextResults(this);
+    }
+
+    public <R> List<R> manyResults(final Function<DataRow.Iterator, R> func) {
+        List<R> ret = new ArrayList<>();
+        Results results;
+        while(null != (results = nextResults())) {
+            if(results.getResultType() == ResultType.HAS_RESULTS) {
+                Iterator<DataRow> rowIter = results.rows();
+                while(rowIter.hasNext()) {
+                    DataRow row = rowIter.next();
+                    DataRow.Iterator colIter = row.iterator();
+                    ret.add(func.apply(colIter));
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    public <R> R singleResult(Function<DataRow.Iterator, R> func) {
+        List<R> many = manyResults(func);
+        if(many.size() != 1) {
+            throw new IllegalStateException("Single result expected, however query returned: " +
+                                            many.size() + " results");
+        }
+
+        return many.get(0);
     }
 }
