@@ -1,6 +1,5 @@
 package db.postgresql.protocol.v3;
 
-import db.postgresql.protocol.v3.io.Stream;
 import java.util.Map;
 
 public class ParameterStatus extends Response {
@@ -16,15 +15,15 @@ public class ParameterStatus extends Response {
         return value;
     }
 
-    private ParameterStatus(final Stream stream) {
+    private ParameterStatus(final String name, final String value) {
         super(BackEnd.ParameterStatus);
-        this.name = stream.nullString();
-        this.value = stream.nullString();
+        this.name = name;
+        this.value = value;
     }
 
     public final static ResponseBuilder builder = new ResponseBuilder() {
-            public ParameterStatus build(final BackEnd backEnd, final int size, final Stream stream) {
-                return new ParameterStatus(stream);
+            public ParameterStatus build(final BackEnd backEnd, final int size, final PostgresqlStream stream) {
+                return new ParameterStatus(stream.nullString(), stream.nullString());
             }
         };
 }

@@ -3,11 +3,17 @@ package db.postgresql.protocol.v3.serializers;
 import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class LongSerializer extends Serializer {
 
-    public LongSerializer() {
-        super(oids(20), classes(long.class, Long.class));
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("int8").oid(20).arrayId(1016).build();
+
+    public static final LongSerializer instance = new LongSerializer();
+    
+    private LongSerializer() {
+        super(long.class, Long.class);
     }
 
     private static final long[] powers = { 1L, 10L, 100L, 1000L, 10000L, 100000L, 1000000L, 10000000L,

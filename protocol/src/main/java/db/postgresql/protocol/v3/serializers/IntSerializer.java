@@ -3,11 +3,17 @@ package db.postgresql.protocol.v3.serializers;
 import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class IntSerializer extends Serializer {
 
-    public IntSerializer() {
-        super(oids(23), classes(int.class, Integer.class));
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("int4").oid(23).arrayId(1007).build();
+
+    public static final IntSerializer instance = new IntSerializer();
+    
+    private IntSerializer() {
+        super(int.class, Integer.class);
     }
 
     private static final int[] powers = { 1, 10, 100, 1_000, 10_000, 100_000, 1_000_000,

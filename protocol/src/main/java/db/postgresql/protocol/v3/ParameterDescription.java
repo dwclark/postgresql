@@ -1,7 +1,5 @@
 package db.postgresql.protocol.v3;
 
-import db.postgresql.protocol.v3.io.Stream;
-
 public class ParameterDescription extends Response {
 
     private final int[] oids;
@@ -10,18 +8,19 @@ public class ParameterDescription extends Response {
         return oids;
     }
 
-    private ParameterDescription(final Stream stream) {
+    private ParameterDescription(final int[] oids) {
         super(BackEnd.ParameterDescription);
-        final int num = stream.getShort() & 0xFFFF;
-        this.oids = new int[num];
-        for(int i = 0; i < num; ++i) {
-            this.oids[i] = stream.getInt();
-        }
+        this.oids = oids;
     }
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public ParameterDescription build(final BackEnd backEnd, final int size, final Stream stream) {
-                return new ParameterDescription(stream);
+            public ParameterDescription build(final BackEnd backEnd, final int size, final PostgresqlStream stream) {
+                final int[] oids = new int[stream.getShort() & 0xFFFF];
+                for(int i = 0; i < oids.length; ++i) {
+                    oids[i] = stream.getInt();
+                }
+
+                return new ParameterDescription(oids);
             }
         };
 }

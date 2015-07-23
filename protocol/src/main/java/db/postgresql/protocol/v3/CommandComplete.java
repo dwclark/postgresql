@@ -1,6 +1,5 @@
 package db.postgresql.protocol.v3;
 
-import db.postgresql.protocol.v3.io.Stream;
 import java.nio.ByteBuffer;
 
 public class CommandComplete extends Response {
@@ -23,7 +22,7 @@ public class CommandComplete extends Response {
         return action;
     }
     
-    private CommandComplete(final Stream stream) {
+    private CommandComplete(final PostgresqlStream stream) {
         super(BackEnd.CommandComplete);
         final String[] ary = stream.nullString().split(" ");
         this.action = Action.valueOf(ary[0]);
@@ -32,7 +31,7 @@ public class CommandComplete extends Response {
     }
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public CommandComplete build(BackEnd backEnd, int size, Stream stream) {
+            public CommandComplete build(final BackEnd backEnd, final int size, final PostgresqlStream stream) {
                 return new CommandComplete(stream);
             }
         };

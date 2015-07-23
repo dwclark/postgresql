@@ -1,5 +1,7 @@
 package db.postgresql.protocol.v3;
 
+import db.postgresql.protocol.v3.serializers.*;
+import db.postgresql.protocol.v3.typeinfo.*;
 import db.postgresql.protocol.v3.io.*;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -36,7 +38,10 @@ public class Session extends PostgresqlStream implements AutoCloseable {
     private final String postgresEncoding;
     private final Map<BackEnd, ResponseHandler> handlers;
     private final Builder builder;
-
+    private final NumericSerializer numericSerializer;
+    private final MoneySerializer moneySerializer;
+    public final StringSerializer stringSerializer;
+    
     //mutable state
     private final Map<String,String> parameterStatuses = new ConcurrentHashMap<>(32, 0.75f, 1);
     private final ConcurrentLinkedQueue<Notification> notificationQueue = new ConcurrentLinkedQueue<>();
@@ -59,7 +64,7 @@ public class Session extends PostgresqlStream implements AutoCloseable {
                     final Map<BackEnd,ResponseHandler> handlers,
                     final SSLContext sslContext) {
         
-        super(makeIo(sslContext, host, port), encoding, numericLocale, moneyLocale);
+        super(makeIo(sslContext, host, port), encoding);
         this.builder = builder;
         this.user = user;
         this.password = password;
@@ -69,6 +74,12 @@ public class Session extends PostgresqlStream implements AutoCloseable {
         this.application = application;
         this.encoding = encoding;
         this.postgresEncoding = postgresEncoding;
+
+        //setup serializers
+        this.moneySerializer = new MoneySerializer(moneyLocale);
+        this.numericSerializer = new NumericSerializer(numericLocale);
+        this.stringSerializer = new StringSerializer(encoding);
+        populateSerializers();
 
         Map<BackEnd,ResponseHandler> finalHandlers = new LinkedHashMap<>();
         
@@ -410,6 +421,49 @@ public class Session extends PostgresqlStream implements AutoCloseable {
         pollingLock.lock();
         super.close();
         pollingLock.unlock();
+    }
+
+    @Override
+    public Serializer serializer(int oid) {
+        return Registry.serializer(getDatabase(), oid);
+    }
+
+    @Override
+    public NumericSerializer getNumericSerializer() {
+        return numericSerializer;
+    }
+
+    @Override
+    public MoneySerializer getMoneySerializer() {
+        return moneySerializer;
+    }
+
+    @Override
+    public StringSerializer getStringSerializer() {
+        return stringSerializer;
+    }
+
+    private final void populateSerializer(final PgType pgType, Serializer s) {
+        Registry.serializer(new PgType.Builder(pgType).database(getDatabase()).build(), s);
+    }
+    
+    private final void populateSerializers() {
+        populateSerializer(BooleanSerializer.PGTYPE, BooleanSerializer.instance);
+        populateSerializer(BytesSerializer.PGTYPE, BytesSerializer.instance);
+        populateSerializer(DateSerializer.PGTYPE, DateSerializer.instance);
+        populateSerializer(DoubleSerializer.PGTYPE, DoubleSerializer.instance);
+        populateSerializer(FloatSerializer.PGTYPE, FloatSerializer.instance);
+        populateSerializer(IntSerializer.PGTYPE, IntSerializer.instance);
+        populateSerializer(LocalDateTimeSerializer.PGTYPE, LocalDateTimeSerializer.instance);
+        populateSerializer(LocalTimeSerializer.PGTYPE, LocalTimeSerializer.instance);
+        populateSerializer(LongSerializer.PGTYPE, LongSerializer.instance);
+        populateSerializer(MoneySerializer.PGTYPE, moneySerializer);
+        populateSerializer(NumericSerializer.PGTYPE, numericSerializer);
+        populateSerializer(OffsetDateTimeSerializer.PGTYPE, OffsetDateTimeSerializer.instance);
+        populateSerializer(OffsetTimeSerializer.PGTYPE, OffsetTimeSerializer.instance);
+        populateSerializer(ShortSerializer.PGTYPE, ShortSerializer.instance);
+        populateSerializer(StringSerializer.PGTYPE_TEXT, stringSerializer);
+        populateSerializer(StringSerializer.PGTYPE_VARCHAR, stringSerializer);
     }
 }
 

@@ -3,155 +3,70 @@ package db.postgresql.protocol.v3.typeinfo;
 import db.postgresql.protocol.v3.Session;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
-import db.postgresql.protocol.v3.serializers.Serializer;
 import java.util.List;
 
 public class PgType {
 
-    public static class OidKey {
-        final String database;
-        final int oid;
-
-        public OidKey(final String database, final int oid) {
-            this.database = database;
-            this.oid = oid;
-        }
-
-        public OidKey(final OidKey toCopy) {
-            this(toCopy.database, toCopy.oid);
-        }
-
-        @Override
-        public boolean equals(final Object rhs) {
-            if(!(rhs instanceof OidKey)) {
-                return false;
-            }
-
-            OidKey o = (OidKey) rhs;
-            return database.equals(o.database) && oid == o.oid;
-        }
-
-        @Override
-        public int hashCode() {
-            return oid + database.hashCode();
-        }
-    }
-
-    public static class NameKey {
-        final String database;
-        final String schema;
-        final String name;
-
-        public NameKey(final String database, final String schema, final String name) {
-            this.database = database;
-            this.schema = filterSchema(schema);
-            this.name = name;
-        }
-
-        public NameKey(final NameKey toCopy) {
-            this(toCopy.database, toCopy.schema, toCopy.name);
-        }
-
-        public NameKey(final String database, final String fullName) {
-            this.database = database;
-            final String[] ary = fullName.split("\\.");
-            if(ary.length == 1) {
-                this.schema = "";
-                this.name = ary[0];
-            }
-            else {
-                this.schema = ary[0];
-                this.name = ary[1];
-            }
-        }
-
-        public boolean hasSchema() {
-            return !"".equals(schema);
-        }
-
-        public String getFullName() {
-            if(hasSchema()) {
-                return schema + '.' + name;
-            }
-            else {
-                return name;
-            }
-        }
-
-        private static String filterSchema(String schema) {
-            if(schema.equals("public") || schema.equals("pg_catalog")) {
-                return "";
-            }
-            else {
-                return schema;
-            }
-        }
-
-        @Override
-        public boolean equals(Object rhs) {
-            if(!(rhs instanceof NameKey)) {
-                return false;
-            }
-
-            NameKey o = (NameKey) rhs;
-            return database.equals(o.database) && schema.equals(o.schema) && name.equals(o.name);
-        }
-
-        public String getDatabase() { return database; }
-        public String getSchema() { return schema; }
-        public String getName() { return name; }
-    }
-
     public static final String DEFAULT_DB = "";
-    public static final Serializer EMPTY = new Serializer() {
-            public Object readObject(Stream stream, int size, Format format) {
-                throw new UnsupportedOperationException();
-            }
-        };
+    public static final String DEFAULT_SCHEMA = "public";
+    public static final int DEFAULT_RELID = 0;
     
     final private OidKey oidKey;
     final private NameKey nameKey;
-    final private int arrayId;
+    final private OidKey arrayKey;
     final private int relId;
-    final private Serializer serializer;
 
-    private PgType(final OidKey oidKey, final NameKey nameKey, final int arrayId,
-                   final int relId, final Serializer serializer) {
+    private PgType(final OidKey oidKey, final OidKey arrayKey, final NameKey nameKey, final int relId) {
         this.oidKey = oidKey;
+        this.arrayKey = arrayKey;
         this.nameKey = nameKey;
-        this.arrayId = arrayId;
         this.relId = relId;
-        this.serializer = serializer;
     }
 
-    public PgType(final String database, final int oid, final String schema,
-                  final String name, final int arrayId, final int relId, final Serializer serializer) {
-        this(new OidKey(database, oid), new NameKey(database, schema, name),
-             arrayId, relId, serializer);
-    }
-    
-    public PgType(final String database, final int oid, final String schema,
-                  final String name, final int arrayId, final int relId) {
-        this(database, oid, schema, name, arrayId, relId, EMPTY);
-    }
+    public static class Builder {
+        private String database = DEFAULT_DB;
+        private String schema = DEFAULT_SCHEMA;
+        private String name;
+        private int oid;
+        private int arrayId;
+        private int relId = DEFAULT_RELID;
 
-    public PgType(final int oid, final String schema,
-                  final String name, final int arrayId, final int relId) {
-        this(DEFAULT_DB, oid, schema, name, arrayId, relId);
+        public Builder database(final String val) { database = val; return this; }
+        public Builder schema(final String val) { schema = val; return this; }
+        public Builder name(final String val) { name = val; return this; }
+        public Builder oid(final int val) { oid = val; return this; }
+        public Builder arrayId(final int val) { arrayId = val; return this; }
+        public Builder relId(final int val) { relId = val; return this; }
+
+        public PgType build() {
+            return new PgType(OidKey.immutable(database, oid), OidKey.immutable(database, arrayId),
+                              NameKey.immutable(database, schema, name), relId);
+        }
+
+        public Builder() { }
+
+        public Builder(final PgType pgType) {
+            this.database = pgType.getDatabase();
+            this.schema = pgType.getSchema();
+            this.name = pgType.getName();
+            this.oid = pgType.getOid();
+            this.arrayId = pgType.getArrayId();
+            this.relId = pgType.getRelId();
+        }
     }
 
     public OidKey getOidKey() { return oidKey; }
+    public OidKey getArrayKey() { return arrayKey; }
     public NameKey getNameKey() { return nameKey; }
-    public String getDatabase() { return oidKey.database; }
-    public int getOid() { return oidKey.oid; }
-    public String getSchema() { return nameKey.schema; }
-    public String getName() { return nameKey.name; }
-    public int getArrayId() { return arrayId; }
+    public String getDatabase() { return oidKey.getDatabase(); }
+    public int getOid() { return oidKey.getOid(); }
+    public String getSchema() { return nameKey.getSchema(); }
+    public String getName() { return nameKey.getName(); }
+    public int getArrayId() { return arrayKey.getOid(); }
     public int getRelId() { return relId; }
     public boolean isComplex() { return relId != 0; }
-    public boolean isArray() { return arrayId == 0; };
-
     public String getFullName() { return nameKey.getFullName(); }
+    public boolean isBuiltin() { return nameKey.isBuiltin(); } 
 
     @Override
     public boolean equals(Object rhs) {

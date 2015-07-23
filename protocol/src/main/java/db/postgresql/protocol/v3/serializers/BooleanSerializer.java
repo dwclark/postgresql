@@ -4,14 +4,20 @@ import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.ProtocolException;
 import db.postgresql.protocol.v3.io.Stream;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class BooleanSerializer extends Serializer {
 
     public static final byte T = (byte) 't';
     public static final byte F = (byte) 'f';
+
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("bool").oid(16).arrayId(1000).build();
+
+    public static final BooleanSerializer instance = new BooleanSerializer();
     
-    public BooleanSerializer() {
-        super(oids(16), classes(boolean.class, Boolean.class));
+    private BooleanSerializer() {
+        super(boolean.class, Boolean.class);
     }
     
     public boolean read(final Stream stream, final int size, final Format format) {

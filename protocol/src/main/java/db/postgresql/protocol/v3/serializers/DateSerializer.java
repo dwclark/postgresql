@@ -6,14 +6,20 @@ import db.postgresql.protocol.v3.ProtocolException;
 import db.postgresql.protocol.v3.io.Stream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class DateSerializer extends Serializer {
 
     private static final String STR = "uuuu-MM-dd";
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern(STR);
+
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("date").oid(1082).arrayId(1182).build();
+
+    public static final DateSerializer instance = new DateSerializer();
     
-    public DateSerializer() {
-        super(oids(1082), classes(LocalDate.class));
+    private DateSerializer() {
+        super(LocalDate.class);
     }
     
     public LocalDate read(final Stream stream, final int size, final Format format) {

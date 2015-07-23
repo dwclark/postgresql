@@ -1,7 +1,5 @@
 package db.postgresql.protocol.v3;
 
-import db.postgresql.protocol.v3.io.Stream;
-
 public class ReadyForQuery extends Response {
 
     private final TransactionStatus status;
@@ -10,14 +8,14 @@ public class ReadyForQuery extends Response {
         return status;
     }
 
-    private ReadyForQuery(final Stream stream) {
+    private ReadyForQuery(final TransactionStatus status) {
         super(BackEnd.ReadyForQuery);
-        this.status = TransactionStatus.from(stream.get());
+        this.status = status;
     }
     
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public ReadyForQuery build(final BackEnd backEnd, final int size, final Stream stream) {
-                return new ReadyForQuery(stream);
+            public ReadyForQuery build(final BackEnd backEnd, final int size, final PostgresqlStream stream) {
+                return new ReadyForQuery(TransactionStatus.from(stream.get()));
             }
         };
 }

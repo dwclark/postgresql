@@ -11,52 +11,17 @@ import java.util.Map;
 
 public abstract class Serializer {
 
-    private final int[] oids;
-
-    public int[] getOids() {
-        return oids;
-    }
-
     private final Class[] types;
     
     public Class[] getTypes() {
         return types;
     }
 
-    public boolean handles(final int val) {
-        for(int oid : oids) {
-            if(val == oid) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public void checkHandles(final int val) {
-        if(!handles(val)) {
-            throw new ProtocolException(getClass().getName() + " can't handle oid " + val);
-        }
-    }
-
-    public Serializer() {
-        this(null, new Class[0]);
-    }
-    
-    public Serializer(final int[] oids, final Class... types) {
-        this.oids = oids;
+    public Serializer(final Class... types) {
         this.types = types;
     }
 
     public abstract Object readObject(Stream stream, int size, Format format);
-
-    protected static int[] oids(int... vals) {
-        return vals;
-    }
-
-    protected static Class[] classes(Class... vals) {
-        return vals;
-    }
 
     public static final Charset ASCII_ENCODING = Charset.forName("US-ASCII");
 

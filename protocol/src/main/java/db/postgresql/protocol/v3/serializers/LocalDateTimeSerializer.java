@@ -11,14 +11,20 @@ import java.time.temporal.TemporalAccessor;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class LocalDateTimeSerializer extends Serializer {
 
     private static final String STR = "uuuu-MM-dd HH:mm:ss.n";
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern(STR);
 
-    public LocalDateTimeSerializer() {
-        super(oids(1114), classes(LocalDateTime.class));
+    public static final LocalDateTimeSerializer instance = new LocalDateTimeSerializer();
+    
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("timestamp").oid(1114).arrayId(1115).build();
+
+    private LocalDateTimeSerializer() {
+        super(LocalDateTime.class);
     }
 
     public LocalDateTime read(final Stream stream, final int size, final Format format) {

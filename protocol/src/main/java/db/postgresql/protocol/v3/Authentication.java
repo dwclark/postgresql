@@ -1,6 +1,5 @@
 package db.postgresql.protocol.v3;
 
-import db.postgresql.protocol.v3.io.Stream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -15,7 +14,7 @@ public abstract class Authentication extends Response {
     }
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public Authentication build(final BackEnd ignore, final int size, final Stream stream) {
+            public Authentication build(final BackEnd ignore, final int size, final PostgresqlStream stream) {
                 BackEnd backEnd = BackEnd.find(ignore.id, (byte) stream.getInt());
                 switch(backEnd) {
                 case AuthenticationOk:
@@ -59,7 +58,7 @@ public abstract class Authentication extends Response {
             return salt;
         }
         
-        private Md5(final Stream stream) {
+        private Md5(final PostgresqlStream stream) {
             super(BackEnd.AuthenticationMD5Password);
             this.salt = stream.get(new byte[4]);
         }

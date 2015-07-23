@@ -8,18 +8,24 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CoderResult;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class StringSerializer extends Serializer {
 
     private final Charset encoding;
     private final CharsetEncoder encoder;
-    
+
+    public static final PgType PGTYPE_TEXT =
+        new PgType.Builder().name("text").oid(25).arrayId(1009).build();
+    public static final PgType PGTYPE_VARCHAR =
+        new PgType.Builder().name("varchar").oid(1043).arrayId(1015).build();
+
     public StringSerializer(final Charset encoding) {
-        super(oids(25,1043), classes(String.class));
+        super(String.class);
         this.encoding = encoding;
         this.encoder = encoding.newEncoder();
     }
-        
+
     public String read(final Stream stream, final int size, final Format format) {
         return isNull(size) ? null : _str(stream, size);
     }

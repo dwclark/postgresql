@@ -9,13 +9,17 @@ import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.Locale;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class NumericSerializer extends Serializer {
 
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("numeric").oid(1700).arrayId(1231).build();
+
     private final Locale locale;
-    
+
     public NumericSerializer(final Locale locale) {
-        super(oids(1700), classes(BigDecimal.class));
+        super(BigDecimal.class);
         this.locale = locale;
     }
 

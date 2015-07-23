@@ -8,14 +8,20 @@ import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class OffsetTimeSerializer extends Serializer {
 
     private static final String STR = "HH:mm:ss.nx";
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern(STR);
 
-    public OffsetTimeSerializer() {
-        super(oids(1266), classes(OffsetTime.class));
+    public static final PgType PGTYPE =
+         new PgType.Builder().name("timetz").oid(1266).arrayId(1270).build();
+
+    public static final OffsetTimeSerializer instance = new OffsetTimeSerializer();
+    
+    private OffsetTimeSerializer() {
+        super(OffsetTime.class);
     }
 
     public OffsetTime read(final Stream stream, final int size, final Format format) {

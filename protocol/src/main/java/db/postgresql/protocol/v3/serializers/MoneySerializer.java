@@ -11,19 +11,21 @@ import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.Currency;
 import java.util.Locale;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class MoneySerializer extends Serializer {
 
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("money").oid(790).arrayId(791).build();
+
     private final Locale locale;
-    
+
     public MoneySerializer(final Locale locale) {
-        super(oids(790), classes(Money.class));
         this.locale = locale;
     }
 
     public DecimalFormat getFormatter() {
         DecimalFormat formatter = (DecimalFormat) NumberFormat.getCurrencyInstance(locale);
-        //formatter.setCurrency(Currency.getInstance(locale));
         formatter.setParseBigDecimal(true);
         return formatter;
     }

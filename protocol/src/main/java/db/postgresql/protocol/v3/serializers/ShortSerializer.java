@@ -3,13 +3,19 @@ package db.postgresql.protocol.v3.serializers;
 import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class ShortSerializer extends Serializer {
 
-    public ShortSerializer() {
-        super(oids(21), classes(short.class, Short.class));
-    }
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("int2").oid(21).arrayId(1005).build();
 
+    public static final ShortSerializer instance = new ShortSerializer();
+    
+    private ShortSerializer() {
+        super(short.class, Short.class);
+    }
+    
     private final static short[] powers = { 1, 10, 100, 1_000, 10_000, Short.MAX_VALUE };
 
     private static short pow(int i) {

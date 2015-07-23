@@ -17,7 +17,7 @@ public class UdtSerializer extends Serializer {
     private final Charset encoding;
     
     public UdtSerializer(final Class<? extends Udt> type, final Charset encoding) {
-        super(oids(-1), classes(type));
+        super(type);
         this.type = type;
         this.encoding = encoding;
     }

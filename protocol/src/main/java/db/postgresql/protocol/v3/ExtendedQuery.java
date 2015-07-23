@@ -68,62 +68,62 @@ public class ExtendedQuery implements ResultProvider {
 
     //binders
     public Bindable bind(final boolean val) {
-        return stream.serializer(BooleanSerializer.class).bindable(val, Format.TEXT);
+        return BooleanSerializer.instance.bindable(val, Format.TEXT);
     }
 
     public Bindable bind(final byte[] val) {
-        return stream.serializer(BytesSerializer.class).bindable(val, Format.TEXT);
+        return BytesSerializer.instance.bindable(val, Format.TEXT);
     }
 
     public Bindable bind(final LocalDate val) {
-        return stream.serializer(DateSerializer.class).bindable(val, Format.TEXT);
+        return DateSerializer.instance.bindable(val, Format.TEXT);
     }
 
     public Bindable bind(final double val) {
-        return stream.serializer(DoubleSerializer.class).bindable(val, Format.TEXT);
+        return DoubleSerializer.instance.bindable(val, Format.TEXT);
     }
 
     public Bindable bind(final float val) {
-        return stream.serializer(FloatSerializer.class).bindable(val, Format.TEXT);
+        return FloatSerializer.instance.bindable(val, Format.TEXT);
     }
 
     public Bindable bind(final int val) {
-        return stream.serializer(IntSerializer.class).bindable(val, Format.TEXT);
+        return IntSerializer.instance.bindable(val, Format.TEXT);
     }
 
     public Bindable bind(final LocalDateTime val) {
-        return stream.serializer(LocalDateTimeSerializer.class).bindable(val, Format.TEXT);
+        return LocalDateTimeSerializer.instance.bindable(val, Format.TEXT);
     }
 
     public Bindable bind(final LocalTime val) {
-        return stream.serializer(LocalTimeSerializer.class).bindable(val, Format.TEXT);
+        return LocalTimeSerializer.instance.bindable(val, Format.TEXT);
     }
 
     public Bindable bind(final long val) {
-        return stream.serializer(LongSerializer.class).bindable(val, Format.TEXT);
+        return LongSerializer.instance.bindable(val, Format.TEXT);
     }
 
     public Bindable bind(final Money val) {
-        return stream.serializer(MoneySerializer.class).bindable(val, Format.TEXT);
+        return stream.getMoneySerializer().bindable(val, Format.TEXT);
     }
 
     public Bindable bind(final BigDecimal val) {
-        return stream.serializer(NumericSerializer.class).bindable(val, Format.TEXT);
+        return stream.getNumericSerializer().bindable(val, Format.TEXT);
     }
 
     public Bindable bind(final OffsetDateTime val) {
-        return stream.serializer(OffsetDateTimeSerializer.class).bindable(val, Format.TEXT);
+        return OffsetDateTimeSerializer.instance.bindable(val, Format.TEXT);
     }
 
     public Bindable bind(final OffsetTime val) {
-        return stream.serializer(OffsetTimeSerializer.class).bindable(val, Format.TEXT);
+        return OffsetTimeSerializer.instance.bindable(val, Format.TEXT);
     }
 
     public Bindable bind(final short val) {
-        return stream.serializer(ShortSerializer.class).bindable(val, Format.TEXT);
+        return ShortSerializer.instance.bindable(val, Format.TEXT);
     }
     
     public Bindable bind(final String val) {
-        return stream.serializer(StringSerializer.class).bindable(val, Format.TEXT);
+        return stream.getStringSerializer().bindable(val, Format.TEXT);
     }
 }

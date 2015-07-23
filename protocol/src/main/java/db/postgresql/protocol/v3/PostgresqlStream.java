@@ -50,62 +50,30 @@ public class PostgresqlStream extends NetworkStream {
 
     protected final Map<BackEnd,ResponseBuilder> builders = builders();
 
-    private static void put(Map<Integer,Serializer> map, Serializer serializer) {
-        assert(serializer != null);
-        assert(serializer.getOids() != null);
-        for(int oid : serializer.getOids()) {
-            map.put(oid, serializer);
-        }
+    public Serializer serializer(int oid) {
+        throw new UnsupportedOperationException();
     }
 
-    private final Map<Integer,Serializer> standardSerializers;
-
-    public Map<Integer,Serializer> getStandardSerializers() {
-        return standardSerializers;
+    private final NumericSerializer _numericSerializer = new NumericSerializer(Locale.getDefault());
+    
+    public NumericSerializer getNumericSerializer() {
+        return _numericSerializer;
     }
 
-    private final Map<Class,Serializer> serializersByType;
+    private final MoneySerializer _moneySerializer = new MoneySerializer(Locale.getDefault());
 
-    private Map<Class,Serializer> serializersByType() {
-        Map<Class,Serializer> ret = new HashMap<>();
-        
-        for(Serializer s : standardSerializers.values()) {
-            ret.put(s.getClass(), s);
-        }
-
-        return Collections.unmodifiableMap(ret);
+    public MoneySerializer getMoneySerializer() {
+        return _moneySerializer;
     }
 
-    @SuppressWarnings("unchecked")
-    public <T extends Serializer> T serializer(Class<T> serializerType) {
-        return (T) serializersByType.get(serializerType);
+    public final StringSerializer _stringSerializer = new StringSerializer(Charset.forName("UTF-8"));
+
+    public StringSerializer getStringSerializer() {
+        return _stringSerializer;
     }
     
-    private Map<Integer,Serializer> standardSerializers(final Charset encoding, final Locale numericLocale,
-                                                        final Locale moneyLocale) {
-        Map<Integer,Serializer> tmp = new HashMap<>();
-        put(tmp, new NumericSerializer(numericLocale));
-        put(tmp, new MoneySerializer(moneyLocale));
-        put(tmp, new BooleanSerializer());
-        put(tmp, new BytesSerializer());
-        put(tmp, new DateSerializer());
-        put(tmp, new DoubleSerializer());
-        put(tmp, new FloatSerializer());
-        put(tmp, new IntSerializer());
-        put(tmp, new LongSerializer());
-        put(tmp, new ShortSerializer());
-        put(tmp, new StringSerializer(encoding));
-        put(tmp, new LocalTimeSerializer());
-        put(tmp, new OffsetTimeSerializer());
-        put(tmp, new LocalDateTimeSerializer());
-        put(tmp, new OffsetDateTimeSerializer());
-        return Collections.unmodifiableMap(tmp);
-    }
-
-    public PostgresqlStream(IO io, final Charset encoding, final Locale numericLocale, final Locale moneyLocale) {
+    public PostgresqlStream(IO io, final Charset encoding) {
         super(io, encoding);
-        this.standardSerializers = standardSerializers(encoding, numericLocale, moneyLocale);
-        this.serializersByType = serializersByType();
     }
     
     //front end requests

@@ -49,8 +49,9 @@ class PrepareAndBindTest extends Specification {
         //session.sync();
         
         
-        IntSerializer intSerializer = session.serializer(IntSerializer);
-        StringSerializer strSerializer = session.serializer(StringSerializer);
+        IntSerializer intSerializer = IntSerializer.instance;
+        StringSerializer strSerializer = session.stringSerializer;
+        
         NUM.times { 
             Bindable[] inputs = [ intSerializer.bindable(3, Format.TEXT), strSerializer.bindable("three", Format.TEXT) ] as Bindable[];
             session.bind('', insertName, inputs, Session.EMPTY_FORMATS).execute('');

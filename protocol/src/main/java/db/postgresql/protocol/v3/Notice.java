@@ -1,6 +1,5 @@
 package db.postgresql.protocol.v3;
 
-import db.postgresql.protocol.v3.io.Stream;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -13,7 +12,7 @@ public class Notice extends Response {
         return messages;
     }
 
-    public Notice(final BackEnd backEnd, final Stream stream, final int size) {
+    public Notice(final BackEnd backEnd, final PostgresqlStream stream, final int size) {
         super(backEnd);
 
         final Map<NoticeType,String> map = new LinkedHashMap<>();
@@ -25,7 +24,7 @@ public class Notice extends Response {
         this.messages = Collections.unmodifiableMap(map);
     }
 
-    public final static ResponseBuilder builder = (final BackEnd backEnd, final int size, final Stream stream) -> {
+    public final static ResponseBuilder builder = (final BackEnd backEnd, final int size, final PostgresqlStream stream) -> {
         return new Notice(backEnd, stream, size);
     };
 

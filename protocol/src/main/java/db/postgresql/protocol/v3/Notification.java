@@ -1,6 +1,5 @@
 package db.postgresql.protocol.v3;
 
-import db.postgresql.protocol.v3.io.Stream;
 import java.util.Map;
 
 public class Notification extends Response {
@@ -21,16 +20,16 @@ public class Notification extends Response {
         return payload;
     }
 
-    private Notification(final Stream stream) {
+    private Notification(final int pid, final String channel, final String payload) {
         super(BackEnd.NotificationResponse);
-        this.pid = stream.getInt();
-        this.channel = stream.nullString();
-        this.payload = stream.nullString();
+        this.pid = pid;
+        this.channel = channel;
+        this.payload = payload;
     }
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public Notification build(final BackEnd backEnd, final int size, final Stream stream) {
-                return new Notification(stream);
+            public Notification build(final BackEnd backEnd, final int size, final PostgresqlStream stream) {
+                return new Notification(stream.getInt(), stream.nullString(), stream.nullString());
             }
         };
 }

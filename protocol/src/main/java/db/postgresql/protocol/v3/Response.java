@@ -34,7 +34,7 @@ public class Response {
     private static final Response portalSuspended = new Response(BackEnd.PortalSuspended);
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public Response build(final BackEnd backEnd, final int size, final Stream stream) {
+            public Response build(final BackEnd backEnd, final int size, final PostgresqlStream stream) {
                 switch(backEnd) {
                 case BindComplete: return bindComplete;
                 case CloseComplete: return closeComplete;

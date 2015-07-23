@@ -3,11 +3,17 @@ package db.postgresql.protocol.v3.serializers;
 import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class DoubleSerializer extends Serializer {
 
-    public DoubleSerializer() {
-        super(oids(700,701), classes(float.class, Float.class, double.class, Double.class));
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("float8").oid(701).arrayId(1022).build();
+
+    public static final DoubleSerializer instance = new DoubleSerializer();
+    
+    private DoubleSerializer() {
+        super(double.class, Double.class);
     }
 
     public double read(final Stream stream, final int size, final Format format) {

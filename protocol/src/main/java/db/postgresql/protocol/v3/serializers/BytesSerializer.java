@@ -5,11 +5,17 @@ import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.io.Stream;
 import java.nio.ByteBuffer;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class BytesSerializer extends Serializer {
 
-    public BytesSerializer() {
-        super(oids(17), classes(byte.class, byte[].class));
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("bytea").oid(17).arrayId(1001).build();
+
+    public static final BytesSerializer instance = new BytesSerializer();
+    
+    private BytesSerializer() {
+        super(byte[].class);
     }
         
     public byte[] read(final Stream stream, final int size, final Format format) {

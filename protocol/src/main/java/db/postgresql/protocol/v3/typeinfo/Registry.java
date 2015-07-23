@@ -3,6 +3,7 @@ package db.postgresql.protocol.v3.typeinfo;
 import db.postgresql.protocol.v3.Session;
 import db.postgresql.protocol.v3.DataRow;
 import db.postgresql.protocol.v3.SimpleQuery;
+import db.postgresql.protocol.v3.serializers.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import java.util.List;
@@ -10,54 +11,82 @@ import java.util.List;
 public class Registry {
 
     public static PgType pgType(final Session session, final int oid) {
-        final PgType.OidKey key = new PgType.OidKey(session.getDatabase(), oid);
-        final PgType ptype = pgTypes.get(key);
+        final PgType ptype = pgTypes.get(OidKey.threadLocal(session.getDatabase(), oid));
         if(ptype != null) {
             return ptype;
         }
         
         session.withDuplicateSession((Session dup) -> populatePgType(dup, oid));
-        return pgTypes.get(key);
+        return pgTypes.get(OidKey.threadLocal(session.getDatabase(), oid));
     }
 
     public static PgType pgType(final Session session, final String fullName) {
-        final PgType.NameKey key = new PgType.NameKey(session.getDatabase(), fullName);
-        final PgType ptype = pgTypesByName.get(key);
+        final PgType ptype = pgTypesByName.get(NameKey.threadLocal(session.getDatabase(), fullName));
         if(ptype != null) {
             return ptype;
         }
 
         session.withDuplicateSession((Session dup) -> populatePgType(dup, fullName));
-        return pgTypes.get(key);
+        return pgTypes.get(NameKey.threadLocal(session.getDatabase(), fullName));
     }
 
     public static PgComplexType pgComplexType(final String database, final int relId) {
-        return pgComplexTypes.get(new PgComplexType.Key(database, relId));
+        return pgComplexTypes.get(OidKey.threadLocal(database, relId));
     }
 
     public static PgComplexType pgComplexType(final Session session, final int relId) {
-        final PgComplexType.Key key = new PgComplexType.Key(session.getDatabase(), relId);
-        final PgComplexType pgComplexType = pgComplexTypes.get(key);
+        final PgComplexType pgComplexType = pgComplexTypes.get(OidKey.threadLocal(session.getDatabase(), relId));
         if(pgComplexType != null) {
             return pgComplexType;
         }
         
         session.withDuplicateSession((Session dup) -> populatePgComplexType(dup, relId));
-        return pgComplexTypes.get(key);
+        return pgComplexTypes.get(OidKey.threadLocal(session.getDatabase(), relId));
     }
 
-    private static final Map<PgType.OidKey,PgType> pgTypes = new ConcurrentHashMap<>(100, 0.75f, 1);
-    private static final Map<PgType.NameKey,PgType> pgTypesByName = new ConcurrentHashMap<>(100, 0.75f, 1);
-    private static final Map<PgComplexType.Key,PgComplexType> pgComplexTypes = new ConcurrentHashMap<>(50, 0.75f, 1);
+    public static Serializer serializer(final String database, final int oid) {
+        return databaseSerializers(database).get(oid);
+    }
 
-    private static void add(PgType pgType) {
+    public static void serializer(final String database, final int oid, final Serializer serializer) {
+        databaseSerializers(database).put(oid, serializer);
+    }
+
+    public static void serializer(final PgType pgType, final Serializer serializer) {
+        serializer(pgType.getDatabase(), pgType.getOid(), serializer);
+        serializer(pgType.getDatabase(), pgType.getArrayId(), serializer);
+    }
+
+    private static Map<Integer,Serializer> databaseSerializers(final String database) {
+        Map<Integer,Serializer> ret = databaseSerializers.get(database);
+        if(ret == null) {
+            databaseSerializers.putIfAbsent(database, new ConcurrentHashMap<>(100, 0.75f, 1));
+            ret = databaseSerializers.get(database);
+        }
+
+        return ret;
+    }
+
+    public static void add(final PgType pgType) {
         pgTypes.put(pgType.getOidKey(), pgType);
+        pgTypes.put(pgType.getArrayKey(), pgType);
         pgTypesByName.put(pgType.getNameKey(), pgType);
     }
     
-    private static void add(PgComplexType pgType) {
-        pgComplexTypes.put(pgType.getKey(), pgType);
+    public static void add(final PgComplexType pgType) {
+        pgComplexTypes.put(pgType.getOidKey(), pgType);
     }
+
+    public static void add(final PgType pgType, final Serializer serializer) {
+        final Map<Integer,Serializer> map = databaseSerializers(pgType.getOidKey().getDatabase());
+        map.put(pgType.getOidKey().getOid(), serializer);
+        map.put(pgType.getArrayKey().getOid(), serializer);
+    }
+
+    private static final Map<OidKey,PgType> pgTypes = new ConcurrentHashMap<>(100, 0.75f, 1);
+    private static final Map<NameKey,PgType> pgTypesByName = new ConcurrentHashMap<>(100, 0.75f, 1);
+    private static final Map<OidKey,PgComplexType> pgComplexTypes = new ConcurrentHashMap<>(50, 0.75f, 1);
+    private static final Map<String,Map<Integer,Serializer>> databaseSerializers = new ConcurrentHashMap<>(5, 0.75f, 1);
 
     private static void populatePgType(final Session session, final int oid) {
         final String sql = String.format("select typ.oid, ns.nspname, typ.typname, typ.typarray, typ.typrelid from pg_type typ " +
@@ -66,7 +95,7 @@ public class Registry {
     }
 
     private static void populatePgType(final Session session, final String fullName) {
-        final PgType.NameKey nameKey = new PgType.NameKey(session.getDatabase(), fullName);
+        final NameKey nameKey = NameKey.immutable(session.getDatabase(), fullName);
         if(nameKey.hasSchema()) {
             final String sql = String.format("select typ.oid, ns.nspname, typ.typname, typ.typarray, typ.typrelid from pg_type typ " +
                                              "join pg_namespace ns on typ.typnamespace = ns.oid where ns.nspname = '%s' " +
@@ -83,13 +112,12 @@ public class Registry {
 
     private static void _populatePgType(final Session session, final String sql) {
         final PgType pg = new SimpleQuery(sql, session).singleResult((DataRow.Iterator iter) -> {
-                return new PgType(iter.nextInt(), iter.nextString(), iter.nextString(),
-                                  iter.nextInt(), iter.nextInt()); });
-        add(pg);
+                PgType.Builder builder = new PgType.Builder();
+                builder.oid(iter.nextInt()).schema(iter.nextString()).name(iter.nextString());
+                builder.arrayId(iter.nextInt()).relId(iter.nextInt());
+                return builder.build(); });
         
-        if(!pg.isArray() && !pgTypes.containsKey(pg.getArrayId())) {
-            populatePgType(session, pg.getArrayId());
-        }
+        add(pg);
         
         if(pg.isComplex() && !pgComplexTypes.containsKey(pg.getRelId())) {
             populatePgComplexType(session, pg.getRelId());
@@ -112,6 +140,21 @@ public class Registry {
     }
 
     static {
-        //TODO: Load default types
+        add(BooleanSerializer.PGTYPE);
+        add(BytesSerializer.PGTYPE);
+        add(DateSerializer.PGTYPE);
+        add(DoubleSerializer.PGTYPE);
+        add(FloatSerializer.PGTYPE);
+        add(IntSerializer.PGTYPE);
+        add(LocalDateTimeSerializer.PGTYPE);
+        add(LocalTimeSerializer.PGTYPE);
+        add(LongSerializer.PGTYPE);
+        add(MoneySerializer.PGTYPE);
+        add(NumericSerializer.PGTYPE);
+        add(OffsetDateTimeSerializer.PGTYPE);
+        add(OffsetTimeSerializer.PGTYPE);
+        add(ShortSerializer.PGTYPE);
+        add(StringSerializer.PGTYPE_TEXT);
+        add(StringSerializer.PGTYPE_VARCHAR);
     }
 }

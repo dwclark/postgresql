@@ -4,11 +4,17 @@ import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.ProtocolException;
 import db.postgresql.protocol.v3.io.Stream;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class FloatSerializer extends Serializer {
+    
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("float4").oid(700).arrayId(1021).build();
 
-    public FloatSerializer() {
-        super(oids(700), classes(float.class, Float.class));
+    public static final FloatSerializer instance = new FloatSerializer();
+    
+    private FloatSerializer() {
+        super(float.class, Float.class);
     }
 
     public float read(final Stream stream, final int size, final Format format) {

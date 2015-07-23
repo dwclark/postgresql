@@ -1,6 +1,5 @@
 package db.postgresql.protocol.v3;
 
-import db.postgresql.protocol.v3.io.Stream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
@@ -11,9 +10,9 @@ import java.nio.charset.Charset;
 public class CopyData extends Response {
 
     private final int size;
-    private final Stream stream;
+    private final PostgresqlStream stream;
 
-    private CopyData(final Stream stream, final int size) {
+    private CopyData(final PostgresqlStream stream, final int size) {
         super(BackEnd.CopyData);
         this.stream = stream;
         this.size = size;
@@ -39,7 +38,7 @@ public class CopyData extends Response {
     }
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public CopyData build(final BackEnd backEnd, final int size, final Stream stream) {
+            public CopyData build(final BackEnd backEnd, final int size, final PostgresqlStream stream) {
                 return new CopyData(stream, size);
             }
         };
