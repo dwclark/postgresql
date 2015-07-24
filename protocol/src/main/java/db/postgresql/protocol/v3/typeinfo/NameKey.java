@@ -100,7 +100,7 @@ public abstract class NameKey {
     public static NameKey threadLocal(final String database, final String schema, final String name) {
         Mutable mut = tlMutable.get();
         mut.database = database;
-        mut.schema = schema;
+        mut.schema = filterSchema(schema);
         mut.name = name;
         return mut;
     }

@@ -48,16 +48,14 @@ public class SimpleQuery implements ResultProvider {
         return Results.nextResults(this);
     }
 
-    public <R> List<R> manyResults(final Function<DataRow.Iterator, R> func) {
+    public <R> List<R> manyRows(final Function<DataRow, R> func) {
         List<R> ret = new ArrayList<>();
         Results results;
         while(null != (results = nextResults())) {
             if(results.getResultType() == ResultType.HAS_RESULTS) {
                 Iterator<DataRow> rowIter = results.rows();
                 while(rowIter.hasNext()) {
-                    DataRow row = rowIter.next();
-                    DataRow.Iterator colIter = row.iterator();
-                    ret.add(func.apply(colIter));
+                    ret.add(func.apply(rowIter.next()));
                 }
             }
         }
@@ -65,13 +63,21 @@ public class SimpleQuery implements ResultProvider {
         return ret;
     }
 
-    public <R> R singleResult(Function<DataRow.Iterator, R> func) {
-        List<R> many = manyResults(func);
+    public <R> R singleRow(final Function <DataRow,R> func) {
+        List<R> many = manyRows(func);
         if(many.size() != 1) {
             throw new IllegalStateException("Single result expected, however query returned: " +
                                             many.size() + " results");
         }
 
         return many.get(0);
+    }
+
+    public <R> List<R> manyResults(final Function<DataRow.Iterator, R> func) {
+        return manyRows((DataRow dataRow) -> func.apply(dataRow.iterator()));
+    }
+
+    public <R> R singleResult(final Function<DataRow.Iterator, R> func) {
+        return singleRow((DataRow dataRow) -> func.apply(dataRow.iterator()));
     }
 }

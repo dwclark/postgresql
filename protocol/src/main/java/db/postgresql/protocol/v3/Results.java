@@ -47,6 +47,8 @@ public abstract class Results {
         public DataRowResults(final ResultProvider provider) {
             this.provider = provider;
             this.rowDescription = (RowDescription) provider.getResponse();
+
+            //TODO: Add ability to load new types if necessary
         }
         
         public ResultType getResultType() { return ResultType.HAS_RESULTS; }

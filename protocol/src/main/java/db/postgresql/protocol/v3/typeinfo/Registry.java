@@ -27,7 +27,7 @@ public class Registry {
         }
 
         session.withDuplicateSession((Session dup) -> populatePgType(dup, fullName));
-        return pgTypes.get(NameKey.threadLocal(session.getDatabase(), fullName));
+        return pgTypesByName.get(NameKey.threadLocal(session.getDatabase(), fullName));
     }
 
     public static PgComplexType pgComplexType(final String database, final int relId) {
@@ -46,15 +46,6 @@ public class Registry {
 
     public static Serializer serializer(final String database, final int oid) {
         return databaseSerializers(database).get(oid);
-    }
-
-    public static void serializer(final String database, final int oid, final Serializer serializer) {
-        databaseSerializers(database).put(oid, serializer);
-    }
-
-    public static void serializer(final PgType pgType, final Serializer serializer) {
-        serializer(pgType.getDatabase(), pgType.getOid(), serializer);
-        serializer(pgType.getDatabase(), pgType.getArrayId(), serializer);
     }
 
     private static Map<Integer,Serializer> databaseSerializers(final String database) {
@@ -112,7 +103,7 @@ public class Registry {
 
     private static void _populatePgType(final Session session, final String sql) {
         final PgType pg = new SimpleQuery(sql, session).singleResult((DataRow.Iterator iter) -> {
-                PgType.Builder builder = new PgType.Builder();
+                PgType.Builder builder = new PgType.Builder().database(session.getDatabase());
                 builder.oid(iter.nextInt()).schema(iter.nextString()).name(iter.nextString());
                 builder.arrayId(iter.nextInt()).relId(iter.nextInt());
                 return builder.build(); });
@@ -126,20 +117,21 @@ public class Registry {
 
     private static void populatePgComplexType(final Session session, final int relId) {
         final String sql = String.format("select attrelid, attname, atttypid, attnum " +
-                                         "from pg_attribute where attrelid = %d", relId);
+                                         "from pg_attribute where attrelid = %d and attnum >= 1", relId);
         final List<PgAttribute> attrs = new SimpleQuery(sql, session).manyResults((DataRow.Iterator iter) -> {
                 return new PgAttribute(iter.nextInt(), iter.nextString(), iter.nextInt(), iter.nextInt()); });
         final PgComplexType pg = new PgComplexType(session.getDatabase(), relId, attrs);
+        
         add(pg);
         
         for(PgAttribute pgAttr : attrs) {
-            if(!pgTypes.containsKey(pgAttr.getTypeId())) {
+            if(!pgTypes.containsKey(OidKey.threadLocal(session.getDatabase(), pgAttr.getTypeId()))) {
                 populatePgType(session, pgAttr.getTypeId());
             }
         }
     }
 
-    static {
+    /*static {
         add(BooleanSerializer.PGTYPE);
         add(BytesSerializer.PGTYPE);
         add(DateSerializer.PGTYPE);
@@ -156,5 +148,5 @@ public class Registry {
         add(ShortSerializer.PGTYPE);
         add(StringSerializer.PGTYPE_TEXT);
         add(StringSerializer.PGTYPE_VARCHAR);
-    }
+        }*/
 }

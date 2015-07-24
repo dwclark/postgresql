@@ -79,7 +79,7 @@ public class Session extends PostgresqlStream implements AutoCloseable {
         this.moneySerializer = new MoneySerializer(moneyLocale);
         this.numericSerializer = new NumericSerializer(numericLocale);
         this.stringSerializer = new StringSerializer(encoding);
-        populateSerializers();
+        builtinTypes();
 
         Map<BackEnd,ResponseHandler> finalHandlers = new LinkedHashMap<>();
         
@@ -443,27 +443,29 @@ public class Session extends PostgresqlStream implements AutoCloseable {
         return stringSerializer;
     }
 
-    private final void populateSerializer(final PgType pgType, Serializer s) {
-        Registry.serializer(new PgType.Builder(pgType).database(getDatabase()).build(), s);
+    private final void builtinType(final PgType tmp, Serializer s) {
+        PgType pgType = new PgType.Builder(tmp).database(getDatabase()).build();
+        Registry.add(pgType);
+        Registry.add(pgType, s);
     }
     
-    private final void populateSerializers() {
-        populateSerializer(BooleanSerializer.PGTYPE, BooleanSerializer.instance);
-        populateSerializer(BytesSerializer.PGTYPE, BytesSerializer.instance);
-        populateSerializer(DateSerializer.PGTYPE, DateSerializer.instance);
-        populateSerializer(DoubleSerializer.PGTYPE, DoubleSerializer.instance);
-        populateSerializer(FloatSerializer.PGTYPE, FloatSerializer.instance);
-        populateSerializer(IntSerializer.PGTYPE, IntSerializer.instance);
-        populateSerializer(LocalDateTimeSerializer.PGTYPE, LocalDateTimeSerializer.instance);
-        populateSerializer(LocalTimeSerializer.PGTYPE, LocalTimeSerializer.instance);
-        populateSerializer(LongSerializer.PGTYPE, LongSerializer.instance);
-        populateSerializer(MoneySerializer.PGTYPE, moneySerializer);
-        populateSerializer(NumericSerializer.PGTYPE, numericSerializer);
-        populateSerializer(OffsetDateTimeSerializer.PGTYPE, OffsetDateTimeSerializer.instance);
-        populateSerializer(OffsetTimeSerializer.PGTYPE, OffsetTimeSerializer.instance);
-        populateSerializer(ShortSerializer.PGTYPE, ShortSerializer.instance);
-        populateSerializer(StringSerializer.PGTYPE_TEXT, stringSerializer);
-        populateSerializer(StringSerializer.PGTYPE_VARCHAR, stringSerializer);
+    private final void builtinTypes() {
+        builtinType(BooleanSerializer.PGTYPE, BooleanSerializer.instance);
+        builtinType(BytesSerializer.PGTYPE, BytesSerializer.instance);
+        builtinType(DateSerializer.PGTYPE, DateSerializer.instance);
+        builtinType(DoubleSerializer.PGTYPE, DoubleSerializer.instance);
+        builtinType(FloatSerializer.PGTYPE, FloatSerializer.instance);
+        builtinType(IntSerializer.PGTYPE, IntSerializer.instance);
+        builtinType(LocalDateTimeSerializer.PGTYPE, LocalDateTimeSerializer.instance);
+        builtinType(LocalTimeSerializer.PGTYPE, LocalTimeSerializer.instance);
+        builtinType(LongSerializer.PGTYPE, LongSerializer.instance);
+        builtinType(MoneySerializer.PGTYPE, moneySerializer);
+        builtinType(NumericSerializer.PGTYPE, numericSerializer);
+        builtinType(OffsetDateTimeSerializer.PGTYPE, OffsetDateTimeSerializer.instance);
+        builtinType(OffsetTimeSerializer.PGTYPE, OffsetTimeSerializer.instance);
+        builtinType(ShortSerializer.PGTYPE, ShortSerializer.instance);
+        builtinType(StringSerializer.PGTYPE_TEXT, stringSerializer);
+        builtinType(StringSerializer.PGTYPE_VARCHAR, stringSerializer);
     }
 }
 
