@@ -9,7 +9,6 @@ import java.util.function.Function;
 public abstract class Query implements ResultProvider {
 
     public static final Function <DataRow,Object> NULL_ROW_FUNC = (DataRow r) -> null;
-    public static final Function <DataRow.Iterator,Object> NULL_RESULTS_FUNC = (DataRow.Iterator r) -> null;
 
     private static final EnumSet<BackEnd> WILL_HANDLE =
         EnumSet.of(BackEnd.RowDescription, BackEnd.EmptyQueryResponse, BackEnd.ReadyForQuery,

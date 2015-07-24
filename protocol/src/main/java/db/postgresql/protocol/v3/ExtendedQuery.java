@@ -8,7 +8,6 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 
 public class ExtendedQuery extends Query {
