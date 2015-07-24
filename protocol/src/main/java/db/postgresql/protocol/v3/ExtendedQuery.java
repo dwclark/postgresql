@@ -11,59 +11,24 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 
-public class ExtendedQuery implements ResultProvider {
-
-    private final Session stream;
-    private Response response;
-    
-    private static final EnumSet<BackEnd> WILL_HANDLE =
-        EnumSet.of(BackEnd.RowDescription, BackEnd.EmptyQueryResponse, BackEnd.ReadyForQuery,
-                   BackEnd.CommandComplete, BackEnd.DataRow);
+public class ExtendedQuery extends Query {
 
     public ExtendedQuery(final String query, final Session stream) {
-        this.stream = stream;
+        super(stream);
         prepare(query);
     }
 
-    public void execute(final List<Bindable[]> arguments) {
+    public ExtendedQuery execute(final List<Bindable[]> arguments) {
         for(Bindable[] ary : arguments) {
             stream.bind("", "", ary, Session.EMPTY_FORMATS).execute("");
         }
 
         stream.sync();
+        return this;
     }
 
     private void prepare(final String query) {
         stream.parse("", query, Session.EMPTY_OIDS);
-        
-    }
-
-    public TransactionStatus getStatus() {
-        if(response.getBackEnd() == BackEnd.ReadyForQuery) {
-            return ((ReadyForQuery) response).getStatus();
-        }
-        else {
-            return null;
-        }
-    }
-
-    public boolean isDone() {
-        return (response instanceof ReadyForQuery);
-    }
-    
-    public void advance() {
-        if(!isDone()) {
-            response = stream.next(WILL_HANDLE);
-        }
-    }
-
-    public Response getResponse() {
-        return response;
-    }
-
-    public Results nextResults() {
-        advance();
-        return Results.nextResults(this);
     }
 
     //binders

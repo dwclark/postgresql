@@ -75,41 +75,12 @@ class PrepareAndBindTest extends Specification {
         session.close();
     }
 
-    def processResults(final ExtendedQuery sq) {
-        Results results;
-        while(results = sq.nextResults()) {
-            if(results.resultType == ResultType.HAS_RESULTS) {
-                Iterator<DataRow> rowIter = results.rows();
-                while(rowIter.hasNext()) {
-                    DataRow row = rowIter.next();
-                    DataRow.Iterator colIter = row.iterator();
-                    while(colIter.hasNext()) {
-                        print(colIter.next() + ' ');
-                    }
-                    println();
-                }
-            }
-            else if(results.resultType == ResultType.NO_RESULTS) {
-                println("No Results");
-            }
-            else if(results.resultType == ResultType.EMPTY) {
-                println("Empty Row!");
-            }
-            else {
-                throw new UnsupportedOperationException();
-            }
-        }
-
-        println("Transaction Status: ${sq.status}");
-    }
-
-
     def "Test Extended Query"() {
         setup:
         Session session = sb.user('noauth').build();
         ExtendedQuery eq = new ExtendedQuery('insert into items values ($1, $2)', session);
         eq.execute([ [ eq.bind(3), eq.bind('three') ] as Bindable[] ]);
-        processResults(eq);
+        eq.noResults();
     }
 
     def "Test Multi Extended Query"() {
@@ -121,10 +92,11 @@ class PrepareAndBindTest extends Specification {
                                       [ eq.bind(5), eq.bind('five') ] as Bindable[],
                                       [ eq.bind(6), eq.bind('six') ] as Bindable[] ];
         eq.execute(bindings);
+        eq.noResults();
 
         ExtendedQuery eqDelete = new ExtendedQuery('delete from items where id >= $1', session);
         eqDelete.execute([ [ eqDelete.bind(3) ] as Bindable[] ]);
-        processResults(eq);
+        eqDelete.noResults();
     }
 }
 
