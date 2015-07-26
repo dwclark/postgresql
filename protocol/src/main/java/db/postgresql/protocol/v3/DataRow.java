@@ -92,12 +92,12 @@ public class DataRow extends Response {
         public Object next() {
             final FieldDescriptor field = field();
             final Serializer serializer = stream.serializer(field.typeOid);
-            return serializer.readObject(stream, stream.getInt(), field.format);
+            return serializer.read(stream, stream.getInt(), field.format);
         }
 
         public <T> T next(Class<T> type) {
             final Serializer serializer = stream.serializer(type);
-            return type.cast(serializer.readObject(stream, stream.getInt(), field().format));
+            return type.cast(serializer.read(stream, stream.getInt(), field().format));
         }
         
         public void remove() {

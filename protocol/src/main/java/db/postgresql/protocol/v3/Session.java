@@ -431,7 +431,7 @@ public class Session extends PostgresqlStream implements AutoCloseable {
     }
     
     @Override
-    public Serializer serializer(final Class type) {
+    public <T> Serializer<T> serializer(final Class<T> type) {
         return Registry.serializer(getDatabase(), type);
     }
 

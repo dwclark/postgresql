@@ -7,7 +7,7 @@ import db.postgresql.protocol.v3.io.Stream;
 import java.nio.ByteBuffer;
 import db.postgresql.protocol.v3.typeinfo.PgType;
 
-public class BytesSerializer extends Serializer {
+public class BytesSerializer extends Serializer<byte[]> {
 
     public static final PgType PGTYPE =
         new PgType.Builder().name("bytea").oid(17).arrayId(1001).build();
@@ -19,7 +19,7 @@ public class BytesSerializer extends Serializer {
     }
         
     public byte[] read(final Stream stream, final int size, final Format format) {
-        if(isNull(size)) {
+        if(size == NULL_LENGTH) {
             return null;
         }
 
@@ -33,11 +33,7 @@ public class BytesSerializer extends Serializer {
     }
 
     public int length(final byte[] bytes, final Format format) {
-        return (bytes == null) ? -1 : (2 + (bytes.length * 2));
-    }
-
-    public Object readObject(final Stream stream, final int size, final Format format) {
-        return read(stream, size, format);
+        return (bytes == null) ? NULL_LENGTH : (2 + (bytes.length * 2));
     }
 
     final private static byte[] asciiHexArray = { (byte) '0', (byte) '1', (byte) '2', (byte) '3', (byte) '4',
@@ -50,13 +46,5 @@ public class BytesSerializer extends Serializer {
             stream.put(asciiHexArray[bytes[i] >>> 4]);
             stream.put(asciiHexArray[bytes[i] & 0x0F]);
         }
-    }
-
-    public Bindable bindable(final byte[] val, final Format format) {
-        return new Bindable() {
-            public Format getFormat() { return format; }
-            public int getLength() { return BytesSerializer.this.length(val, format); }
-            public void write(final Stream stream) { BytesSerializer.this.write(stream, val, format); }
-        };
     }
 }

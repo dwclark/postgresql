@@ -1,19 +1,17 @@
 package db.postgresql.protocol.v3.serializers;
 
-import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.FieldPosition;
 import java.text.NumberFormat;
-import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.Currency;
 import java.util.Locale;
 import db.postgresql.protocol.v3.typeinfo.PgType;
 
-public class MoneySerializer extends Serializer {
+public class MoneySerializer extends Serializer<Money> {
 
     public static final PgType PGTYPE =
         new PgType.Builder().name("money").oid(790).arrayId(791).build();
@@ -31,7 +29,7 @@ public class MoneySerializer extends Serializer {
     }
 
     public Money read(final Stream stream, final int size, final Format format) {
-        if(isNull(size)) {
+        if(size == NULL_LENGTH) {
             return null;
         }
         else {
@@ -50,19 +48,7 @@ public class MoneySerializer extends Serializer {
         return (money == null) ? -1 : toString(money.unwrap()).length();
     }
 
-    public Object readObject(final Stream stream, final int size, final Format format) {
-        return read(stream, size, format);
-    }
-
     public void write(final Stream stream, final Money money, final Format format) {
         stream.putString(toString(money.unwrap()));
-    }
-
-    public Bindable bindable(final Money money, final Format format) {
-        return new Bindable() {
-            public Format getFormat() { return format; }
-            public int getLength() { return MoneySerializer.this.length(money, format); }
-            public void write(final Stream stream) { MoneySerializer.this.write(stream, money, format); }
-        };
     }
 }

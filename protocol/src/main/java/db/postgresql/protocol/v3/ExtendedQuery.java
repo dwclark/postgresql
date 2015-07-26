@@ -35,20 +35,14 @@ public class ExtendedQuery extends Query {
     }
 
     //binders
-    public Bindable bind(final BitSet val) {
-        return BitSetSerializer.instance.bindable(val, Format.TEXT);
+    public <T> Bindable bind(final T val) {
+        @SuppressWarnings("unchecked")
+        Class<T> type = (Class<T>) val.getClass();
+        return stream.serializer(type).bindable(val, Format.TEXT);
     }
     
     public Bindable bind(final boolean val) {
         return BooleanSerializer.instance.bindable(val, Format.TEXT);
-    }
-
-    public Bindable bind(final byte[] val) {
-        return BytesSerializer.instance.bindable(val, Format.TEXT);
-    }
-
-    public Bindable bind(final LocalDate val) {
-        return DateSerializer.instance.bindable(val, Format.TEXT);
     }
 
     public Bindable bind(final double val) {
@@ -63,43 +57,11 @@ public class ExtendedQuery extends Query {
         return IntSerializer.instance.bindable(val, Format.TEXT);
     }
 
-    public Bindable bind(final LocalDateTime val) {
-        return LocalDateTimeSerializer.instance.bindable(val, Format.TEXT);
-    }
-
-    public Bindable bind(final LocalTime val) {
-        return LocalTimeSerializer.instance.bindable(val, Format.TEXT);
-    }
-
     public Bindable bind(final long val) {
         return LongSerializer.instance.bindable(val, Format.TEXT);
     }
 
-    public Bindable bind(final Money val) {
-        return stream.getMoneySerializer().bindable(val, Format.TEXT);
-    }
-
-    public Bindable bind(final BigDecimal val) {
-        return stream.getNumericSerializer().bindable(val, Format.TEXT);
-    }
-
-    public Bindable bind(final OffsetDateTime val) {
-        return OffsetDateTimeSerializer.instance.bindable(val, Format.TEXT);
-    }
-
-    public Bindable bind(final OffsetTime val) {
-        return OffsetTimeSerializer.instance.bindable(val, Format.TEXT);
-    }
-
     public Bindable bind(final short val) {
         return ShortSerializer.instance.bindable(val, Format.TEXT);
-    }
-    
-    public Bindable bind(final String val) {
-        return stream.getStringSerializer().bindable(val, Format.TEXT);
-    }
-
-    public Bindable bind(final UUID val) {
-        return UUIDSerializer.instance.bindable(val, Format.TEXT);
     }
 }

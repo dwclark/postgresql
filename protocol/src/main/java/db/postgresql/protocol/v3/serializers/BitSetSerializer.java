@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
 import db.postgresql.protocol.v3.typeinfo.PgType;
 import java.util.BitSet;
 
-public class BitSetSerializer extends Serializer {
+public class BitSetSerializer extends Serializer<BitSet> {
 
     public static final PgType PGTYPE_BIT =
         new PgType.Builder().name("bit").oid(1560).arrayId(1561).build();
@@ -21,8 +21,12 @@ public class BitSetSerializer extends Serializer {
         super(BitSet.class);
     }
         
+    public int length(final BitSet bits, final Format format) {
+        return (bits == null) ? NULL_LENGTH : bits.length();
+    }
+
     public BitSet read(final Stream stream, final int size, final Format format) {
-        if(isNull(size)) {
+        if(size == NULL_LENGTH) {
             return null;
         }
 
@@ -36,25 +40,9 @@ public class BitSetSerializer extends Serializer {
         return ret;
     }
 
-    public int length(final BitSet bits, final Format format) {
-        return bits.length();
-    }
-
-    public Object readObject(final Stream stream, final int size, final Format format) {
-        return read(stream, size, format);
-    }
-
     public void write(final Stream stream, final BitSet bits, final Format format) {
         for(int i = 0; i < bits.length(); ++i) {
             stream.put(bits.get(i) ? (byte) '1' : (byte) '0');
         }
-    }
-
-    public Bindable bindable(final BitSet bits, final Format format) {
-        return new Bindable() {
-            public Format getFormat() { return format; }
-            public int getLength() { return BitSetSerializer.this.length(bits, format); }
-            public void write(final Stream stream) { BitSetSerializer.this.write(stream, bits, format); }
-        };
     }
 }

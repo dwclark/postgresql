@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class Serializer {
+public abstract class Serializer<T> {
 
     private final Class[] types;
     
@@ -21,10 +21,13 @@ public abstract class Serializer {
         this.types = types;
     }
 
-    public abstract Object readObject(Stream stream, int size, Format format);
-
+    public abstract T read(Stream stream, int size, Format format);
+    public abstract void write(Stream stream, T val, Format format);
+    public abstract int length(T val, Format format);
+    
     public static final Charset ASCII_ENCODING = Charset.forName("US-ASCII");
-
+    public static final int NULL_LENGTH = -1;
+    
     private static class StringArea extends ThreadLocal<byte[]> {
         @Override
         protected byte[] initialValue() {
@@ -52,14 +55,32 @@ public abstract class Serializer {
     }
 
     protected static boolean isNull(final int size) {
-        return size == -1;
+        return size == NULL_LENGTH;
     }
 
-    public Bindable nullBindable(final Format format) {
+    public static Bindable bindable(final Format format) {
         return new Bindable() {
             public Format getFormat() { return format; }
             public int getLength() { return -1; }
             public void write(final Stream stream) { }
+        };
+    }
+
+    public Bindable bindable(final T val, final Format format) {
+        return new Bindable() {
+
+            public Format getFormat() { return format; }
+
+            public int getLength() {
+                if(val == null) {
+                    return NULL_LENGTH;
+                }
+                else {
+                    return length(val, format);
+                }
+            }
+            
+            public void write(final Stream stream) { Serializer.this.write(stream, val, format); }
         };
     }
 }

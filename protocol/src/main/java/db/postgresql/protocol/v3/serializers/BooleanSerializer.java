@@ -6,7 +6,7 @@ import db.postgresql.protocol.v3.ProtocolException;
 import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.typeinfo.PgType;
 
-public class BooleanSerializer extends Serializer {
+public class BooleanSerializer extends Serializer<Boolean> {
 
     public static final byte T = (byte) 't';
     public static final byte F = (byte) 'f';
@@ -20,28 +20,27 @@ public class BooleanSerializer extends Serializer {
         super(boolean.class, Boolean.class);
     }
     
-    public boolean read(final Stream stream, final int size, final Format format) {
-        if(isNull(size)) {
+    public boolean readPrimitive(final Stream stream, final int size, final Format format) {
+        if(size == NULL_LENGTH) {
             return false;
         }
         
         return (stream.get() == T) ? true : false;
     }
-    
-    public int length(final boolean b, final Format format) {
+
+    public Boolean read(final Stream stream, final int size, final Format format) {
+        return isNull(size) ? null : readPrimitive(stream, size, format);
+    }
+
+    public int lengthPrimitive(final boolean b, final Format format) {
         return 1;
     }
 
-    public Object readObject(final Stream stream, final int size, final Format format) {
-        if(isNull(size)) {
-            return null;
-        }
-        else {
-            return read(stream, size, format);
-        }
+    public int length(final Boolean b, final Format format) {
+        return b == null ? NULL_LENGTH : lengthPrimitive(b, format);
     }
 
-    public void write(final Stream stream, final boolean val, final Format format) {
+    public void writePrimitive(final Stream stream, final boolean val, final Format format) {
         if(val) {
             stream.put(T);
         }
@@ -49,12 +48,16 @@ public class BooleanSerializer extends Serializer {
             stream.put(F);
         }
     }
+    
+    public void write(final Stream stream, final Boolean val, final Format format) {
+        writePrimitive(stream, val, format);
+    }
 
     public Bindable bindable(final boolean val, final Format format) {
         return new Bindable() {
             public Format getFormat() { return format; }
-            public int getLength() { return BooleanSerializer.this.length(val, format); }
-            public void write(final Stream stream) { BooleanSerializer.this.write(stream, val, format); }
+            public int getLength() { return lengthPrimitive(val, format); }
+            public void write(final Stream stream) { writePrimitive(stream, val, format); }
         };
     }
 }

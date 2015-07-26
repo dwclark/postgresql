@@ -1,6 +1,5 @@
 package db.postgresql.protocol.v3.serializers;
 
-import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import java.math.BigDecimal;
@@ -11,7 +10,7 @@ import java.text.ParsePosition;
 import java.util.Locale;
 import db.postgresql.protocol.v3.typeinfo.PgType;
 
-public class NumericSerializer extends Serializer {
+public class NumericSerializer extends Serializer<BigDecimal> {
 
     public static final PgType PGTYPE =
         new PgType.Builder().name("numeric").oid(1700).arrayId(1231).build();
@@ -48,19 +47,7 @@ public class NumericSerializer extends Serializer {
         return (bd == null) ? -1 : toString(bd).length();
     }
 
-    public Object readObject(final Stream stream, final int size, final Format format) {
-        return read(stream, size, format);
-    }
-
     public void write(final Stream stream, final BigDecimal bd, final Format format) {
         stream.putString(toString(bd));
-    }
-
-    public Bindable bindable(final BigDecimal bd, final Format format) {
-        return new Bindable() {
-            public Format getFormat() { return format; }
-            public int getLength() { return NumericSerializer.this.length(bd, format); }
-            public void write(final Stream stream) { NumericSerializer.this.write(stream, bd, format); }
-        };
     }
 }

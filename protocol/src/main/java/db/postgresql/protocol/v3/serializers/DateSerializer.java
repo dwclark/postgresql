@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import db.postgresql.protocol.v3.typeinfo.PgType;
 
-public class DateSerializer extends Serializer {
+public class DateSerializer extends Serializer<LocalDate> {
 
     private static final String STR = "uuuu-MM-dd";
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern(STR);
@@ -23,7 +23,7 @@ public class DateSerializer extends Serializer {
     }
     
     public LocalDate read(final Stream stream, final int size, final Format format) {
-        if(isNull(size)) {
+        if(size == NULL_LENGTH) {
             return null;
         }
         else {
@@ -33,22 +33,10 @@ public class DateSerializer extends Serializer {
 
     public int length(final LocalDate d, final Format format) {
         //yyyy-mm-dd -> 10
-        return (d == null) ? -1 : 10;
-    }
-
-    public Object readObject(final Stream stream, final int size, final Format format) {
-        return read(stream, size, format);
+        return (d == null) ? NULL_LENGTH : 10;
     }
 
     public void write(final Stream stream, final LocalDate val, final Format format) {
         stream.putString(val.format(DATE));
-    }
-
-    public Bindable bindable(final LocalDate val, final Format format) {
-        return new Bindable() {
-            public Format getFormat() { return format; }
-            public int getLength() { return DateSerializer.this.length(val, format); }
-            public void write(final Stream stream) { DateSerializer.this.write(stream, val, format); }
-        };
     }
 }

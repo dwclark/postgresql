@@ -48,8 +48,10 @@ public class Registry {
         return databaseSerializers(database).get(oid);
     }
 
-    public static Serializer serializer(final String database, final Class type) {
-        return typeSerializers(database).get(type);
+    @SuppressWarnings("unchecked")
+    public static <T> Serializer<T> serializer(final String database, final Class<T> type) {
+        final Map<Class,Serializer> tmp = typeSerializers(database);
+        return (Serializer<T>) tmp.get(type);
     }
 
     private static Map<Integer,Serializer> databaseSerializers(final String database) {

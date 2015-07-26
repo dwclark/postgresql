@@ -1,16 +1,12 @@
 package db.postgresql.protocol.v3.serializers;
 
-import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
-import db.postgresql.protocol.v3.ProtocolException;
 import db.postgresql.protocol.v3.io.Stream;
-import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
 import db.postgresql.protocol.v3.typeinfo.PgType;
 
-public class OffsetTimeSerializer extends Serializer {
+public class OffsetTimeSerializer extends Serializer<OffsetTime> {
 
     private static final String STR = "HH:mm:ss.nx";
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern(STR);
@@ -25,7 +21,7 @@ public class OffsetTimeSerializer extends Serializer {
     }
 
     public OffsetTime read(final Stream stream, final int size, final Format format) {
-        if(isNull(size)) {
+        if(size == NULL_LENGTH) {
             return null;
         }
         else {
@@ -39,19 +35,7 @@ public class OffsetTimeSerializer extends Serializer {
         return 18;
     }
 
-    public Object readObject(final Stream stream, final int size, final Format format) {
-        return read(stream, size, format);
-    }
-
     public void write(final Stream stream, final OffsetTime val, final Format format) {
         stream.putString(val.format(DATE));
-    }
-    
-    public Bindable bindable(final OffsetTime val, final Format format) {
-        return new Bindable() {
-            public Format getFormat() { return format; }
-            public int getLength() { return OffsetTimeSerializer.this.length(val, format); }
-            public void write(final Stream stream) { OffsetTimeSerializer.this.write(stream, val, format); }
-        };
     }
 }

@@ -5,7 +5,7 @@ import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.typeinfo.PgType;
 
-public class LongSerializer extends Serializer {
+public class LongSerializer extends Serializer<Long> {
 
     public static final PgType PGTYPE =
         new PgType.Builder().name("int8").oid(20).arrayId(1016).build();
@@ -27,7 +27,7 @@ public class LongSerializer extends Serializer {
         return powers[i];
     }
 
-    public long read(final Stream stream, final int size, final Format format) {
+    public long readPrimitive(final Stream stream, final int size, final Format format) {
         if(isNull(size)) {
             return 0L;
         }
@@ -49,7 +49,11 @@ public class LongSerializer extends Serializer {
         return negate ? -accum : accum;
     }
 
-    public int length(final long val, final Format format) {
+    public Long read(final Stream stream, final int size, final Format format) {
+        return size == NULL_LENGTH ? null : readPrimitive(stream, size, format);
+    }
+
+    public int lengthPrimitive(final long val, final Format format) {
         if(val == Long.MIN_VALUE) {
             return 20;
         }
@@ -66,16 +70,11 @@ public class LongSerializer extends Serializer {
         return digits + (includeSign ? 1 : 0);
     }
 
-    public Object readObject(final Stream stream, final int size, final Format format) {
-        if(isNull(size)) {
-            return null;
-        }
-        else {
-            return read(stream, size, format);
-        }
+    public int length(final Long val, final Format format) {
+        return val == null ? NULL_LENGTH : lengthPrimitive(val, format);
     }
 
-    public void write(final Stream stream, final long val, final Format format) {
+    public void writePrimitive(final Stream stream, final long val, final Format format) {
         final int size = length(val, format);
         final byte[] bytes = new byte[size];
         final int startAt = size - 1;
@@ -94,11 +93,15 @@ public class LongSerializer extends Serializer {
         stream.put(bytes);
     }
 
+    public void write(final Stream stream, final Long val, final Format format) {
+        writePrimitive(stream, val, format);
+    }
+
     public Bindable bindable(final long val, final Format format) {
         return new Bindable() {
             public Format getFormat() { return format; }
-            public int getLength() { return LongSerializer.this.length(val, format); }
-            public void write(final Stream stream) { LongSerializer.this.write(stream, val, format); }
+            public int getLength() { return lengthPrimitive(val, format); }
+            public void write(final Stream stream) { writePrimitive(stream, val, format); }
         };
     }
 }

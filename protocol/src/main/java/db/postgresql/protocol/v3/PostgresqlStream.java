@@ -54,7 +54,7 @@ public class PostgresqlStream extends NetworkStream {
         throw new UnsupportedOperationException();
     }
 
-    public Serializer serializer(final Class type) {
+    public <T> Serializer<T> serializer(final Class<T> type) {
         throw new UnsupportedOperationException();
     }
 

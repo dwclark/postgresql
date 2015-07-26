@@ -1,19 +1,12 @@
 package db.postgresql.protocol.v3.serializers;
 
-import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
-import db.postgresql.protocol.v3.ProtocolException;
 import db.postgresql.protocol.v3.io.Stream;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
-import java.util.regex.MatchResult;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import db.postgresql.protocol.v3.typeinfo.PgType;
 
-public class LocalDateTimeSerializer extends Serializer {
+public class LocalDateTimeSerializer extends Serializer<LocalDateTime> {
 
     private static final String STR = "uuuu-MM-dd HH:mm:ss.n";
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern(STR);
@@ -37,23 +30,11 @@ public class LocalDateTimeSerializer extends Serializer {
         }
     }
 
-    public int length(final TemporalAccessor date, final Format format) {
+    public int length(final LocalDateTime date, final Format format) {
         return 29;
-    }
-
-    public Object readObject(final Stream stream, final int size, final Format format) {
-        return read(stream, size, format);
     }
 
     public void write(final Stream stream, final LocalDateTime date, final Format format) {
         stream.putString(date.format(DATE));
-    }
-    
-    public Bindable bindable(final LocalDateTime date, final Format format) {
-        return new Bindable() {
-            public Format getFormat() { return format; }
-            public int getLength() { return LocalDateTimeSerializer.this.length(date, format); }
-            public void write(final Stream stream) { LocalDateTimeSerializer.this.write(stream, date, format); }
-        };
     }
 }
