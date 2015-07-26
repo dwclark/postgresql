@@ -37,7 +37,7 @@ public class BitSetSerializer extends Serializer {
     }
 
     public int length(final BitSet bits, final Format format) {
-        return bits.size();
+        return bits.length();
     }
 
     public Object readObject(final Stream stream, final int size, final Format format) {
@@ -45,7 +45,7 @@ public class BitSetSerializer extends Serializer {
     }
 
     public void write(final Stream stream, final BitSet bits, final Format format) {
-        for(int i = 0; i < bits.size(); ++i) {
+        for(int i = 0; i < bits.length(); ++i) {
             stream.put(bits.get(i) ? (byte) '1' : (byte) '0');
         }
     }

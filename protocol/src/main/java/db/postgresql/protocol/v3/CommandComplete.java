@@ -22,17 +22,25 @@ public class CommandComplete extends Response {
         return action;
     }
     
-    private CommandComplete(final PostgresqlStream stream) {
+    private CommandComplete(final Action action, final int oid, final int rows) {
         super(BackEnd.CommandComplete);
-        final String[] ary = stream.nullString().split(" ");
-        this.action = Action.valueOf(ary[0]);
-        this.rows = Integer.valueOf(ary[1]);
-        this.oid = (ary.length == 3) ? Integer.valueOf(ary[2]) : 0;
+        this.action = action;
+        this.oid = oid;
+        this.rows = rows;
     }
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
             public CommandComplete build(final BackEnd backEnd, final int size, final PostgresqlStream stream) {
-                return new CommandComplete(stream);
+                final String[] ary = stream.nullString().split(" ");
+                if(ary.length == 2) {
+                    return new CommandComplete(Action.valueOf(ary[0]), 0, Integer.valueOf(ary[1]));
+                }
+                else if(ary.length == 3) {
+                    return new CommandComplete(Action.valueOf(ary[0]), Integer.valueOf(ary[1]), Integer.valueOf(ary[2]));
+                }
+                else {
+                    throw new ProtocolException();
+                }
             }
         };
 }

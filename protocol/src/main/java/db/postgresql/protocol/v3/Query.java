@@ -16,6 +16,7 @@ public abstract class Query implements ResultProvider {
     
     protected final Session stream;
     protected Response response;
+    private CommandComplete complete;
 
     public Query(final Session stream) {
         this.stream = stream;
@@ -28,6 +29,10 @@ public abstract class Query implements ResultProvider {
         else {
             return null;
         }
+    }
+
+    public CommandComplete getComplete() {
+        return complete;
     }
 
     public boolean isDone() {
@@ -58,6 +63,9 @@ public abstract class Query implements ResultProvider {
                 while(rowIter.hasNext()) {
                     ret.add(func.apply(rowIter.next()));
                 }
+            }
+            else if(results.getResultType() == ResultType.NO_RESULTS) {
+                complete = results.getCommandComplete();
             }
         }
 
