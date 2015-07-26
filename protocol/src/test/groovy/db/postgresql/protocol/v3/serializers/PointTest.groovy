@@ -34,4 +34,14 @@ class PointTest extends Specification {
         p.x == 1;
         p.y == 2;
     }
+
+    def "Test Point 2"() {
+        setup:
+        UdtParser parser = new UdtParser(point2);
+        Point p = parser.readUdt(Point);
+
+        expect:
+        p.x == 1.8d;
+        p.y == 23.6d;
+    }
 }

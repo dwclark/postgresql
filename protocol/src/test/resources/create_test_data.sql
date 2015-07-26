@@ -2,6 +2,7 @@ begin transaction;
 
 drop table if exists items;
 drop table if exists all_types;
+drop table if exists extended_types;
 
 create table items (
        id int,
@@ -38,6 +39,14 @@ insert into all_types (my_boolean, my_smallint, my_int, my_long, my_decimal,
 values (true, 100, 1000, 10000, 175.1234, 1234567.89, 700.5, 700000.1, 250.67, 'some varchar', 'some text',
        E'\\xDEADBEEF', '22:16:52.048607', '22:16:52.048607-05', '2010-12-25',
        '2015-07-07 22:17:38.475474', '2015-07-07 22:17:38.475474-05');
+
+create table extended_types (
+       my_bits bit varying(128),
+       my_uuid uuid
+);
+
+insert into extended_types (my_bits, my_uuid)
+values ('110011', 'aa81b166-c60f-4e4e-addb-17414a652733');
 
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO noauth;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO clearauth;
