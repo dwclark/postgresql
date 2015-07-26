@@ -46,6 +46,18 @@ class AuthenticationTest extends Specification {
         payload == 'md53021e9c7078798c92184ad247ec9e6b6';
     }
 
+    def "MD5 Payload 35 Chars"() {
+        setup:
+        String user = 'md5auth';
+        String password = user;
+        Charset c = Charset.forName('UTF-8');
+        ByteBuffer salt = ByteBuffer.wrap([ 117, -75, -60, 31 ] as byte[]);
+        String payload = PostgresqlStream.md5Hash(c, user, password, salt);
+
+        expect:
+        payload.length() == 35;
+    }
+
     def "Clear Text Password"() {
         setup:
         def user = 'clearauth';

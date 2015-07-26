@@ -8,10 +8,12 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.temporal.TemporalAccessor;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 import java.util.function.Function;
 
 public class DataRow extends Response {
@@ -117,6 +119,11 @@ public class DataRow extends Response {
             final int size = stream.getInt();
             return BooleanSerializer.instance.read(stream, size, field.format);
         }
+        
+        public BitSet nextBitSet() {
+            guardAdvance();
+            return BitSetSerializer.instance.read(stream, stream.getInt(), rowDescription.field(index++).format);
+        }
 
         public byte[] nextBytes() {
             guardAdvance();
@@ -200,6 +207,11 @@ public class DataRow extends Response {
             final FieldDescriptor field = rowDescription.field(index++);
             final int size = stream.getInt();
             return OffsetDateTimeSerializer.instance.read(stream, size, field.format);
+        }
+
+        public UUID nextUUID() {
+            guardAdvance();
+            return UUIDSerializer.instance.read(stream, stream.getInt(), rowDescription.field(index++).format);
         }
     }
 }

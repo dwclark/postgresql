@@ -288,7 +288,8 @@ public class PostgresqlStream extends NetworkStream {
             MessageDigest m = MessageDigest.getInstance("MD5");
             m.update(first);
             m.update(second);
-            return new BigInteger(1, m.digest()).toString(16);
+            String str = new BigInteger(1, m.digest()).toString(16);
+            return (str.length() == 32) ? str : ("0" + str);
         }
         catch(NoSuchAlgorithmException e) {
             throw new ProtocolException(e);

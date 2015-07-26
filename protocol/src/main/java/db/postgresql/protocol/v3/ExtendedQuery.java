@@ -7,8 +7,10 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.util.BitSet;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.UUID;
 
 public class ExtendedQuery extends Query {
 
@@ -19,7 +21,9 @@ public class ExtendedQuery extends Query {
 
     public ExtendedQuery execute(final List<Bindable[]> arguments) {
         for(Bindable[] ary : arguments) {
-            stream.bind("", "", ary, Session.EMPTY_FORMATS).execute("");
+            stream.bind("", "", ary, Session.EMPTY_FORMATS);
+            stream.describePortal("");
+            stream.execute("");
         }
 
         stream.sync();
@@ -31,6 +35,10 @@ public class ExtendedQuery extends Query {
     }
 
     //binders
+    public Bindable bind(final BitSet val) {
+        return BitSetSerializer.instance.bindable(val, Format.TEXT);
+    }
+    
     public Bindable bind(final boolean val) {
         return BooleanSerializer.instance.bindable(val, Format.TEXT);
     }
@@ -89,5 +97,9 @@ public class ExtendedQuery extends Query {
     
     public Bindable bind(final String val) {
         return stream.getStringSerializer().bindable(val, Format.TEXT);
+    }
+
+    public Bindable bind(final UUID val) {
+        return UUIDSerializer.instance.bindable(val, Format.TEXT);
     }
 }

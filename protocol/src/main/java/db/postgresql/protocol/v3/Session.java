@@ -111,6 +111,8 @@ public class Session extends PostgresqlStream implements AutoCloseable {
         finalHandlers.put(BackEnd.ParseComplete, (Response r) -> {});
 
         finalHandlers.put(BackEnd.BindComplete, (Response r) -> {});
+
+        finalHandlers.put(BackEnd.NoData, (Response r) -> {});
         
         finalHandlers.putAll(handlers); //specified overrides default
         this.handlers = Collections.unmodifiableMap(finalHandlers);
@@ -450,6 +452,8 @@ public class Session extends PostgresqlStream implements AutoCloseable {
     }
     
     private final void builtinTypes() {
+        builtinType(BitSetSerializer.PGTYPE_BIT, BitSetSerializer.instance);
+        builtinType(BitSetSerializer.PGTYPE_VARBIT, BitSetSerializer.instance);
         builtinType(BooleanSerializer.PGTYPE, BooleanSerializer.instance);
         builtinType(BytesSerializer.PGTYPE, BytesSerializer.instance);
         builtinType(DateSerializer.PGTYPE, DateSerializer.instance);
@@ -466,6 +470,7 @@ public class Session extends PostgresqlStream implements AutoCloseable {
         builtinType(ShortSerializer.PGTYPE, ShortSerializer.instance);
         builtinType(StringSerializer.PGTYPE_TEXT, stringSerializer);
         builtinType(StringSerializer.PGTYPE_VARCHAR, stringSerializer);
+        builtinType(UUIDSerializer.PGTYPE, UUIDSerializer.instance);
     }
 }
 

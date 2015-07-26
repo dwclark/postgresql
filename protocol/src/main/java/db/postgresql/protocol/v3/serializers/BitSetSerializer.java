@@ -28,7 +28,9 @@ public class BitSetSerializer extends Serializer {
 
         BitSet ret = new BitSet(size);
         for(int i = 0; i < size; ++i) {
-            ret.set(i, Character.digit(stream.get(), 10) == '1' ? true : false);
+            final byte b = stream.get();
+            final boolean val = (b == (byte) '1') ? true : false;
+            ret.set(i, val);
         }
 
         return ret;
