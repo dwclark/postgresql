@@ -35,7 +35,7 @@ class PostgresqlTypesTest extends Specification {
         ExtendedQuery select = new ExtendedQuery('select * from extended_types;', session);
         select.execute(Bindable.EMPTY);
         def row = select.singleResult { DataRow.Iterator iter ->
-            return [ iter.nextBitSet(), iter.nextUUID() ]; };
+            return [ iter.next(BitSet), iter.next(UUID) ]; };
 
         then:
         row;

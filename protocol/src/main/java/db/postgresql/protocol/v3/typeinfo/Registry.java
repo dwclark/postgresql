@@ -48,11 +48,25 @@ public class Registry {
         return databaseSerializers(database).get(oid);
     }
 
+    public static Serializer serializer(final String database, final Class type) {
+        return typeSerializers(database).get(type);
+    }
+
     private static Map<Integer,Serializer> databaseSerializers(final String database) {
         Map<Integer,Serializer> ret = databaseSerializers.get(database);
         if(ret == null) {
             databaseSerializers.putIfAbsent(database, new ConcurrentHashMap<>(100, 0.75f, 1));
             ret = databaseSerializers.get(database);
+        }
+
+        return ret;
+    }
+
+    private static Map<Class,Serializer> typeSerializers(final String database) {
+        Map<Class,Serializer> ret = typeSerializers.get(database);
+        if(ret == null) {
+            typeSerializers.putIfAbsent(database, new ConcurrentHashMap<>(100, 0.75f, 1));
+            ret = typeSerializers.get(database);
         }
 
         return ret;
@@ -72,12 +86,21 @@ public class Registry {
         final Map<Integer,Serializer> map = databaseSerializers(pgType.getOidKey().getDatabase());
         map.put(pgType.getOidKey().getOid(), serializer);
         map.put(pgType.getArrayKey().getOid(), serializer);
+        add(pgType.getOidKey().getDatabase(), serializer);
+    }
+
+    public static void add(final String database, final Serializer serializer) {
+        final Map<Class,Serializer> map = typeSerializers(database);
+        for(Class type : serializer.getTypes()) {
+            map.put(type, serializer);
+        }
     }
 
     private static final Map<OidKey,PgType> pgTypes = new ConcurrentHashMap<>(100, 0.75f, 1);
     private static final Map<NameKey,PgType> pgTypesByName = new ConcurrentHashMap<>(100, 0.75f, 1);
     private static final Map<OidKey,PgComplexType> pgComplexTypes = new ConcurrentHashMap<>(50, 0.75f, 1);
     private static final Map<String,Map<Integer,Serializer>> databaseSerializers = new ConcurrentHashMap<>(5, 0.75f, 1);
+    private static final Map<String,Map<Class,Serializer>> typeSerializers = new ConcurrentHashMap<>(5, 0.75f, 1);
 
     private static void populatePgType(final Session session, final int oid) {
         final String sql = String.format("select typ.oid, ns.nspname, typ.typname, typ.typarray, typ.typrelid from pg_type typ " +
@@ -104,7 +127,7 @@ public class Registry {
     private static void _populatePgType(final Session session, final String sql) {
         final PgType pg = new SimpleQuery(sql, session).singleResult((DataRow.Iterator iter) -> {
                 PgType.Builder builder = new PgType.Builder().database(session.getDatabase());
-                builder.oid(iter.nextInt()).schema(iter.nextString()).name(iter.nextString());
+                builder.oid(iter.nextInt()).schema(iter.next(String.class)).name(iter.next(String.class));
                 builder.arrayId(iter.nextInt()).relId(iter.nextInt());
                 return builder.build(); });
         
@@ -119,7 +142,7 @@ public class Registry {
         final String sql = String.format("select attrelid, attname, atttypid, attnum " +
                                          "from pg_attribute where attrelid = %d and attnum >= 1", relId);
         final List<PgAttribute> attrs = new SimpleQuery(sql, session).manyResults((DataRow.Iterator iter) -> {
-                return new PgAttribute(iter.nextInt(), iter.nextString(), iter.nextInt(), iter.nextInt()); });
+                return new PgAttribute(iter.nextInt(), iter.next(String.class), iter.nextInt(), iter.nextInt()); });
         final PgComplexType pg = new PgComplexType(session.getDatabase(), relId, attrs);
         
         add(pg);

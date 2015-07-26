@@ -50,7 +50,11 @@ public class PostgresqlStream extends NetworkStream {
 
     protected final Map<BackEnd,ResponseBuilder> builders = builders();
 
-    public Serializer serializer(int oid) {
+    public Serializer serializer(final int oid) {
+        throw new UnsupportedOperationException();
+    }
+
+    public Serializer serializer(final Class type) {
         throw new UnsupportedOperationException();
     }
 
@@ -283,13 +287,20 @@ public class PostgresqlStream extends NetworkStream {
         return this;
     }
 
+    private static String toHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for(byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+
+        return sb.toString();
+    }
     private static String compute(ByteBuffer first, ByteBuffer second) {
         try {
             MessageDigest m = MessageDigest.getInstance("MD5");
             m.update(first);
             m.update(second);
-            String str = new BigInteger(1, m.digest()).toString(16);
-            return (str.length() == 32) ? str : ("0" + str);
+            return toHex(m.digest());
         }
         catch(NoSuchAlgorithmException e) {
             throw new ProtocolException(e);
