@@ -5,6 +5,8 @@ import db.postgresql.protocol.v3.io.Stream;
 import java.util.Stack;
 import java.nio.CharBuffer;
 import java.math.BigInteger;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 public class UdtParser implements UdtInput {
 
@@ -65,8 +67,11 @@ public class UdtParser implements UdtInput {
     }
 
     public void beginUdt() {
-        char b = buffer.charAt(index++);
-        assert(validBegin(b));
+        char b;
+        do {
+            b = buffer.charAt(index++);
+        }
+        while(!validBegin(b));
         objectStack.push(b);
     }
 
@@ -145,15 +150,23 @@ public class UdtParser implements UdtInput {
         return Double.valueOf(str);
     }
 
-    public Udt readUdt(Class<? extends Udt> type) {
+    public String readString() {
+        findLimits();
+        return buffer.substring(beginField, endField);
+    }
+
+    private static final Class[] CONSTRUCTOR_ARGS = new Class[] { UdtInput.class };
+    
+    public <T extends Udt> T readUdt(Class<T> type) {
         try {
             beginUdt();
-            Udt udt = (Udt) type.newInstance();
-            udt.read(this);
+            Constructor<T> constructor = type.getConstructor(CONSTRUCTOR_ARGS);
+            T udt = (T) constructor.newInstance(this);
             endUdt();
             return udt;
         }
-        catch(InstantiationException | IllegalAccessException ex) {
+        catch(NoSuchMethodException | InstantiationException |
+              IllegalAccessException | InvocationTargetException ex) {
             throw new ProtocolException(ex);
         }
     }

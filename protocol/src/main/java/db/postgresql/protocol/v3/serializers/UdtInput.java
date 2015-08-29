@@ -7,4 +7,5 @@ public interface UdtInput {
     long readLong();
     float readFloat();
     double readDouble();
+    <T extends Udt> T readUdt(Class<T> type);
 }
