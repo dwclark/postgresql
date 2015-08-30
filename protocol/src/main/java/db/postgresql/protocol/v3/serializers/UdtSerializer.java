@@ -4,7 +4,6 @@ import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import java.nio.charset.Charset;
 
-
 public class UdtSerializer extends Serializer<Udt> {
 
     private final Class<? extends Udt> type;

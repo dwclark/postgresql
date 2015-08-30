@@ -13,8 +13,8 @@ public class UdtParser implements UdtInput {
     final String buffer;
     final private Stack<Character> objectStack = new Stack<>();
 
-    public static final char[] BEGIN = { '(', '<', '{' };
-    public static final char[] END = { ')', '>', '}' };
+    public static final char[] BEGIN = { '(', '<', '{', '[' };
+    public static final char[] END = { ')', '>', '}', ']' };
     public static final char FIELD_DIV = ',';
     public static final char STR_DIV = '"';
 
@@ -23,6 +23,14 @@ public class UdtParser implements UdtInput {
     private int endField = 0;
     private boolean withinQuotes = false;
 
+    public boolean hasNext() {
+        return (index + 1) != buffer.length();
+    }
+
+    public char getCurrentDelimiter() {
+        return objectStack.peek();
+    }
+    
     private static boolean valid(final char test, final char[] allowed) {
         for(char b : allowed) {
             if(b == test) {
@@ -67,11 +75,8 @@ public class UdtParser implements UdtInput {
     }
 
     public void beginUdt() {
-        char b;
-        do {
-            b = buffer.charAt(index++);
-        }
-        while(!validBegin(b));
+        char b = buffer.charAt(index++);
+        assert(validBegin(b));
         objectStack.push(b);
     }
 
@@ -80,6 +85,10 @@ public class UdtParser implements UdtInput {
         assert(validEnd(end));
         char begin = objectStack.pop();
         assert(validDelimiters(begin, end));
+
+        if(index < buffer.length() && buffer.charAt(index) == FIELD_DIV) {
+            ++index;
+        }
     }
 
     public void findLimits() {

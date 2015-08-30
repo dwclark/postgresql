@@ -3,6 +3,7 @@ begin transaction;
 drop table if exists items;
 drop table if exists all_types;
 drop table if exists extended_types;
+drop table if exists geometry_types;
 
 create table items (
        id int,
@@ -47,6 +48,16 @@ create table extended_types (
 
 insert into extended_types (my_bits, my_uuid)
 values ('110011', 'aa81b166-c60f-4e4e-addb-17414a652733');
+
+create table geometry_types (
+       id serial,
+       my_point point,
+       my_line line,
+       my_circle circle
+);
+
+insert into geometry_types (my_point, my_line, my_circle)
+values ('(1,1)', '{1,2,3}', '<(1,1),5>');
 
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO noauth;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO clearauth;
