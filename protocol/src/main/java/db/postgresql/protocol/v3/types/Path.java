@@ -10,9 +10,13 @@ import db.postgresql.protocol.v3.serializers.Udt;
 import db.postgresql.protocol.v3.serializers.UdtInput;
 import db.postgresql.protocol.v3.serializers.UdtOutput;
 import static db.postgresql.protocol.v3.types.UdtHashing.*;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class Path implements Udt {
 
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("path").oid(602).arrayId(1019).build();
+    
     private static final char[] OPEN_DELIMITERS = { '[', ']' };
     private static final char[] CLOSED_DELIMITERS = { '(', ')' };
 
@@ -24,7 +28,7 @@ public class Path implements Udt {
         return open ? OPEN_DELIMITERS[1] : CLOSED_DELIMITERS[1];
     }
 
-    public String getName() { return "path"; }
+    public String getName() { return PGTYPE.getName(); }
     
     private final List<Point> points;
     private final boolean open;

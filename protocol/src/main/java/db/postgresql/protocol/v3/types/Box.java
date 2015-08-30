@@ -4,15 +4,19 @@ import db.postgresql.protocol.v3.serializers.Udt;
 import db.postgresql.protocol.v3.serializers.UdtInput;
 import db.postgresql.protocol.v3.serializers.UdtOutput;
 import static db.postgresql.protocol.v3.types.UdtHashing.*;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class Box implements Udt {
 
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("box").oid(603).arrayId(1020).build();
+    
     private final Point upperRight;
     private final Point lowerLeft;
 
     public Point getUpperRight() { return upperRight; }
     public Point getLowerLeft() { return lowerLeft; }
-    public String getName() { return "box"; }
+    public String getName() { return PGTYPE.getName(); }
     
     public Box(final UdtInput input) {
         this(input.readUdt(Point.class), input.readUdt(Point.class));

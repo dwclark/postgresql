@@ -4,15 +4,19 @@ import db.postgresql.protocol.v3.serializers.Udt;
 import db.postgresql.protocol.v3.serializers.UdtInput;
 import db.postgresql.protocol.v3.serializers.UdtOutput;
 import static db.postgresql.protocol.v3.types.UdtHashing.*;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class LineSegment implements Udt {
+
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("lseg").oid(601).arrayId(1018).build();
 
     private final Point left;
     private final Point right;
 
     public Point getLeft() { return left; }
     public Point getRight() { return right; }
-    public String getName() { return "lseg"; }
+    public String getName() { return PGTYPE.getName(); }
     
     public LineSegment(final UdtInput input) {
         this(input.readUdt(Point.class), input.readUdt(Point.class));

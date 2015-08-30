@@ -2,10 +2,14 @@ package db.postgresql.protocol.v3.types;
 
 import java.util.List;
 import db.postgresql.protocol.v3.serializers.UdtInput;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class Polygon extends Path {
 
-    public String getName() { return "polygon"; }
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("polygon").oid(604).arrayId(1027).build();
+    
+    public String getName() { return PGTYPE.getName(); }
     
     public Polygon(final UdtInput input) {
         super(input);

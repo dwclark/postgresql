@@ -4,9 +4,13 @@ import db.postgresql.protocol.v3.serializers.Udt;
 import db.postgresql.protocol.v3.serializers.UdtInput;
 import db.postgresql.protocol.v3.serializers.UdtOutput;
 import static db.postgresql.protocol.v3.types.UdtHashing.*;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class Line implements Udt {
 
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("line").oid(628).arrayId(629).build();
+    
     @Override
     public char getLeftDelimiter() { return '{'; }
 
@@ -21,7 +25,7 @@ public class Line implements Udt {
     public double getB() { return b; }
     public double getC() { return c; }
 
-    public String getName() { return "line"; }
+    public String getName() { return PGTYPE.getName(); }
     
     public Line(final UdtInput input) {
         this(input.readDouble(), input.readDouble(), input.readDouble());

@@ -4,8 +4,12 @@ import db.postgresql.protocol.v3.serializers.Udt;
 import db.postgresql.protocol.v3.serializers.UdtInput;
 import db.postgresql.protocol.v3.serializers.UdtOutput;
 import static db.postgresql.protocol.v3.types.UdtHashing.*;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class Point implements Udt {
+
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("point").oid(600).arrayId(1017).build();
 
     private final double x;
     private final double y;
@@ -13,7 +17,7 @@ public class Point implements Udt {
     public double getX() { return x; }
     public double getY() { return y; }
     
-    public String getName() { return "point"; }
+    public String getName() { return PGTYPE.getName(); }
 
     public Point(final UdtInput input) {
         this(input.readDouble(), input.readDouble());

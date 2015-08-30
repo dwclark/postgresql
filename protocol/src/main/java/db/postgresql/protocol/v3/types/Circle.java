@@ -4,9 +4,13 @@ import db.postgresql.protocol.v3.serializers.Udt;
 import db.postgresql.protocol.v3.serializers.UdtInput;
 import db.postgresql.protocol.v3.serializers.UdtOutput;
 import static db.postgresql.protocol.v3.types.UdtHashing.*;
+import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class Circle implements Udt {
 
+    public static final PgType PGTYPE =
+        new PgType.Builder().name("circle").oid(718).arrayId(719).build();
+    
     @Override
     public char getLeftDelimiter() { return '<'; }
 
@@ -18,7 +22,7 @@ public class Circle implements Udt {
 
     public Point getCenter() { return center; }
     public double getRadius() { return radius; }
-    public String getName() { return "circle"; }
+    public String getName() { return PGTYPE.getName(); }
     
     public Circle(final UdtInput input) {
         this(input.readUdt(Point.class), input.readDouble());
