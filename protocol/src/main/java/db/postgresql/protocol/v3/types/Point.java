@@ -35,7 +35,7 @@ public class Point implements Udt {
 
     @Override
     public String toString() {
-        return String.format("%s%d,%d%s", getLeftDelimiter(), x, y, getRightDelimiter());
+        return String.format("%c%f,%f%c", getLeftDelimiter(), x, y, getRightDelimiter());
     }
 
     @Override

@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.nio.charset.Charset;
 import java.security.*;
 import static db.postgresql.protocol.v3.ssl.ContextCreation.*;
+import db.postgresql.protocol.v3.types.*;
 
 class QueryTest extends Specification {
 
@@ -92,5 +93,23 @@ class QueryTest extends Specification {
 
         cleanup:
         session.close();
+    }
+
+    def "Geometry Query"() {
+        setup:
+        Session session = sb.user('noauth').build();
+        List list = new SimpleQuery('select * from geometry_types;', session).singleRow { DataRow dataRow -> dataRow.toArray(); };
+        println(list);
+        
+        expect:
+        list;
+        list[1] instanceof Point;
+        list[2] instanceof Line;
+        list[3] instanceof LineSegment;
+        list[4] instanceof Box;
+        list[5] instanceof Path && list[5].closed;
+        list[6] instanceof Path && list[6].open;
+        list[7] instanceof Polygon;
+        list[8] instanceof Circle;
     }
 }

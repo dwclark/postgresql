@@ -155,23 +155,4 @@ public class Registry {
             }
         }
     }
-
-    /*static {
-        add(BooleanSerializer.PGTYPE);
-        add(BytesSerializer.PGTYPE);
-        add(DateSerializer.PGTYPE);
-        add(DoubleSerializer.PGTYPE);
-        add(FloatSerializer.PGTYPE);
-        add(IntSerializer.PGTYPE);
-        add(LocalDateTimeSerializer.PGTYPE);
-        add(LocalTimeSerializer.PGTYPE);
-        add(LongSerializer.PGTYPE);
-        add(MoneySerializer.PGTYPE);
-        add(NumericSerializer.PGTYPE);
-        add(OffsetDateTimeSerializer.PGTYPE);
-        add(OffsetTimeSerializer.PGTYPE);
-        add(ShortSerializer.PGTYPE);
-        add(StringSerializer.PGTYPE_TEXT);
-        add(StringSerializer.PGTYPE_VARCHAR);
-        }*/
 }

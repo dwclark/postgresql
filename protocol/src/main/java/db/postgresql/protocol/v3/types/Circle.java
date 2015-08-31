@@ -40,7 +40,7 @@ public class Circle implements Udt {
 
     @Override
     public String toString() {
-        return String.format("%s%d,%d%s", getLeftDelimiter(), center.toString(), radius, getRightDelimiter());
+        return String.format("%c%s,%f%c", getLeftDelimiter(), center.toString(), radius, getRightDelimiter());
     }
 
     @Override

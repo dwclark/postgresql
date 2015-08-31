@@ -7,120 +7,35 @@ import java.nio.CharBuffer;
 import java.math.BigInteger;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.function.BiFunction;
 
 public class UdtParser implements UdtInput {
 
-    final String buffer;
-    final private Stack<Character> objectStack = new Stack<>();
-
-    public static final char[] BEGIN = { '(', '<', '{', '[' };
-    public static final char[] END = { ')', '>', '}', ']' };
-    public static final char FIELD_DIV = ',';
-    public static final char STR_DIV = '"';
-
-    private int index = 0;
-    private int beginField = 0;
-    private int endField = 0;
-    private boolean withinQuotes = false;
-
-    public boolean hasNext() {
-        return (index + 1) != buffer.length();
+    final CompositeEngine engine;
+    
+    private UdtParser(final CharSequence buffer, final BiFunction<Character,Integer,ParserMeta> factory) {
+        this.engine = new CompositeEngine(buffer, factory);
     }
 
-    public char getCurrentDelimiter() {
-        return objectStack.peek();
+    public static UdtParser forUdt(final CharSequence buffer) {
+        return new UdtParser(buffer, ParserMeta.udt);
+    }
+
+    public static UdtParser forGeometry(final CharSequence buffer) {
+        return new UdtParser(buffer, ParserMeta.geometry);
     }
     
-    private static boolean valid(final char test, final char[] allowed) {
-        for(char b : allowed) {
-            if(b == test) {
-                return true;
-            }
+    public Boolean readBoolean() {
+        String s = engine.getField();
+        if(s == null) {
+            return null;
         }
-
-        return false;
-    }
-    
-    private static boolean validBegin(final char test) {
-        return valid(test, BEGIN);
-    }
-
-    private static boolean validEnd(final char test) {
-        return valid(test, END);
-    }
-
-    private static boolean validFieldTermination(final char test) {
-        return (test == FIELD_DIV) || validEnd(test);
-    }
-
-    private static boolean validDelimiters(final char begin, final char end) {
-        int beginIndex = 0, endIndex = 0;
-        for(; beginIndex < BEGIN.length; ++beginIndex) {
-            if(BEGIN[beginIndex] == begin) {
-                break;
-            }
-        }
-
-        for(; endIndex < END.length; ++endIndex) {
-            if(END[endIndex] == end) {
-                break;
-            }
-        }
-
-        return beginIndex == endIndex;
-    }
-    
-    public UdtParser(final String buffer) {
-        this.buffer = buffer;
-    }
-
-    public void beginUdt() {
-        char b = buffer.charAt(index++);
-        assert(validBegin(b));
-        objectStack.push(b);
-    }
-
-    public void endUdt() {
-        char end = buffer.charAt(index++);
-        assert(validEnd(end));
-        char begin = objectStack.pop();
-        assert(validDelimiters(begin, end));
-
-        if(index < buffer.length() && buffer.charAt(index) == FIELD_DIV) {
-            ++index;
-        }
-    }
-
-    public void findLimits() {
-        beginField = index;
-        while(true) {
-            char next = buffer.charAt(index++);
-            if(next == STR_DIV) {
-                withinQuotes = withinQuotes ? false : true;
-            }
-
-            if(validFieldTermination(next) && !withinQuotes) {
-                endField = index - 1;
-                if(validEnd(next)) {
-                    --index;
-                }
-                
-                break;
-            }
-        }
-    }
-
-    public int limitSize() {
-        return (endField - beginField);
-    }
-    
-    public boolean readBoolean() {
-        findLimits();
-        if(limitSize() != 1) {
+        
+        if(s.length() != 1) {
             throw new IllegalStateException("Field is too large to be a boolean");
         }
         
-        char val = buffer.charAt(beginField);
+        char val = s.charAt(0);
         if(val == BooleanSerializer.T) {
             return true;
         }
@@ -132,51 +47,56 @@ public class UdtParser implements UdtInput {
         }
     }
 
-    //TODO: Make these more performant, no string allocation
-    public short readShort() {
-        findLimits();
-        return Short.valueOf(buffer.subSequence(beginField, endField).toString());
+    public Short readShort() {
+        String s = engine.getField();
+        return (s == null) ? null : Short.valueOf(s);
     }
 
-    public int readInt() {
-        findLimits();
-        return Integer.valueOf(buffer.subSequence(beginField, endField).toString());
+    public Integer readInteger() {
+        String s = engine.getField();
+        return (s == null) ? null : Integer.valueOf(s);
     }
 
-    public long readLong() {
-        findLimits();
-        return Long.valueOf(buffer.subSequence(beginField, endField).toString());
+    public Long readLong() {
+        String s = engine.getField();
+        return (s == null) ? null : Long.valueOf(s);
     }
 
-    public float readFloat() {
-        findLimits();
-        return Float.valueOf(buffer.subSequence(beginField, endField).toString());
+    public Float readFloat() {
+        String s = engine.getField();
+        return (s == null) ? null : Float.valueOf(s);
     }
 
-    public double readDouble() {
-        findLimits();
-        String str = buffer.subSequence(beginField, endField).toString();
-        return Double.valueOf(str);
+    public Double readDouble() {
+        String s = engine.getField();
+        return (s == null) ? null : Double.valueOf(s);
     }
 
     public String readString() {
-        findLimits();
-        return buffer.substring(beginField, endField);
+        return engine.getField();
     }
 
     private static final Class[] CONSTRUCTOR_ARGS = new Class[] { UdtInput.class };
     
     public <T extends Udt> T readUdt(Class<T> type) {
         try {
-            beginUdt();
+            engine.beginUdt();
             Constructor<T> constructor = type.getConstructor(CONSTRUCTOR_ARGS);
             T udt = (T) constructor.newInstance(this);
-            endUdt();
+            engine.endUdt();
             return udt;
         }
         catch(NoSuchMethodException | InstantiationException |
               IllegalAccessException | InvocationTargetException ex) {
             throw new ProtocolException(ex);
         }
+    }
+
+    public char getCurrentDelimiter() {
+        return engine.getLevel().getDelimiter();
+    }
+
+    public boolean hasNext() {
+        return engine.hasNext();
     }
 }

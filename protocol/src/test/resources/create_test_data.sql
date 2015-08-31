@@ -4,6 +4,9 @@ drop table if exists items;
 drop table if exists all_types;
 drop table if exists extended_types;
 drop table if exists geometry_types;
+drop table if exists persons;
+drop type if exists person;
+drop type if exists address;
 
 create table items (
        id int,
@@ -53,11 +56,42 @@ create table geometry_types (
        id serial,
        my_point point,
        my_line line,
+       my_lseg lseg,
+       my_box box,
+       my_closed_path path,
+       my_open_path path,
+       my_polygon polygon,
        my_circle circle
 );
 
-insert into geometry_types (my_point, my_line, my_circle)
-values ('(1,1)', '{1,2,3}', '<(1,1),5>');
+insert into geometry_types (my_point, my_line, my_lseg, my_box, my_closed_path, my_open_path, my_polygon, my_circle)
+values ('(1,1)', '{1,2,3}', '((1,2),(3,4))', '((3,4),(1,2))', '((0,0),(1,1),(1,0))',
+        '[(0,0),(1,1),(1,0)]', '((0,0),(1,1),(1,0))', '<(1,1),5>');
+
+create type address as (
+       street1 varchar(100),
+       street2 varchar(100),
+       city varchar(50),
+       postal_code varchar(10),
+       lat_long point
+);
+
+create type person as (
+       birthdate date,
+       first_name varchar(100),
+       last_name varchar(100),
+       favorite_number int,
+       stupid_quotes varchar(50),
+       the_address address,
+       nothing smallint
+);
+
+create table persons (
+       id serial,
+       the_person person
+);
+
+insert into persons (the_person) values ('(11-01-1975,"David","Clark",23,"quote""","(""123 Main"""""",""Suite 100"",Fargo,90210,""(45,45)"")",)');
 
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO noauth;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO clearauth;

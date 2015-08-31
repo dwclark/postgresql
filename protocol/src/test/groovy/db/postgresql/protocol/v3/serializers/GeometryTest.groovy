@@ -8,121 +8,166 @@ class GeometryTest extends Specification {
     
     def "Test Point 1"() {
         setup:
-        Point p = new UdtParser('(1,2)').readUdt(Point);
-
+        Point p = UdtParser.forGeometry('(1,2)').readUdt(Point);
+        final Point shouldBe = new Point(1,2);
+        
         expect:
-        p == new Point(1,2);
+        p == shouldBe;
+        p.hashCode() == shouldBe.hashCode();
+        p.toString();
     }
 
     def "Test Point 2"() {
         setup:
-        Point p = new UdtParser('(1.8,23.6)').readUdt(Point);
-
+        Point p = UdtParser.forGeometry('(1.8,23.6)').readUdt(Point);
+        Point shouldBe = new Point(1.8d, 23.6d);
+        
         expect:
-        p == new Point(1.8d, 23.6d);
+        p == shouldBe;
+        p.hashCode() == shouldBe.hashCode();
+        p.toString();
     }
 
     def "Test Line 1"() {
         setup:
-        Line line = new UdtParser('{1,2,3}').readUdt(Line);
-
+        Line line = UdtParser.forGeometry('{1,2,3}').readUdt(Line);
+        Line shouldBe = new Line(1d, 2d, 3d);
+        
         expect:
-        line == new Line(1d, 2d, 3d);
+        line == shouldBe;
+        line.hashCode() == shouldBe.hashCode();
+        line.toString();
     }
 
     def "Test Line 2"() {
         setup:
-        Line line = new UdtParser('{5.5,7.7,10.0}').readUdt(Line);
-
+        Line line = UdtParser.forGeometry('{5.5,7.7,10.0}').readUdt(Line);
+        Line shouldBe = new Line(5.5d, 7.7d, 10.0d);
+        
         expect:
-        line == new Line(5.5d, 7.7d, 10.0d);
+        line == shouldBe;
+        line.hashCode() == shouldBe.hashCode();
+        line.toString();
     }
 
     def "Test Line Segment 1"() {
         setup:
-        LineSegment lseg = new UdtParser('((1,2),(3,4))').readUdt(LineSegment);
-
+        LineSegment lseg = UdtParser.forGeometry('((1,2),(3,4))').readUdt(LineSegment);
+        LineSegment shouldBe = new LineSegment(new Point(1d,2d), new Point(3d,4d));
+        
         expect:
-        lseg == new LineSegment(new Point(1d,2d), new Point(3d,4d));
+        lseg == shouldBe;
+        lseg.hashCode() == shouldBe.hashCode();
+        lseg.toString();
     }
 
     def "Test Line Segment 2"() {
         setup:
-        LineSegment lseg = new UdtParser('((1.1,2.2),(3.3,4.4))').readUdt(LineSegment);
-
+        LineSegment lseg = UdtParser.forGeometry('((1.1,2.2),(3.3,4.4))').readUdt(LineSegment);
+        LineSegment shouldBe = new LineSegment(new Point(1.1d,2.2d), new Point(3.3d,4.4d));
+        
         expect:
-        lseg == new LineSegment(new Point(1.1d,2.2d), new Point(3.3d,4.4d));
+        lseg == shouldBe;
+        lseg.hashCode() == shouldBe.hashCode();
+        lseg.toString();
     }
 
     def "Test Box 1"() {
         setup:
-        Box box = new UdtParser('((1,1),(0,0))').readUdt(Box);
-        
+        Box box = BoxSerializer.from('(1,1),(0,0)')
+        Box shouldBe = new Box(new Point(1d,1d), new Point(0d,0d));
+            
         expect:
-        box == new Box(new Point(1d,1d), new Point(0d,0d));
+        box == shouldBe;
+        box.hashCode() == shouldBe.hashCode();
+        box.toString();
     }
 
     def "Test Box 2"() {
         setup:
-        Box box = new UdtParser('((1,1),(-1.1,-1.1))').readUdt(Box);
-
+        Box box = BoxSerializer.from('(1,1),(-1.1,-1.1)');
+        Box shouldBe = new Box(new Point(1d,1d), new Point(-1.1d,-1.1d));
+        
         expect:
-        box == new Box(new Point(1d,1d), new Point(-1.1d,-1.1d));
+        box == shouldBe;
+        box.hashCode() == shouldBe.hashCode();
+        box.toString();
     }
 
     def "Test Open Path 1"() {
         setup:
-        Path p = new UdtParser('[(0,0),(1,1),(0,2)]').readUdt(Path);
-
+        Path p = UdtParser.forGeometry('[(0,0),(1,1),(0,2)]').readUdt(Path);
+        Path shouldBe = new Path([ new Point(0,0), new Point(1,1), new Point(0,2)], true);
+        
         expect:
-        p == new Path([ new Point(0,0), new Point(1,1), new Point(0,2)], true);
+        p == shouldBe;
+        p.hashCode() == shouldBe.hashCode();
+        p.toString();
     }
 
     def "Test Open Path 2"() {
         setup:
-        Path p = new UdtParser('[(0.1,0.1),(1.1,1.1),(0.1,2.1)]').readUdt(Path);
+        Path p = UdtParser.forGeometry('[(0.1,0.1),(1.1,1.1),(0.1,2.1)]').readUdt(Path);
+        Path shouldBe = new Path([ new Point(0.1d,0.1d), new Point(1.1d,1.1d), new Point(0.1d,2.1d)], true);
         
         expect:
-        p == new Path([ new Point(0.1d,0.1d), new Point(1.1d,1.1d), new Point(0.1d,2.1d)], true);
+        p == shouldBe;
+        p.hashCode() == shouldBe.hashCode();
+        p.toString();
     }
 
     def "Test Closed Path 1"() {
         setup:
-        Path p = new UdtParser('((0,0),(1,1),(0,2))').readUdt(Path);
-
+        Path p = UdtParser.forGeometry('((0,0),(1,1),(0,2))').readUdt(Path);
+        Path shouldBe = new Path([ new Point(0,0), new Point(1,1), new Point(0,2)], false);
+        
         expect:
-        p == new Path([ new Point(0,0), new Point(1,1), new Point(0,2)], false);
+        p == shouldBe;
+        p.hashCode() == shouldBe.hashCode();
+        p.toString();
     }
 
     def "Test Closed Path 2"() {
         setup:
-        Path p = new UdtParser('((0.1,0.1),(1.1,1.1),(0.1,2.1))').readUdt(Path);
+        Path p = UdtParser.forGeometry('((0.1,0.1),(1.1,1.1),(0.1,2.1))').readUdt(Path);
+        Path shouldBe = new Path([ new Point(0.1d,0.1d), new Point(1.1d,1.1d), new Point(0.1d,2.1d)], false);
         
         expect:
-        p == new Path([ new Point(0.1d,0.1d), new Point(1.1d,1.1d), new Point(0.1d,2.1d)], false);
+        p == shouldBe;
+        p.hashCode() == shouldBe.hashCode();
+        p.toString();
     }
 
     def "Test Polygon 1"() {
         setup:
-        Polygon p = new UdtParser('((0,0),(1,1),(0,2))').readUdt(Polygon);
-
+        Polygon p = UdtParser.forGeometry('((0,0),(1,1),(0,2))').readUdt(Polygon);
+        Polygon shouldBe = new Polygon([ new Point(0,0), new Point(1,1), new Point(0,2)]);
+        
         expect:
-        p == new Polygon([ new Point(0,0), new Point(1,1), new Point(0,2)]);
+        p == shouldBe;
+        p.hashCode() == shouldBe.hashCode();
+        p.toString();
     }
 
     def "Test Polygon 2"() {
         setup:
-        Polygon p = new UdtParser('((0.1,0.1),(1.1,1.1),(0.1,2.1))').readUdt(Polygon);
+        Polygon p = UdtParser.forGeometry('((0.1,0.1),(1.1,1.1),(0.1,2.1))').readUdt(Polygon);
+        Polygon shouldBe = new Polygon([ new Point(0.1d,0.1d), new Point(1.1d,1.1d), new Point(0.1d,2.1d)]);
         
         expect:
-        p == new Polygon([ new Point(0.1d,0.1d), new Point(1.1d,1.1d), new Point(0.1d,2.1d)]);
+        p == shouldBe;
+        p.hashCode() == shouldBe.hashCode();
+        p.toString();
     }
 
     def "Test Circle 1"() {
         setup:
-        Circle c = new UdtParser('<(1,1),5>').readUdt(Circle);
-
+        Circle c = UdtParser.forGeometry('<(1,1),5>').readUdt(Circle);
+        Circle shouldBe = new Circle(new Point(1d,1d), 5d);
+        
         expect:
-        c == new Circle(new Point(1d,1d), 5d);
+        c == shouldBe;
+        c.hashCode() == shouldBe.hashCode();
+        c.toString();
     }
 }

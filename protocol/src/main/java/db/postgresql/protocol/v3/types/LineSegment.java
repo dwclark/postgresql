@@ -34,7 +34,7 @@ public class LineSegment implements Udt {
 
     @Override
     public String toString() {
-        return String.format("%s%s,%s%s", getLeftDelimiter(), left.toString(),
+        return String.format("%c%s,%s%c", getLeftDelimiter(), left.toString(),
                              right.toString(), getRightDelimiter());
     }
     

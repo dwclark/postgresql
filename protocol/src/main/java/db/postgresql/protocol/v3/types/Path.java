@@ -21,7 +21,7 @@ public class Path implements Udt {
     private static final char[] CLOSED_DELIMITERS = { '(', ')' };
 
     public char getLeftDelimiter() {
-        return open ? OPEN_DELIMITERS[0] : CLOSED_DELIMITERS[1];
+        return open ? OPEN_DELIMITERS[0] : CLOSED_DELIMITERS[0];
     }
 
     public char getRightDelimiter() {

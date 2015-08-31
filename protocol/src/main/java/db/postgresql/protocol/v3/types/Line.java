@@ -45,7 +45,7 @@ public class Line implements Udt {
 
     @Override
     public String toString() {
-        return String.format("%s%d,%d,%d,%s", getLeftDelimiter(), a, b, c, getRightDelimiter());
+        return String.format("%c%f,%f,%f%c", getLeftDelimiter(), a, b, c, getRightDelimiter());
     }
 
     @Override

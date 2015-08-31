@@ -2,6 +2,7 @@ package db.postgresql.protocol.v3;
 
 import db.postgresql.protocol.v3.serializers.*;
 import db.postgresql.protocol.v3.typeinfo.*;
+import db.postgresql.protocol.v3.types.*;
 import db.postgresql.protocol.v3.io.*;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -476,6 +477,15 @@ public class Session extends PostgresqlStream implements AutoCloseable {
         builtinType(StringSerializer.PGTYPE_TEXT, stringSerializer);
         builtinType(StringSerializer.PGTYPE_VARCHAR, stringSerializer);
         builtinType(UUIDSerializer.PGTYPE, UUIDSerializer.instance);
+
+        //geometry types
+        builtinType(Box.PGTYPE, new BoxSerializer(encoding));
+        builtinType(Circle.PGTYPE, new UdtSerializer<>(Circle.class, encoding));
+        builtinType(Line.PGTYPE, new UdtSerializer<>(Line.class, encoding));
+        builtinType(LineSegment.PGTYPE, new UdtSerializer<>(LineSegment.class, encoding));
+        builtinType(Path.PGTYPE, new UdtSerializer<>(Path.class, encoding));
+        builtinType(Point.PGTYPE, new UdtSerializer<>(Point.class, encoding));
+        builtinType(Polygon.PGTYPE, new UdtSerializer<>(Polygon.class, encoding));
     }
 }
 

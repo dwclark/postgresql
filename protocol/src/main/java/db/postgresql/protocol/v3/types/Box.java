@@ -34,8 +34,7 @@ public class Box implements Udt {
 
     @Override
     public String toString() {
-        return String.format("%s%s,%s%s", getLeftDelimiter(), upperRight.toString(),
-                             lowerLeft.toString(), getRightDelimiter());
+        return String.format("%s,%s", upperRight.toString(), lowerLeft.toString());
     }
     
     @Override
