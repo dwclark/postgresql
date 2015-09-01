@@ -97,6 +97,6 @@ public class UdtParser implements UdtInput {
     }
 
     public boolean hasNext() {
-        return engine.hasNext();
+        return engine.getCurrent() != engine.getLevel().getEndDelimiter();
     }
 }

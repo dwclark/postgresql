@@ -5,23 +5,18 @@ import java.util.ArrayDeque;
 import java.util.function.BiFunction;
 import static db.postgresql.protocol.v3.serializers.ParserMeta.*;
 
+//Rule: UDT consumes udt char and any quotes
+//Rule: Field consumes quotes and content, but only makes content available
+//Rule: Field will not consume anything more than one char if null field
+//Rule: Field will leave index one past meta char (, or udt delimiter)
 public class CompositeEngine {
 
     private final Deque<ParserMeta> levels = new ArrayDeque<>();
     private final BiFunction<Character,Integer,ParserMeta> factory;
     
     final CharSequence buffer;
-    private int _index;
-    private int _fieldBegin;
-    private int _fieldEnd;
-    private int _contentBegin;
-    private int _contentEnd;
+    private int index;
 
-    public int getFieldBegin() { return _fieldBegin; }
-    public int getFieldEnd() { return _fieldEnd; }
-    public int getContentBegin() { return _contentBegin; }
-    public int getContentEnd() { return _contentEnd; }
-    
     public CompositeEngine(final CharSequence buffer, final BiFunction<Character,Integer,ParserMeta> factory) {
         this.buffer = buffer;
         this.factory = factory;
@@ -40,7 +35,7 @@ public class CompositeEngine {
         
         return true;
     }
-
+    
     private static boolean anyQuotes(final CharSequence seq) {
         for(int i = 0; i < seq.length(); ++i) {
             if(seq.charAt(i) == QUOTE) {
@@ -51,86 +46,72 @@ public class CompositeEngine {
         return false;
     }
 
-    private static boolean endUdtChar(final char c) {
-        for(char end : END) {
-            if(c == end) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
-    private static boolean noQuoteEnd(final char c) {
-        return (c == ',') ? true : endUdtChar(c);
-    }
-    
-    private int contentEndNoQuotes(final int start) {
-        int idx = start;
-        while(!noQuoteEnd(buffer.charAt(idx))) {
-            ++idx;
-        }
-
-        return idx;
-    }
-
-    private int contentEndWithQuotes(final int start) {
-        final ParserMeta level = getLevel();
-        int idx = start;
+    private void advanceEndNoQuotes() {
         while(true) {
-            if(buffer.charAt(idx) != QUOTE) {
-                ++idx;
-                continue;
+            final char current = buffer.charAt(index);
+            if(isEnd(current) || isDiv(current)) {
+                break;
             }
 
-            //it's a quote, figure out what to do
-            final int remaining = buffer.length() - idx;
-            
-            if(remaining < level.getEmbeddedQuotes() || !allQuotes(buffer.subSequence(idx, idx + level.getEmbeddedQuotes()))) {
-                return idx;
-            }
+            ++index;
+        }
+    }
 
-            //it's all quotes, advance and continue
-            idx += level.getEmbeddedQuotes();
+    private void advanceEndQuotes() {
+        while(true) {
+            final char current = buffer.charAt(index);
+            final char possibleEnd = buffer.charAt(index + getLevel().getFieldQuotes());
+            if(isQuote(current) && !isQuote(possibleEnd)) {
+                break;
+            }
+            else {
+                ++index;
+            }
         }
     }
     
-    private void prepareField() {
-        boolean withinQuotes = false;
-        _fieldBegin = _index;
-
-        //detect null content
-        if(noQuoteEnd(buffer.charAt(_index))) {
-            _fieldEnd = _index;
-            _contentBegin = _index;
-            _contentEnd = _index;
-            return;
-        }
-
-        //advance to content
-        if(buffer.charAt(_index) == QUOTE) {
-            _index += getLevel().getFieldQuotes();
-            withinQuotes = true;
-        }
-
-        _contentBegin = _index;
-        _index = withinQuotes ? contentEndWithQuotes(_index) : contentEndNoQuotes(_index);
-        _contentEnd = _index;
-
-        if(withinQuotes) {
-            _index += getLevel().getFieldQuotes();
-        }
-
-        _fieldEnd = _index;
-    }
-
     public String getField() {
-        prepareField();
-        if(_fieldBegin == _fieldEnd) {
+        boolean withinQuotes = false;
+        if(isEnd(buffer.charAt(index))) {
+            //case 1: at the end of the udt, no field present
             return null;
         }
 
-        CharSequence seq = buffer.subSequence(_contentBegin, _contentEnd);
+        if(isDiv(buffer.charAt(index))) {
+            //case 2: null field, but not at the end of the udt
+            ++index;
+            return null;
+        }
+
+        if(isQuote(buffer.charAt(index))) {
+            //advance the the content, record that we are inside quotes
+            index += getLevel().getFieldQuotes();
+            withinQuotes = true;
+        }
+
+        //at this point there is definitely content and the index is pointed at the beginning
+        final int contentBegin = index;
+        if(withinQuotes) {
+            advanceEndQuotes();
+        }
+        else {
+            advanceEndNoQuotes();
+        }
+
+        final int contentEnd = index;
+
+        if(withinQuotes) {
+            index += getLevel().getFieldQuotes();
+        }
+        
+        if(isDiv(buffer.charAt(index))) {
+            //advance past comma to position next read on either the
+            //beginning of the field boundary or at the udt end
+            ++index;
+        }
+
+        //return the actual content
+        CharSequence seq = buffer.subSequence(contentBegin, contentEnd);
         if(anyQuotes(seq)) {
             return getLevel().replace(seq.toString());
         }
@@ -140,25 +121,19 @@ public class CompositeEngine {
     }
 
     public void beginUdt() {
-        if(levels.size() > 0) {
-            ++_index;
-        }
-
-        final char delimiter = buffer.charAt(_index);
-        final ParserMeta next = factory.apply(delimiter, levels.size());
-        _index += next.getLevel();
+        final ParserMeta tmp = factory.apply('(', levels.size());
+        index += tmp.getUdtQuotes();
+        final ParserMeta next = factory.apply(buffer.charAt(index++), levels.size());
         levels.push(next);
     }
 
     public void endUdt() {
-        final char delimiter = buffer.charAt(_index);
         final ParserMeta last = levels.pop();
-        ++_index; //advance the delimiter
-        _index += last.getLevel(); //advance any quotes
-        assert(last.validEnd(delimiter));
+        assert(last.validEnd(buffer.charAt(index++)));
+        index += last.getUdtQuotes();
     }
 
-    public boolean hasNext() {
-        return _index < buffer.length(); 
+    public char getCurrent() {
+        return buffer.charAt(index);
     }
 }

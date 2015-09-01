@@ -9,7 +9,34 @@ public abstract class ParserMeta {
     public static final char DIV = ',';
     public static final char QUOTE = '"';
     public static final String QUOTE_STR = "\"";
+
+    private static boolean in(final char c, final char[] ary) {
+        for(char e : ary) {
+            if(c == e) {
+                return true;
+            }
+        }
+
+        return false;
+    }
     
+    public static boolean isBegin(final char c) {
+        return in(c, BEGIN);
+    }
+    
+    public static boolean isEnd(final char c) {
+        return in(c, END);
+    }
+
+    public static boolean isDiv(final char c) {
+        return c == DIV;
+    }
+
+    public static boolean isQuote(final char c) {
+        return c == QUOTE;
+    }
+
+    public abstract int getUdtQuotes();
     public abstract int getFieldQuotes();
     public abstract int getEmbeddedQuotes();
     public abstract String replace(final String str);
@@ -19,6 +46,10 @@ public abstract class ParserMeta {
 
     public char getDelimiter() {
         return delimiter;
+    }
+
+    public char getEndDelimiter() {
+        return END[beginIndex()];
     }
     
     public int getLevel() {
@@ -61,6 +92,10 @@ public abstract class ParserMeta {
             super(delimiter, level);
         }
 
+        public int getUdtQuotes() {
+            return getLevel();
+        }
+        
         public int getFieldQuotes() {
             return getLevel() + 1;
         }
@@ -84,6 +119,10 @@ public abstract class ParserMeta {
 
         public GeometryMeta(final char delimiter, final int level) {
             super(delimiter, level);
+        }
+
+        public int getUdtQuotes() {
+            return 0;
         }
 
         public int getFieldQuotes() {
