@@ -48,7 +48,7 @@ class CompositeEngineTest extends Specification {
 
     def "Simple Embedded Quote Test"() {
         setup:
-        String buffer = '("David","""The Terrible""")';
+        String buffer = '("David","""The ""Terrible""")';
         CompositeEngine engine = new CompositeEngine(buffer, ParserMeta.udt);
         engine.beginUdt();
         String one = engine.field;
@@ -56,7 +56,7 @@ class CompositeEngineTest extends Specification {
 
         expect:
         one == 'David';
-        two == '"The Terrible"';
+        two == '"The "Terrible"';
     }
 
     def "Embedded Type Test"() {

@@ -60,9 +60,13 @@ public class CompositeEngine {
     private void advanceEndQuotes() {
         while(true) {
             final char current = buffer.charAt(index);
-            final char possibleEnd = buffer.charAt(index + getLevel().getFieldQuotes());
-            if(isQuote(current) && !isQuote(possibleEnd)) {
-                break;
+            if(isQuote(current)) {
+                if(getLevel().isEmbeddedQuotes(index, buffer)) {
+                    index += getLevel().getEmbeddedQuotes();
+                }
+                else {
+                    break;
+                }
             }
             else {
                 ++index;
@@ -131,6 +135,10 @@ public class CompositeEngine {
         final ParserMeta last = levels.pop();
         assert(last.validEnd(buffer.charAt(index++)));
         index += last.getUdtQuotes();
+
+        if(index < buffer.length() && isDiv(buffer.charAt(index))) {
+            ++index;
+        }
     }
 
     public char getCurrent() {

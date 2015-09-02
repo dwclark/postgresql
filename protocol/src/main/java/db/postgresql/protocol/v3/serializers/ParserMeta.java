@@ -39,6 +39,27 @@ public abstract class ParserMeta {
     public abstract int getUdtQuotes();
     public abstract int getFieldQuotes();
     public abstract int getEmbeddedQuotes();
+
+    public boolean isEmbeddedQuotes(final int index, final CharSequence buffer) {
+        final int len = getEmbeddedQuotes();
+        
+        if(len == 0) {
+            return false;
+        }
+
+        if((buffer.length() - index) < len) {
+            return false;
+        }
+
+        for(int i = 0; i < len; ++i) {
+            if(!isQuote(buffer.charAt(i + index))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+    
     public abstract String replace(final String str);
 
     private final char delimiter;
