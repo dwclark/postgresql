@@ -26,7 +26,7 @@ public class StringSerializer extends Serializer<String> {
     }
 
     public String read(final Stream stream, final int size, final Format format) {
-        return size == NULL_LENGTH ? null : _str(stream, size);
+        return size == NULL_LENGTH ? null : str(stream, size);
     }
 
     public int length(final String str, final Format format) {

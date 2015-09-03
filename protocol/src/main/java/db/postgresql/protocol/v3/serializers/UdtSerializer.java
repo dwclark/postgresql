@@ -20,7 +20,7 @@ public class UdtSerializer<T extends Udt> extends Serializer<T> {
             return null;
         }
         else {
-            UdtParser parser = UdtParser.forUdt(_str(stream, size));
+            UdtParser parser = UdtParser.forUdt(str(stream, size));
             return parser.readUdt(type);
         }
     }

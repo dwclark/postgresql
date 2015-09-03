@@ -7,7 +7,6 @@ import java.text.DecimalFormat;
 import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
-import java.util.Currency;
 import java.util.Locale;
 import db.postgresql.protocol.v3.typeinfo.PgType;
 
@@ -33,7 +32,7 @@ public class MoneySerializer extends Serializer<Money> {
             return null;
         }
         else {
-            final String str = _str(stream, size, ASCII_ENCODING);
+            final String str = str(stream, size, ASCII_ENCODING);
             return Money.wrap((BigDecimal) getFormatter().parse(str, new ParsePosition(0)));
         }
     }

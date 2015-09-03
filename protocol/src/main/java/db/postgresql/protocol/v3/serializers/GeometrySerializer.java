@@ -20,7 +20,7 @@ public class GeometrySerializer<T extends Udt> extends Serializer<T> {
             return null;
         }
         else {
-            UdtParser parser = UdtParser.forGeometry(_str(stream, size));
+            UdtParser parser = UdtParser.forGeometry(str(stream, size));
             return parser.readUdt(type);
         }
     }

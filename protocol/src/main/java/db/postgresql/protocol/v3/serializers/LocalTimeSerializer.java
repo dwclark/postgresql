@@ -21,7 +21,7 @@ public class LocalTimeSerializer extends Serializer<LocalTime> {
     }
 
     public LocalTime read(final Stream stream, final int size, final Format format) {
-        return size == NULL_LENGTH ? null : LocalTime.parse(_str(stream, size, ASCII_ENCODING) + "000", DATE);
+        return size == NULL_LENGTH ? null : LocalTime.parse(str(stream, size, ASCII_ENCODING) + "000", DATE);
     }
 
     public int length(final LocalTime time, final Format format) {

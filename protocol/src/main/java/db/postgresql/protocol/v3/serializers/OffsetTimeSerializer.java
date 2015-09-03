@@ -25,7 +25,7 @@ public class OffsetTimeSerializer extends Serializer<OffsetTime> {
             return null;
         }
         else {
-            final String str = _str(stream, size, ASCII_ENCODING);
+            final String str = str(stream, size, ASCII_ENCODING);
             final int index = str.lastIndexOf('-');
             return OffsetTime.parse(str.substring(0, index) + "000" + str.substring(index), DATE);
         }

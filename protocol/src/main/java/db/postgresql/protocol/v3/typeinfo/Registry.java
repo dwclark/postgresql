@@ -105,7 +105,8 @@ public class Registry {
     private static final Map<String,Map<Class,Serializer>> typeSerializers = new ConcurrentHashMap<>(5, 0.75f, 1);
 
     private static void populatePgType(final Session session, final int oid) {
-        final String sql = String.format("select typ.oid, ns.nspname, typ.typname, typ.typarray, typ.typrelid from pg_type typ " +
+        final String sql = String.format("select typ.oid, ns.nspname, typ.typname, typ.typarray, typ.typrelid, typ.typdelim " +
+                                         "from pg_type typ " +
                                          "join pg_namespace ns on typ.typnamespace = ns.oid where typ.oid = %d", oid);
         _populatePgType(session, sql);
     }
@@ -113,13 +114,15 @@ public class Registry {
     private static void populatePgType(final Session session, final String fullName) {
         final NameKey nameKey = NameKey.immutable(session.getDatabase(), fullName);
         if(nameKey.hasSchema()) {
-            final String sql = String.format("select typ.oid, ns.nspname, typ.typname, typ.typarray, typ.typrelid from pg_type typ " +
+            final String sql = String.format("select typ.oid, ns.nspname, typ.typname, typ.typarray, typ.typrelid, typ.typdelim " +
+                                             "from pg_type typ " +
                                              "join pg_namespace ns on typ.typnamespace = ns.oid where ns.nspname = '%s' " +
                                              "and typ.typname = '%s'", nameKey.getSchema(), nameKey.getName());
             _populatePgType(session, sql);
         }
         else {
-            final String sql = String.format("select typ.oid, ns.nspname, typ.typname, typ.typarray, typ.typrelid from pg_type typ " +
+            final String sql = String.format("select typ.oid, ns.nspname, typ.typname, typ.typarray, typ.typrelid, typ.typdelim " +
+                                             "from pg_type typ " +
                                              "join pg_namespace ns on typ.typnamespace = ns.oid where typ.typname = '%s'",
                                              nameKey.getName());
             _populatePgType(session, sql);
@@ -130,7 +133,7 @@ public class Registry {
         final PgType pg = new SimpleQuery(sql, session).singleResult((DataRow.Iterator iter) -> {
                 PgType.Builder builder = new PgType.Builder().database(session.getDatabase());
                 builder.oid(iter.nextInt()).schema(iter.next(String.class)).name(iter.next(String.class));
-                builder.arrayId(iter.nextInt()).relId(iter.nextInt());
+                builder.arrayId(iter.nextInt()).relId(iter.nextInt()).delimiter(iter.next(String.class).charAt(0));
                 return builder.build(); });
         
         add(pg);

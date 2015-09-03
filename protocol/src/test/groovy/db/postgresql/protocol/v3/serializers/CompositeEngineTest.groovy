@@ -1,14 +1,13 @@
 package db.postgresql.protocol.v3.serializers;
 
-import spock.lang.*;
-import java.nio.*;
+import spock.lang.*
 
 class CompositeEngineTest extends Specification {
 
     def "Simple Test"() {
         setup:
         String buffer = '(1,1)';
-        CompositeEngine engine = new CompositeEngine(buffer, ParserMeta.udt);
+        CompositeEngine engine = new CompositeEngine(buffer, CompositeMeta.udt);
         engine.beginUdt();
         String one = engine.field;
         String two = engine.field;
@@ -22,7 +21,7 @@ class CompositeEngineTest extends Specification {
     def "Simple Quoted Test"() {
         setup:
         String buffer = '("David","The Terrible")';
-        CompositeEngine engine = new CompositeEngine(buffer, ParserMeta.udt);
+        CompositeEngine engine = new CompositeEngine(buffer, CompositeMeta.udt);
         engine.beginUdt();
         String one = engine.field;
         String two = engine.field;
@@ -36,7 +35,7 @@ class CompositeEngineTest extends Specification {
     def "Simple Null Field Test"() {
         setup:
         String buffer = '(,)';
-        CompositeEngine engine = new CompositeEngine(buffer, ParserMeta.udt);
+        CompositeEngine engine = new CompositeEngine(buffer, CompositeMeta.udt);
         engine.beginUdt();
         String one = engine.field;
         String two = engine.field;
@@ -49,7 +48,7 @@ class CompositeEngineTest extends Specification {
     def "Simple Embedded Quote Test"() {
         setup:
         String buffer = '("David","""The ""Terrible""")';
-        CompositeEngine engine = new CompositeEngine(buffer, ParserMeta.udt);
+        CompositeEngine engine = new CompositeEngine(buffer, CompositeMeta.udt);
         engine.beginUdt();
         String one = engine.field;
         String two = engine.field;
@@ -62,7 +61,7 @@ class CompositeEngineTest extends Specification {
     def "Embedded Type Test"() {
         setup:
         String buffer = '("David","Clark","(""123 Main Street"",""El Cajon"",CA,93021)")'
-        CompositeEngine engine = new CompositeEngine(buffer, ParserMeta.udt);
+        CompositeEngine engine = new CompositeEngine(buffer, CompositeMeta.udt);
         engine.beginUdt();
         String firstName = engine.field;
         String lastName = engine.field;
@@ -86,7 +85,7 @@ class CompositeEngineTest extends Specification {
     def "Complex Embedded Test"() {
         setup:
         String buffer = '(11-01-1975,"David","Clark",23,"quote""","(""123 Main"""""",""Suite 100"",Fargo,90210,""(45,45)"")",)';
-        CompositeEngine engine = new CompositeEngine(buffer, ParserMeta.udt);
+        CompositeEngine engine = new CompositeEngine(buffer, CompositeMeta.udt);
         engine.beginUdt();
         def person = [ birthDate: engine.field, firstName: engine.field, lastName: engine.field,
                        number: engine.field, misc: engine.field ];

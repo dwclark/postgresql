@@ -17,7 +17,7 @@ public class UUIDSerializer extends Serializer<UUID> {
     }
 
     public UUID read(final Stream stream, final int size, final Format format) {
-        return isNull(size) ? null : UUID.fromString(_str(stream, size, ASCII_ENCODING));
+        return isNull(size) ? null : UUID.fromString(str(stream, size, ASCII_ENCODING));
     }
 
     public int length(final UUID val, final Format format) {

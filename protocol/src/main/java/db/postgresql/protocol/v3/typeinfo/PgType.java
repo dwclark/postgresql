@@ -10,17 +10,21 @@ public class PgType {
     public static final String DEFAULT_DB = "";
     public static final String DEFAULT_SCHEMA = "public";
     public static final int DEFAULT_RELID = 0;
+    public static final char DEFAULT_DELIMITER = ',';
     
     final private OidKey oidKey;
     final private NameKey nameKey;
     final private OidKey arrayKey;
     final private int relId;
+    final private char delimiter;
 
-    private PgType(final OidKey oidKey, final OidKey arrayKey, final NameKey nameKey, final int relId) {
+    private PgType(final OidKey oidKey, final OidKey arrayKey, final NameKey nameKey,
+                   final int relId, final char delimiter) {
         this.oidKey = oidKey;
         this.arrayKey = arrayKey;
         this.nameKey = nameKey;
         this.relId = relId;
+        this.delimiter = delimiter;
     }
 
     public static class Builder {
@@ -30,6 +34,7 @@ public class PgType {
         private int oid;
         private int arrayId;
         private int relId = DEFAULT_RELID;
+        private char delimiter = DEFAULT_DELIMITER;
 
         public Builder database(final String val) { database = val; return this; }
         public Builder schema(final String val) { schema = val; return this; }
@@ -37,10 +42,11 @@ public class PgType {
         public Builder oid(final int val) { oid = val; return this; }
         public Builder arrayId(final int val) { arrayId = val; return this; }
         public Builder relId(final int val) { relId = val; return this; }
+        public Builder delimiter(final char val) { delimiter = val; return this; }
 
         public PgType build() {
             return new PgType(OidKey.immutable(database, oid), OidKey.immutable(database, arrayId),
-                              NameKey.immutable(database, schema, name), relId);
+                              NameKey.immutable(database, schema, name), relId, delimiter);
         }
 
         public Builder() { }
@@ -64,6 +70,7 @@ public class PgType {
     public String getName() { return nameKey.getName(); }
     public int getArrayId() { return arrayKey.getOid(); }
     public int getRelId() { return relId; }
+    public char getDelimiter() { return delimiter; }
     public boolean isComplex() { return relId != 0; }
     public String getFullName() { return nameKey.getFullName(); }
     public boolean isBuiltin() { return nameKey.isBuiltin(); } 

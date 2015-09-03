@@ -29,5 +29,6 @@ class RegistryTest extends Specification {
         pgType2 == pgType3;
         pgType.complex;
         pgType.attributes.size() == 2;
+        pgType.delimiter == ',';
     }
 }

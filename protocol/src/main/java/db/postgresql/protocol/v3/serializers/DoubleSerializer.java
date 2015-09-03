@@ -17,7 +17,7 @@ public class DoubleSerializer extends Serializer<Double> {
     }
 
     public double readPrimitive(final Stream stream, final int size, final Format format) {
-        return size == NULL_LENGTH ? 0.0d : Double.valueOf(_str(stream, size, ASCII_ENCODING));
+        return size == NULL_LENGTH ? 0.0d : Double.valueOf(str(stream, size, ASCII_ENCODING));
     }
 
     public Double read(final Stream stream, final int size, final Format format) {

@@ -25,7 +25,7 @@ public class LocalDateTimeSerializer extends Serializer<LocalDateTime> {
             return null;
         }
         else {
-            final String str = _str(stream, size, ASCII_ENCODING);
+            final String str = str(stream, size, ASCII_ENCODING);
             return LocalDateTime.parse(str + "000", DATE);
         }
     }

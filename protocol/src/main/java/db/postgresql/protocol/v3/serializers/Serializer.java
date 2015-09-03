@@ -2,12 +2,8 @@ package db.postgresql.protocol.v3.serializers;
 
 import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
-import db.postgresql.protocol.v3.ProtocolException;
 import db.postgresql.protocol.v3.io.Stream;
 import java.nio.charset.Charset;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 public abstract class Serializer<T> {
 
@@ -43,15 +39,15 @@ public abstract class Serializer<T> {
         }
     }
 
-    private static final StringArea _stringArea = new StringArea();
+    private static final StringArea stringArea = new StringArea();
     
-    protected static String _str(final Stream stream, final int size, final Charset encoding) {
-        byte[] bytes = stream.get(_stringArea.ensure(size), 0, size);
+    protected static String str(final Stream stream, final int size, final Charset encoding) {
+        byte[] bytes = stream.get(stringArea.ensure(size), 0, size);
         return new String(bytes, 0, size, encoding);
     }
 
-    protected static String _str(final Stream stream, final int size) {
-        return _str(stream, size, stream.getEncoding());
+    protected static String str(final Stream stream, final int size) {
+        return str(stream, size, stream.getEncoding());
     }
 
     protected static boolean isNull(final int size) {

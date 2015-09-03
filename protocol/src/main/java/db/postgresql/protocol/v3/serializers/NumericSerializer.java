@@ -33,7 +33,7 @@ public class NumericSerializer extends Serializer<BigDecimal> {
             return null;
         }
         else {
-            return (BigDecimal) getFormatter().parse(_str(stream, size, ASCII_ENCODING), new ParsePosition(0));
+            return (BigDecimal) getFormatter().parse(str(stream, size, ASCII_ENCODING), new ParsePosition(0));
         }
     }
 

@@ -2,7 +2,6 @@ package db.postgresql.protocol.v3.serializers;
 
 import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
-import db.postgresql.protocol.v3.ProtocolException;
 import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.typeinfo.PgType;
 
@@ -18,7 +17,7 @@ public class FloatSerializer extends Serializer<Float> {
     }
 
     public float readPrimitive(final Stream stream, final int size, final Format format) {
-        return size == NULL_LENGTH ? 0.0f : Float.valueOf(_str(stream, size, ASCII_ENCODING));
+        return size == NULL_LENGTH ? 0.0f : Float.valueOf(str(stream, size, ASCII_ENCODING));
     }
 
     public Float read(final Stream stream, final int size, final Format format) {

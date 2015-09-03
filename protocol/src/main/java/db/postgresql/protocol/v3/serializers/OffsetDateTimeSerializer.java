@@ -4,7 +4,7 @@ import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
+
 import db.postgresql.protocol.v3.typeinfo.PgType;
 
 public class OffsetDateTimeSerializer extends Serializer<OffsetDateTime> {
@@ -26,7 +26,7 @@ public class OffsetDateTimeSerializer extends Serializer<OffsetDateTime> {
             return null;
         }
         else {
-            final String str = _str(stream, size, ASCII_ENCODING);
+            final String str = str(stream, size, ASCII_ENCODING);
             final int index = str.lastIndexOf('-');
             return OffsetDateTime.parse(str.substring(0, index) + "000" + str.substring(index), DATE);
         }

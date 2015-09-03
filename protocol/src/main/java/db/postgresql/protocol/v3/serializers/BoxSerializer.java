@@ -28,7 +28,7 @@ public class BoxSerializer extends Serializer<Box> {
             return null;
         }
         else {
-            return from(_str(stream, size));
+            return from(str(stream, size));
         }
     }
 

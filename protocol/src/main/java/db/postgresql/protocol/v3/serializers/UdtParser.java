@@ -1,10 +1,7 @@
 package db.postgresql.protocol.v3.serializers;
 
 import db.postgresql.protocol.v3.ProtocolException;
-import db.postgresql.protocol.v3.io.Stream;
-import java.util.Stack;
-import java.nio.CharBuffer;
-import java.math.BigInteger;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.BiFunction;
@@ -13,16 +10,16 @@ public class UdtParser implements UdtInput {
 
     final CompositeEngine engine;
     
-    private UdtParser(final CharSequence buffer, final BiFunction<Character,Integer,ParserMeta> factory) {
+    private UdtParser(final CharSequence buffer, final BiFunction<Character,Integer,CompositeMeta> factory) {
         this.engine = new CompositeEngine(buffer, factory);
     }
 
     public static UdtParser forUdt(final CharSequence buffer) {
-        return new UdtParser(buffer, ParserMeta.udt);
+        return new UdtParser(buffer, CompositeMeta.udt);
     }
 
     public static UdtParser forGeometry(final CharSequence buffer) {
-        return new UdtParser(buffer, ParserMeta.geometry);
+        return new UdtParser(buffer, CompositeMeta.geometry);
     }
     
     public Boolean readBoolean() {
@@ -93,10 +90,10 @@ public class UdtParser implements UdtInput {
     }
 
     public char getCurrentDelimiter() {
-        return engine.getLevel().getDelimiter();
+        return engine.getLevel().getBegin();
     }
 
     public boolean hasNext() {
-        return engine.getCurrent() != engine.getLevel().getEndDelimiter();
+        return engine.getCurrent() != engine.getLevel().getEnd();
     }
 }

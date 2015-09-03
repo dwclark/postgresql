@@ -2,11 +2,11 @@ package db.postgresql.protocol.v3.serializers;
 
 import java.util.function.BiFunction;
 
-public abstract class ParserMeta {
+public abstract class CompositeMeta {
 
     public static final char[] BEGIN = { '(', '<', '{', '[' };
     public static final char[] END = { ')', '>', '}', ']' };
-    public static final char DIV = ',';
+    public static final char STANDARD_DELIMITER = ',';
     public static final char QUOTE = '"';
     public static final String QUOTE_STR = "\"";
 
@@ -28,17 +28,16 @@ public abstract class ParserMeta {
         return in(c, END);
     }
 
-    public static boolean isDiv(final char c) {
-        return c == DIV;
-    }
-
     public static boolean isQuote(final char c) {
         return c == QUOTE;
     }
 
     public abstract int getUdtQuotes();
     public abstract int getFieldQuotes();
-    public abstract int getEmbeddedQuotes();
+
+    public int getEmbeddedQuotes() {
+        return 2 * getFieldQuotes();
+    }
 
     public boolean isEmbeddedQuotes(final int index, final CharSequence buffer) {
         final int len = getEmbeddedQuotes();
@@ -59,17 +58,26 @@ public abstract class ParserMeta {
 
         return true;
     }
+
+    public boolean isDelimiter(final char c) {
+        return c == delimiter;
+    }
     
     public abstract String replace(final String str);
 
     private final char delimiter;
+    private final char begin;
     private final int level;
 
     public char getDelimiter() {
         return delimiter;
     }
 
-    public char getEndDelimiter() {
+    public char getBegin() {
+        return begin;
+    }
+
+    public char getEnd() {
         return END[beginIndex()];
     }
     
@@ -93,7 +101,7 @@ public abstract class ParserMeta {
     
     private int beginIndex() {
         for(int i = 0; i < BEGIN.length; ++i) {
-            if(BEGIN[i] == delimiter) {
+            if(BEGIN[i] == begin) {
                 return i;
             }
         }
@@ -101,16 +109,21 @@ public abstract class ParserMeta {
         return -1;
     }
 
-    protected ParserMeta(final char delimiter, final int level) {
-        this.delimiter = delimiter;
+    protected CompositeMeta(final char begin, final int level) {
+        this(begin, level, STANDARD_DELIMITER);
+    }
+
+    protected CompositeMeta(final char begin, final int level, final char delimiter) {
+        this.begin = begin;
         this.level = level;
+        this.delimiter = delimiter;
         assert(validBegin());
     }
 
-    private static class UdtMeta extends ParserMeta {
+    private static class UdtMeta extends CompositeMeta {
         
-        public UdtMeta(final char delimiter, final int level) {
-            super(delimiter, level);
+        public UdtMeta(final char begin, final int level) {
+            super(begin, level);
         }
 
         public int getUdtQuotes() {
@@ -119,10 +132,6 @@ public abstract class ParserMeta {
         
         public int getFieldQuotes() {
             return getLevel() + 1;
-        }
-
-        public int getEmbeddedQuotes() {
-            return getFieldQuotes() * 2;
         }
 
         public String replace(final String str) {
@@ -136,10 +145,10 @@ public abstract class ParserMeta {
         }
     }
 
-    private static class GeometryMeta extends ParserMeta {
+    private static class GeometryMeta extends CompositeMeta {
 
-        public GeometryMeta(final char delimiter, final int level) {
-            super(delimiter, level);
+        public GeometryMeta(final char begin, final int level) {
+            super(begin, level);
         }
 
         public int getUdtQuotes() {
@@ -150,20 +159,38 @@ public abstract class ParserMeta {
             return 0;
         }
         
-        public int getEmbeddedQuotes() {
-            return 0;
-        }
-        
         public String replace(final String str) {
             return str;
         }
     }
 
-    public static BiFunction<Character,Integer,ParserMeta> udt = (final Character delimiter, final Integer level) -> {
-        return new UdtMeta(delimiter, level);
+    private static class ArrayMeta extends CompositeMeta {
+        public ArrayMeta(final char delimiter, final int level) {
+            super('{', level, delimiter);
+        }
+
+        public int getUdtQuotes() {
+            return 0;
+        }
+
+        public int getFieldQuotes() {
+            return 1;
+        }
+
+        public String replace(final String str) {
+            return str;
+        }
+    }
+
+    public static BiFunction<Character,Integer,CompositeMeta> udt = (final Character begin, final Integer level) -> {
+        return new UdtMeta(begin, level);
     };
 
-    public static BiFunction<Character,Integer,ParserMeta> geometry = (final Character delimiter, final Integer level) -> {
-        return new GeometryMeta(delimiter, level);
+    public static BiFunction<Character,Integer,CompositeMeta> geometry = (final Character begin, final Integer level) -> {
+        return new GeometryMeta(begin, level);
+    };
+
+    public static BiFunction<Character,Integer,CompositeMeta> array = (final Character delimiter, final Integer level) -> {
+        return new ArrayMeta(delimiter, level);
     };
 }
