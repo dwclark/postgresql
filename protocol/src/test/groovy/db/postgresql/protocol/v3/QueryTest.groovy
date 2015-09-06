@@ -107,4 +107,20 @@ class QueryTest extends Specification {
         list[7] instanceof Polygon;
         list[8] instanceof Circle;
     }
+
+    def "Arrays Query"() {
+        setup:
+        Session session = sb.user('noauth').build();
+        List list = new SimpleQuery('select int_array, string_array from my_arrays', session).singleRow {
+            DataRow dataRow -> dataRow.toArray(); };
+        int[][][] intArray = list[0];
+        String[][] strArray = list[1];
+
+        expect:
+        strArray[1][1] == 'fuzz';
+        strArray[0][1] == 'bar';
+        intArray[0][0][0] == 1;
+        intArray[1][1][2] == 16;
+        intArray[2][0][1] == 22;
+    }
 }

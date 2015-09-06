@@ -12,20 +12,20 @@ public class Notice extends Response {
         return messages;
     }
 
-    public Notice(final BackEnd backEnd, final PostgresqlStream stream, final int size) {
+    public Notice(final BackEnd backEnd, final Session session, final int size) {
         super(backEnd);
 
         final Map<NoticeType,String> map = new LinkedHashMap<>();
         byte byteType;
-        while((byteType = stream.get()) != NULL) {
-            map.put(NoticeType.from(byteType), stream.nullString());
+        while((byteType = session.get()) != NULL) {
+            map.put(NoticeType.from(byteType), session.nullString());
         }
 
         this.messages = Collections.unmodifiableMap(map);
     }
 
-    public final static ResponseBuilder builder = (final BackEnd backEnd, final int size, final PostgresqlStream stream) -> {
-        return new Notice(backEnd, stream, size);
+    public final static ResponseBuilder builder = (final BackEnd backEnd, final int size, final Session session) -> {
+        return new Notice(backEnd, session, size);
     };
 
     public void throwMe() {

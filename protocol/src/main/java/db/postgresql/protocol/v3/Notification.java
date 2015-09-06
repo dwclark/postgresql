@@ -28,8 +28,8 @@ public class Notification extends Response {
     }
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public Notification build(final BackEnd backEnd, final int size, final PostgresqlStream stream) {
-                return new Notification(stream.getInt(), stream.nullString(), stream.nullString());
+            public Notification build(final BackEnd backEnd, final int size, final Session session) {
+                return new Notification(session.getInt(), session.nullString(), session.nullString());
             }
         };
 }

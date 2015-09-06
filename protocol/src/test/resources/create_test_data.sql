@@ -5,6 +5,7 @@ drop table if exists all_types;
 drop table if exists extended_types;
 drop table if exists geometry_types;
 drop table if exists persons;
+drop table if exists my_arrays;
 drop type if exists person;
 drop type if exists address;
 
@@ -92,6 +93,16 @@ create table persons (
 );
 
 insert into persons (the_person) values ('(11-01-1975,"David","Clark",23,"quote""","(""123 Main"""""",""Suite 100"",Fargo,90210,""(45,45)"")",)');
+
+create table my_arrays (
+       id serial,
+       int_array int[],
+       string_array varchar[][]
+);
+
+insert into my_arrays (int_array, string_array) values
+('{{{1,2,3},{4,5,6},{7,8,9}},{{11,12,13},{14,15,16},{17,18,19}},{{21,22,23},{24,25,26},{27,28,29}}}',
+'{{foo,bar},{baz,fuzz}}');
 
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO noauth;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO clearauth;

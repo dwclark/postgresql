@@ -30,8 +30,8 @@ public class CommandComplete extends Response {
     }
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public CommandComplete build(final BackEnd backEnd, final int size, final PostgresqlStream stream) {
-                final String[] ary = stream.nullString().split(" ");
+            public CommandComplete build(final BackEnd backEnd, final int size, final Session session) {
+                final String[] ary = session.nullString().split(" ");
                 if(ary.length == 2) {
                     return new CommandComplete(Action.valueOf(ary[0]), 0, Integer.valueOf(ary[1]));
                 }

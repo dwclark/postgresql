@@ -14,12 +14,12 @@ public abstract class Query implements ResultProvider {
         EnumSet.of(BackEnd.RowDescription, BackEnd.EmptyQueryResponse, BackEnd.ReadyForQuery,
                    BackEnd.CommandComplete, BackEnd.DataRow);
     
-    protected final Session stream;
+    protected final Session session;
     protected Response response;
     private CommandComplete complete;
 
-    public Query(final Session stream) {
-        this.stream = stream;
+    public Query(final Session session) {
+        this.session = session;
     }
 
     public TransactionStatus getStatus() {
@@ -41,7 +41,7 @@ public abstract class Query implements ResultProvider {
 
     public void advance() {
         if(!isDone()) {
-            response = stream.next(WILL_HANDLE);
+            response = session.next(WILL_HANDLE);
         }
     }
 

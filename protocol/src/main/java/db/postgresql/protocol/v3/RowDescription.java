@@ -20,10 +20,10 @@ public class RowDescription extends Response {
     }
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public RowDescription build(final BackEnd backEnd, final int size, final PostgresqlStream stream) {
-                FieldDescriptor[] fields = new FieldDescriptor[0xFFFF & stream.getShort()];
+            public RowDescription build(final BackEnd backEnd, final int size, final Session session) {
+                FieldDescriptor[] fields = new FieldDescriptor[0xFFFF & session.getShort()];
                 for(int i = 0; i < fields.length; ++i) {
-                    fields[i] = new FieldDescriptor(stream);
+                    fields[i] = new FieldDescriptor(session);
                 }
                 
                 return new RowDescription(fields);

@@ -14,10 +14,10 @@ public class ParameterDescription extends Response {
     }
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public ParameterDescription build(final BackEnd backEnd, final int size, final PostgresqlStream stream) {
-                final int[] oids = new int[stream.getShort() & 0xFFFF];
+            public ParameterDescription build(final BackEnd backEnd, final int size, final Session session) {
+                final int[] oids = new int[session.getShort() & 0xFFFF];
                 for(int i = 0; i < oids.length; ++i) {
-                    oids[i] = stream.getInt();
+                    oids[i] = session.getInt();
                 }
 
                 return new ParameterDescription(oids);

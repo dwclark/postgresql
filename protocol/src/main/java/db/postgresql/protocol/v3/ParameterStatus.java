@@ -22,8 +22,8 @@ public class ParameterStatus extends Response {
     }
 
     public final static ResponseBuilder builder = new ResponseBuilder() {
-            public ParameterStatus build(final BackEnd backEnd, final int size, final PostgresqlStream stream) {
-                return new ParameterStatus(stream.nullString(), stream.nullString());
+            public ParameterStatus build(final BackEnd backEnd, final int size, final Session session) {
+                return new ParameterStatus(session.nullString(), session.nullString());
             }
         };
 }

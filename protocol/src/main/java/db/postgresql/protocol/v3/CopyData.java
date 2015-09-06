@@ -10,11 +10,11 @@ import java.nio.charset.Charset;
 public class CopyData extends Response {
 
     private final int size;
-    private final PostgresqlStream stream;
+    private final Session session;
 
-    private CopyData(final PostgresqlStream stream, final int size) {
+    private CopyData(final Session session, final int size) {
         super(BackEnd.CopyData);
-        this.stream = stream;
+        this.session = session;
         this.size = size;
     }
 
@@ -22,13 +22,13 @@ public class CopyData extends Response {
         try {
             int remaining = size;
             while(remaining != 0) {
-                ByteBuffer v = stream.view(remaining);
+                ByteBuffer v = session.view(remaining);
                 while(v.hasRemaining()) {
                     remaining -= channel.write(v);
                 }
 
                 if(remaining != 0) {
-                    stream.recv();
+                    session.recv();
                 }
             }
         }
@@ -38,8 +38,8 @@ public class CopyData extends Response {
     }
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public CopyData build(final BackEnd backEnd, final int size, final PostgresqlStream stream) {
-                return new CopyData(stream, size);
+            public CopyData build(final BackEnd backEnd, final int size, final Session session) {
+                return new CopyData(session, size);
             }
         };
 }

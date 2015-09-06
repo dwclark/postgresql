@@ -426,31 +426,6 @@ public class Session extends PostgresqlStream implements AutoCloseable {
         pollingLock.unlock();
     }
 
-    @Override
-    public Serializer serializer(final int oid) {
-        return Registry.serializer(getDatabase(), oid);
-    }
-    
-    @Override
-    public <T> Serializer<T> serializer(final Class<T> type) {
-        return Registry.serializer(getDatabase(), type);
-    }
-
-    @Override
-    public NumericSerializer getNumericSerializer() {
-        return numericSerializer;
-    }
-
-    @Override
-    public MoneySerializer getMoneySerializer() {
-        return moneySerializer;
-    }
-
-    @Override
-    public StringSerializer getStringSerializer() {
-        return stringSerializer;
-    }
-
     private final void builtinType(final PgType tmp, Serializer s) {
         PgType pgType = new PgType.Builder(tmp).database(getDatabase()).build();
         Registry.add(pgType);
@@ -487,5 +462,32 @@ public class Session extends PostgresqlStream implements AutoCloseable {
         builtinType(Point.PGTYPE, new GeometrySerializer<>(Point.class));
         builtinType(Polygon.PGTYPE, new GeometrySerializer<>(Polygon.class));
     }
+
+    private Map<BackEnd,ResponseBuilder> builders() {
+        Map<BackEnd, ResponseBuilder> ret = new LinkedHashMap<>();
+        ret.put(BackEnd.Authentication, Authentication.builder);
+        ret.put(BackEnd.BackendKeyData, KeyData.builder);
+        ret.put(BackEnd.BindComplete, Response.builder);
+        ret.put(BackEnd.CloseComplete, Response.builder);
+        ret.put(BackEnd.CommandComplete, CommandComplete.builder);
+        ret.put(BackEnd.CopyData, CopyData.builder);
+        ret.put(BackEnd.CopyDone, Response.builder);
+        ret.put(BackEnd.DataRow, DataRow.builder);
+        ret.put(BackEnd.EmptyQueryResponse, Response.builder);
+        ret.put(BackEnd.ErrorResponse, Notice.builder);
+        ret.put(BackEnd.NoData, Response.builder);
+        ret.put(BackEnd.NoticeResponse, Notice.builder);
+        ret.put(BackEnd.NotificationResponse, Notification.builder);
+        ret.put(BackEnd.ParameterDescription, ParameterDescription.builder);
+        ret.put(BackEnd.ParameterStatus, ParameterStatus.builder);
+        ret.put(BackEnd.ParseComplete, Response.builder);
+        ret.put(BackEnd.PortalSuspended, Response.builder);
+        ret.put(BackEnd.ReadyForQuery, ReadyForQuery.builder);
+        ret.put(BackEnd.RowDescription, RowDescription.builder);
+        return Collections.unmodifiableMap(ret);
+    }
+
+    protected final Map<BackEnd,ResponseBuilder> builders = builders();
+
 }
 

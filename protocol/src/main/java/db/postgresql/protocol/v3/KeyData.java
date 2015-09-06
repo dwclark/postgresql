@@ -13,15 +13,15 @@ public class KeyData extends Response {
         return secretKey;
     }
     
-    private KeyData(final PostgresqlStream stream) {
+    private KeyData(final int pid, final int secretKey) {
         super(BackEnd.BackendKeyData);
-        this.pid = stream.getInt();
-        this.secretKey = stream.getInt();
+        this.pid = pid;
+        this.secretKey = secretKey;
     }
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public KeyData build(final BackEnd backEnd, final int size, final PostgresqlStream stream) {
-                return new KeyData(stream);
+            public KeyData build(final BackEnd backEnd, final int size, final Session session) {
+                return new KeyData(session.getInt(), session.getInt());
             }
         };
 }

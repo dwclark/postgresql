@@ -23,58 +23,6 @@ import java.util.Map;
 public class PostgresqlStream extends NetworkStream {
     
     private final static int VERSION = 196608;
-
-    protected Map<BackEnd,ResponseBuilder> builders() {
-        Map<BackEnd, ResponseBuilder> ret = new LinkedHashMap<>();
-        ret.put(BackEnd.Authentication, Authentication.builder);
-        ret.put(BackEnd.BackendKeyData, KeyData.builder);
-        ret.put(BackEnd.BindComplete, Response.builder);
-        ret.put(BackEnd.CloseComplete, Response.builder);
-        ret.put(BackEnd.CommandComplete, CommandComplete.builder);
-        ret.put(BackEnd.CopyData, CopyData.builder);
-        ret.put(BackEnd.CopyDone, Response.builder);
-        ret.put(BackEnd.DataRow, DataRow.builder);
-        ret.put(BackEnd.EmptyQueryResponse, Response.builder);
-        ret.put(BackEnd.ErrorResponse, Notice.builder);
-        ret.put(BackEnd.NoData, Response.builder);
-        ret.put(BackEnd.NoticeResponse, Notice.builder);
-        ret.put(BackEnd.NotificationResponse, Notification.builder);
-        ret.put(BackEnd.ParameterDescription, ParameterDescription.builder);
-        ret.put(BackEnd.ParameterStatus, ParameterStatus.builder);
-        ret.put(BackEnd.ParseComplete, Response.builder);
-        ret.put(BackEnd.PortalSuspended, Response.builder);
-        ret.put(BackEnd.ReadyForQuery, ReadyForQuery.builder);
-        ret.put(BackEnd.RowDescription, RowDescription.builder);
-        return Collections.unmodifiableMap(ret);
-    }
-
-    protected final Map<BackEnd,ResponseBuilder> builders = builders();
-
-    public Serializer serializer(final int oid) {
-        throw new UnsupportedOperationException();
-    }
-
-    public <T> Serializer<T> serializer(final Class<T> type) {
-        throw new UnsupportedOperationException();
-    }
-
-    private final NumericSerializer _numericSerializer = new NumericSerializer(Locale.getDefault());
-    
-    public NumericSerializer getNumericSerializer() {
-        return _numericSerializer;
-    }
-
-    private final MoneySerializer _moneySerializer = new MoneySerializer(Locale.getDefault());
-
-    public MoneySerializer getMoneySerializer() {
-        return _moneySerializer;
-    }
-
-    public final StringSerializer _stringSerializer = new StringSerializer(Charset.forName("UTF-8"));
-
-    public StringSerializer getStringSerializer() {
-        return _stringSerializer;
-    }
     
     public PostgresqlStream(IO io, final Charset encoding) {
         super(io, encoding);

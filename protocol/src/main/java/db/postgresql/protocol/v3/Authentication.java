@@ -14,15 +14,15 @@ public abstract class Authentication extends Response {
     }
 
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public Authentication build(final BackEnd ignore, final int size, final PostgresqlStream stream) {
-                BackEnd backEnd = BackEnd.find(ignore.id, (byte) stream.getInt());
+            public Authentication build(final BackEnd ignore, final int size, final Session session) {
+                BackEnd backEnd = BackEnd.find(ignore.id, (byte) session.getInt());
                 switch(backEnd) {
                 case AuthenticationOk:
                     return Ok.instance;
                 case AuthenticationCleartextPassword:
                     return Password.instance;
                 case AuthenticationMD5Password:
-                    return new Md5(stream);
+                    return new Md5(session);
                 default:
                     return Fail.instance;
                 }

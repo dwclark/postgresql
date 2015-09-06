@@ -14,8 +14,8 @@ public class ReadyForQuery extends Response {
     }
     
     public static final ResponseBuilder builder = new ResponseBuilder() {
-            public ReadyForQuery build(final BackEnd backEnd, final int size, final PostgresqlStream stream) {
-                return new ReadyForQuery(TransactionStatus.from(stream.get()));
+            public ReadyForQuery build(final BackEnd backEnd, final int size, final Session session) {
+                return new ReadyForQuery(TransactionStatus.from(session.get()));
             }
         };
 }

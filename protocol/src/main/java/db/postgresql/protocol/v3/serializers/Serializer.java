@@ -30,7 +30,11 @@ public abstract class Serializer<T> {
     public abstract T read(Stream stream, int size);
     public abstract void write(Stream stream, T val);
     public abstract int length(T val);
-    
+
+    public Object readArray(final Stream stream, final int size, final char delimiter) {
+        return new ArrayParser(str(stream, size), this, delimiter).toArray();
+    }
+
     public static final Charset ASCII_ENCODING = Charset.forName("US-ASCII");
     public static final int NULL_LENGTH = -1;
     
