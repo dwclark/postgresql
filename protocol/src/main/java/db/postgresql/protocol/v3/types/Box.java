@@ -9,7 +9,7 @@ import db.postgresql.protocol.v3.typeinfo.PgType;
 public class Box implements Udt {
 
     public static final PgType PGTYPE =
-        new PgType.Builder().name("box").oid(603).arrayId(1020).build();
+        new PgType.Builder().name("box").oid(603).arrayId(1020).delimiter(';').build();
     
     private final Point upperRight;
     private final Point lowerLeft;

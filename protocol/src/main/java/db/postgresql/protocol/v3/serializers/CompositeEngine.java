@@ -11,7 +11,7 @@ import static db.postgresql.protocol.v3.serializers.CompositeMeta.*;
 //Rule: Field will leave index one past meta char (, or udt delimiter)
 public class CompositeEngine <T extends CompositeMeta> {
 
-    private final Deque<T> levels;
+    final Deque<T> levels = new ArrayDeque<>();
     private final BiFunction<Character,Integer,T> factory;
     
     final CharSequence buffer;
@@ -19,16 +19,26 @@ public class CompositeEngine <T extends CompositeMeta> {
     private int contentBegin = -1;
     private int contentEnd = -1;
     private boolean withinQuotes = false;
-    
-    public CompositeEngine(final CharSequence buffer, final BiFunction<Character,Integer,T> factory) {
-        this(buffer, factory, new ArrayDeque<>());
+
+    public int getIndex() {
+        return index;
     }
 
-    public CompositeEngine(final CharSequence buffer, final BiFunction<Character,Integer,T> factory,
-                           final Deque<T> levels) {
+    public int getContentBegin() {
+        return contentBegin;
+    }
+
+    public int getContentEnd() {
+        return contentEnd;
+    }
+
+    public boolean getWithinQuotes() {
+        return withinQuotes;
+    }
+    
+    public CompositeEngine(final CharSequence buffer, final BiFunction<Character,Integer,T> factory) {
         this.buffer = buffer;
         this.factory = factory;
-        this.levels = levels;
     }
 
     public T getLevel() {
