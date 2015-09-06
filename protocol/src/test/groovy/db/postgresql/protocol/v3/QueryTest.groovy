@@ -1,12 +1,7 @@
-package db.postgresql.protocol.v3;
+package db.postgresql.protocol.v3
 
-import spock.lang.*;
-import java.nio.channels.*;
-import java.net.InetSocketAddress;
-import java.net.InetAddress;
-import java.nio.charset.Charset;
-import java.security.*;
-import static db.postgresql.protocol.v3.ssl.ContextCreation.*;
+import db.postgresql.protocol.v3.serializers.Serializer;
+import spock.lang.*
 import db.postgresql.protocol.v3.types.*;
 
 class QueryTest extends Specification {

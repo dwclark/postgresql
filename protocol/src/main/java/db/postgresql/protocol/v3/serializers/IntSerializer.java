@@ -4,6 +4,7 @@ import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.typeinfo.PgType;
+import java.lang.reflect.Array;
 
 public class IntSerializer extends Serializer<Integer> {
 
@@ -11,9 +12,19 @@ public class IntSerializer extends Serializer<Integer> {
         new PgType.Builder().name("int4").oid(23).arrayId(1007).build();
 
     public static final IntSerializer instance = new IntSerializer();
-    
+
+    @Override
+    public Class getArrayType() {
+        return int.class;
+    }
+
+    @Override
+    public void putArray(final Object ary, final int index, final String val) {
+        Array.setInt(ary, index, Integer.parseInt(val));
+    }
+
     private IntSerializer() {
-        super(int.class, Integer.class);
+        super(Integer.class);
     }
 
     private static final int[] powers = { 1, 10, 100, 1_000, 10_000, 100_000, 1_000_000,
@@ -24,7 +35,11 @@ public class IntSerializer extends Serializer<Integer> {
         return powers[i];
     }
 
-    public int readPrimitive(final Stream stream, final int size, final Format format) {
+    public Integer fromString(final String str) {
+        return Integer.valueOf(str);
+    }
+    
+    public int readPrimitive(final Stream stream, final int size) {
         if(size == NULL_LENGTH) {
             return 0;
         }
@@ -46,11 +61,11 @@ public class IntSerializer extends Serializer<Integer> {
         return negate ? -accum : accum;
     }
 
-    public Integer read(final Stream stream, final int size, final Format format) {
-        return size == NULL_LENGTH ? null : readPrimitive(stream, size, format);
+    public Integer read(final Stream stream, final int size) {
+        return size == NULL_LENGTH ? null : readPrimitive(stream, size);
     }
 
-    public int lengthPrimitive(final int val, final Format format) {
+    public int lengthPrimitive(final int val) {
         if(val == Integer.MIN_VALUE) {
             return 11;
         }
@@ -67,15 +82,15 @@ public class IntSerializer extends Serializer<Integer> {
         return digits + (includeSign ? 1 : 0);
     }
 
-    public int length(final Integer val, final Format format) {
-        return val == null ? NULL_LENGTH : lengthPrimitive(val, format);
+    public int length(final Integer val) {
+        return val == null ? NULL_LENGTH : lengthPrimitive(val);
     }
 
     public static final byte[] DIGITS = { (byte) '0', (byte) '1', (byte) '2', (byte) '3', (byte) '4',
                                           (byte) '5', (byte) '6', (byte) '7', (byte) '8', (byte) '9' };
     
-    public void writePrimitive(final Stream stream, final int val, final Format format) {
-        final int size = length(val, format);
+    public void writePrimitive(final Stream stream, final int val) {
+        final int size = length(val);
         final byte[] bytes = new byte[size];
         final int startAt = size - 1;
         final int endAt = (val < 0) ? 1 : 0;
@@ -93,15 +108,14 @@ public class IntSerializer extends Serializer<Integer> {
         stream.put(bytes);
     }
 
-    public void write(final Stream stream, final Integer val, final Format format) {
-        writePrimitive(stream, val, format);
+    public void write(final Stream stream, final Integer val) {
+        writePrimitive(stream, val);
     }
 
-    public Bindable bindable(final int val, final Format format) {
+    public Bindable bindable(final int val) {
         return new Bindable() {
-            public Format getFormat() { return format; }
-            public int getLength() { return lengthPrimitive(val, format); }
-            public void write(final Stream stream) { writePrimitive(stream, val, format); }
+            public int getLength() { return lengthPrimitive(val); }
+            public void write(final Stream stream) { writePrimitive(stream, val); }
         };
     }
 }

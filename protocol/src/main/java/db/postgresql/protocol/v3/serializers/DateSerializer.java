@@ -1,6 +1,5 @@
 package db.postgresql.protocol.v3.serializers;
 
-import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -19,22 +18,21 @@ public class DateSerializer extends Serializer<LocalDate> {
     private DateSerializer() {
         super(LocalDate.class);
     }
+
+    public LocalDate fromString(final String str) {
+        return LocalDate.parse(str, DATE);
+    }
     
-    public LocalDate read(final Stream stream, final int size, final Format format) {
-        if(size == NULL_LENGTH) {
-            return null;
-        }
-        else {
-            return LocalDate.parse(str(stream, size, ASCII_ENCODING), DATE);
-        }
+    public LocalDate read(final Stream stream, final int size) {
+        return isNull(size) ? null : fromString(str(stream, size, ASCII_ENCODING));
     }
 
-    public int length(final LocalDate d, final Format format) {
+    public int length(final LocalDate d) {
         //yyyy-mm-dd -> 10
         return (d == null) ? NULL_LENGTH : 10;
     }
 
-    public void write(final Stream stream, final LocalDate val, final Format format) {
+    public void write(final Stream stream, final LocalDate val) {
         stream.putString(val.format(DATE));
     }
 }

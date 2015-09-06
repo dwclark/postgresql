@@ -74,7 +74,7 @@ class GeometryTest extends Specification {
 
     def "Test Box 1"() {
         setup:
-        Box box = BoxSerializer.from('(1,1),(0,0)')
+        Box box = new BoxSerializer().fromString('(1,1),(0,0)')
         Box shouldBe = new Box(new Point(1d,1d), new Point(0d,0d));
             
         expect:
@@ -85,7 +85,7 @@ class GeometryTest extends Specification {
 
     def "Test Box 2"() {
         setup:
-        Box box = BoxSerializer.from('(1,1),(-1.1,-1.1)');
+        Box box = new BoxSerializer().fromString('(1,1),(-1.1,-1.1)');
         Box shouldBe = new Box(new Point(1d,1d), new Point(-1.1d,-1.1d));
         
         expect:

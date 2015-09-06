@@ -93,9 +93,7 @@ public class Registry {
 
     public static void add(final String database, final Serializer serializer) {
         final Map<Class,Serializer> map = typeSerializers(database);
-        for(Class type : serializer.getTypes()) {
-            map.put(type, serializer);
-        }
+        map.put(serializer.getType(), serializer);
     }
 
     private static final Map<OidKey,PgType> pgTypes = new ConcurrentHashMap<>(100, 0.75f, 1);

@@ -14,15 +14,15 @@ class ShortSerializerTest extends Specification {
 
     def "Test Length"() {
         expect:
-        s.length((short) 0, f) == 1;
-        s.length(Short.MIN_VALUE, f) == 6;
-        s.length(Short.MAX_VALUE, f) == 5;
-        s.length((short) 9_999, f) == 4;
-        s.length((short) 10_000, f) == 5;
-        s.length((short) -9_999, f) == 5;
-        s.length((short) -10_000, f) == 6;
-        s.length((short) 9, f) == 1;
-        s.length((short) 10, f) == 2;
+        s.length((short) 0) == 1;
+        s.length(Short.MIN_VALUE) == 6;
+        s.length(Short.MAX_VALUE) == 5;
+        s.length((short) 9_999) == 4;
+        s.length((short) 10_000) == 5;
+        s.length((short) -9_999) == 5;
+        s.length((short) -10_000) == 6;
+        s.length((short) 9) == 1;
+        s.length((short) 10) == 2;
     }
 
     private String toString(final FixedStream fs) {
@@ -44,22 +44,22 @@ class ShortSerializerTest extends Specification {
         def fs = new FixedStream(20, ascii);
 
         when:
-        s.write(fs, (short) 100, f);
+        s.write(fs, (short) 100);
         then:
         toString(fs) == '100';
 
         when:
-        s.write(fs, Short.MAX_VALUE, f);
+        s.write(fs, Short.MAX_VALUE);
         then:
         toString(fs)  == '32767';
 
         when:
-        s.write(fs, (short) 9_999, f);
+        s.write(fs, (short) 9_999);
         then:
         toString(fs) == '9999';
 
         when:
-        s.write(fs, (short) -10_001, f);
+        s.write(fs, (short) -10_001);
         then:
         toString(fs) == '-10001';
     }
@@ -71,21 +71,21 @@ class ShortSerializerTest extends Specification {
         when:
         strToStream(fs, "9999");
         then:
-        s.read(fs, 4, f) == 9_999;
+        s.read(fs, 4) == 9_999;
 
         when:
         strToStream(fs, '-32768');
         then:
-        s.read(fs, 6, f) == -32768;
+        s.read(fs, 6) == -32768;
 
         when:
         strToStream(fs, '32767');
         then:
-        s.read(fs, 5, f) == 32767;
+        s.read(fs, 5) == 32767;
 
         when:
         strToStream(fs, '-12345');
         then:
-        s.read(fs, 6, f) == -12345;
+        s.read(fs, 6) == -12345;
     }
 }

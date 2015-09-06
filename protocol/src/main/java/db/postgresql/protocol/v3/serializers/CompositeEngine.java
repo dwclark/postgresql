@@ -9,20 +9,29 @@ import static db.postgresql.protocol.v3.serializers.CompositeMeta.*;
 //Rule: Field consumes quotes and content, but only makes content available
 //Rule: Field will not consume anything more than one char if null field
 //Rule: Field will leave index one past meta char (, or udt delimiter)
-public class CompositeEngine {
+public class CompositeEngine <T extends CompositeMeta> {
 
-    private final Deque<CompositeMeta> levels = new ArrayDeque<>();
-    private final BiFunction<Character,Integer,CompositeMeta> factory;
+    private final Deque<T> levels;
+    private final BiFunction<Character,Integer,T> factory;
     
     final CharSequence buffer;
-    private int index;
-
-    public CompositeEngine(final CharSequence buffer, final BiFunction<Character,Integer,CompositeMeta> factory) {
-        this.buffer = buffer;
-        this.factory = factory;
+    private int index = 0;
+    private int contentBegin = -1;
+    private int contentEnd = -1;
+    private boolean withinQuotes = false;
+    
+    public CompositeEngine(final CharSequence buffer, final BiFunction<Character,Integer,T> factory) {
+        this(buffer, factory, new ArrayDeque<>());
     }
 
-    public CompositeMeta getLevel() {
+    public CompositeEngine(final CharSequence buffer, final BiFunction<Character,Integer,T> factory,
+                           final Deque<T> levels) {
+        this.buffer = buffer;
+        this.factory = factory;
+        this.levels = levels;
+    }
+
+    public T getLevel() {
         return levels.peek();
     }
     
@@ -37,7 +46,7 @@ public class CompositeEngine {
     }
 
     private void advanceEndNoQuotes() {
-        CompositeMeta level = getLevel();
+        T level = getLevel();
         while(true) {
             final char current = buffer.charAt(index);
             if(level.isEnd(current) || level.isDelimiter(current)) {
@@ -49,7 +58,7 @@ public class CompositeEngine {
     }
 
     private void advanceEndQuotes() {
-        CompositeMeta level = getLevel();
+        T level = getLevel();
         while(true) {
             final char current = buffer.charAt(index);
             if(isQuote(current)) {
@@ -65,19 +74,32 @@ public class CompositeEngine {
             }
         }
     }
+
+    public void reset() {
+        resetBoundaries();
+        levels.clear();
+        index = 0;
+    }
     
-    public String getField() {
-        CompositeMeta level = getLevel();
-        boolean withinQuotes = false;
+    private void resetBoundaries() {
+        contentBegin = -1;
+        contentEnd = -1;
+        withinQuotes = false;
+    }
+    
+    public void findBoundaries() {
+        resetBoundaries();
+        T level = getLevel();
+        
         if(level.isEnd(buffer.charAt(index))) {
             //case 1: at the end of the udt, no field present
-            return null;
+            return;
         }
 
         if(level.isDelimiter(buffer.charAt(index))) {
             //case 2: null field, but not at the end of the udt
             ++index;
-            return null;
+            return;
         }
 
         if(isQuote(buffer.charAt(index))) {
@@ -87,7 +109,7 @@ public class CompositeEngine {
         }
 
         //at this point there is definitely content and the index is pointed at the beginning
-        final int contentBegin = index;
+        contentBegin = index;
         if(withinQuotes) {
             advanceEndQuotes();
         }
@@ -95,7 +117,8 @@ public class CompositeEngine {
             advanceEndNoQuotes();
         }
 
-        final int contentEnd = index;
+
+        contentEnd = index;
 
         if(withinQuotes) {
             index += level.getFieldQuotes();
@@ -106,11 +129,17 @@ public class CompositeEngine {
             //beginning of the field boundary or at the udt end
             ++index;
         }
-
-        //return the actual content
+    }
+    
+    public String getField() {
+        findBoundaries();
+        if(contentBegin == -1) {
+            return null;
+        }
+        
         CharSequence seq = buffer.subSequence(contentBegin, contentEnd);
         if(anyQuotes(seq)) {
-            return level.replace(seq.toString());
+            return getLevel().replace(seq.toString());
         }
         else {
             return seq.toString();
@@ -122,12 +151,12 @@ public class CompositeEngine {
             ++index;
         }
                 
-        final CompositeMeta next = factory.apply(buffer.charAt(index++), levels.size());
+        final T next = factory.apply(buffer.charAt(index++), levels.size());
         levels.push(next);
     }
 
     public void endUdt() {
-        final CompositeMeta last = levels.pop();
+        final T last = levels.pop();
         ++index;
         index += last.getUdtQuotes();
 
@@ -138,5 +167,9 @@ public class CompositeEngine {
 
     public char getCurrent() {
         return buffer.charAt(index);
+    }
+
+    public boolean hasMore() {
+        return index < buffer.length();
     }
 }

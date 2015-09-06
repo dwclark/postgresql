@@ -1,6 +1,5 @@
 package db.postgresql.protocol.v3.serializers;
 
-import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.typeinfo.PgType;
 import java.util.UUID;
@@ -16,15 +15,19 @@ public class UUIDSerializer extends Serializer<UUID> {
         super(UUID.class);
     }
 
-    public UUID read(final Stream stream, final int size, final Format format) {
-        return isNull(size) ? null : UUID.fromString(str(stream, size, ASCII_ENCODING));
+    public UUID fromString(final String str) {
+        return UUID.fromString(str);
     }
 
-    public int length(final UUID val, final Format format) {
+    public UUID read(final Stream stream, final int size) {
+        return isNull(size) ? null : fromString(str(stream, size, ASCII_ENCODING));
+    }
+
+    public int length(final UUID val) {
         return val.toString().length();
     }
 
-    public void write(final Stream stream, final UUID val, final Format format) {
+    public void write(final Stream stream, final UUID val) {
         stream.putString(val.toString());
     }
 }

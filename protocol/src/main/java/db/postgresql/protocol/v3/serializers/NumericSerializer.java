@@ -1,6 +1,5 @@
 package db.postgresql.protocol.v3.serializers;
 
-import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -28,7 +27,11 @@ public class NumericSerializer extends Serializer<BigDecimal> {
         return formatter;
     }
 
-    public BigDecimal read(final Stream stream, final int size, final Format format) {
+    public BigDecimal fromString(final String str) {
+        return new BigDecimal(str);
+    }
+    
+    public BigDecimal read(final Stream stream, final int size) {
         if(isNull(size)) {
             return null;
         }
@@ -43,11 +46,11 @@ public class NumericSerializer extends Serializer<BigDecimal> {
         return sb.toString();
     }
 
-    public int length(final BigDecimal bd, final Format format) {
+    public int length(final BigDecimal bd) {
         return (bd == null) ? -1 : toString(bd).length();
     }
 
-    public void write(final Stream stream, final BigDecimal bd, final Format format) {
+    public void write(final Stream stream, final BigDecimal bd) {
         stream.putString(toString(bd));
     }
 }

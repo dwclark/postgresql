@@ -1,12 +1,6 @@
 package db.postgresql.protocol.v3;
 
 import spock.lang.*;
-import java.nio.channels.*;
-import java.net.InetSocketAddress;
-import java.net.InetAddress;
-import java.nio.charset.Charset;
-import java.security.*;
-import static db.postgresql.protocol.v3.ssl.ContextCreation.*;
 import db.postgresql.protocol.v3.serializers.*;
 
 class PrepareAndBindTest extends Specification {
@@ -53,7 +47,7 @@ class PrepareAndBindTest extends Specification {
         StringSerializer strSerializer = session.stringSerializer;
         
         NUM.times { 
-            Bindable[] inputs = [ intSerializer.bindable(3, Format.TEXT), strSerializer.bindable("three", Format.TEXT) ] as Bindable[];
+            Bindable[] inputs = [ intSerializer.bindable(3), strSerializer.bindable("three") ] as Bindable[];
             session.bind('', insertName, inputs, Session.EMPTY_FORMATS).execute('');
         }
         

@@ -1,6 +1,5 @@
 package db.postgresql.protocol.v3.serializers;
 
-import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import java.time.OffsetTime;
 import java.time.format.DateTimeFormatter;
@@ -20,22 +19,20 @@ public class OffsetTimeSerializer extends Serializer<OffsetTime> {
         super(OffsetTime.class);
     }
 
-    public OffsetTime read(final Stream stream, final int size, final Format format) {
-        if(size == NULL_LENGTH) {
-            return null;
-        }
-        else {
-            final String str = str(stream, size, ASCII_ENCODING);
-            final int index = str.lastIndexOf('-');
-            return OffsetTime.parse(str.substring(0, index) + "000" + str.substring(index), DATE);
-        }
+    public OffsetTime fromString(final String str) {
+        final int index = str.lastIndexOf('-');
+        return OffsetTime.parse(str.substring(0, index) + "000" + str.substring(index), DATE);
     }
 
-    public int length(final OffsetTime date, final Format format) {
+    public OffsetTime read(final Stream stream, final int size) {
+        return isNull(size) ? null : fromString(str(stream, size, ASCII_ENCODING));
+    }
+
+    public int length(final OffsetTime date) {
         return 18;
     }
 
-    public void write(final Stream stream, final OffsetTime val, final Format format) {
+    public void write(final Stream stream, final OffsetTime val) {
         stream.putString(val.format(DATE));
     }
 }

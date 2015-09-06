@@ -1,9 +1,9 @@
 package db.postgresql.protocol.v3.serializers;
 
 import db.postgresql.protocol.v3.Bindable;
-import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.typeinfo.PgType;
+import java.lang.reflect.Array;
 
 public class FloatSerializer extends Serializer<Float> {
     
@@ -13,38 +13,51 @@ public class FloatSerializer extends Serializer<Float> {
     public static final FloatSerializer instance = new FloatSerializer();
     
     private FloatSerializer() {
-        super(float.class, Float.class);
+        super(Float.class);
     }
 
-    public float readPrimitive(final Stream stream, final int size, final Format format) {
+    @Override
+    public Class getArrayType() {
+        return float.class;
+    }
+
+    @Override
+    public void putArray(final Object ary, final int index, final String val) {
+        Array.setFloat(ary, index, Float.parseFloat(val));
+    }
+    
+    public Float fromString(final String str) {
+        return Float.valueOf(str);
+    }
+    
+    public float readPrimitive(final Stream stream, final int size) {
         return size == NULL_LENGTH ? 0.0f : Float.valueOf(str(stream, size, ASCII_ENCODING));
     }
 
-    public Float read(final Stream stream, final int size, final Format format) {
-        return size == NULL_LENGTH ? null : readPrimitive(stream, size, format);
+    public Float read(final Stream stream, final int size) {
+        return size == NULL_LENGTH ? null : readPrimitive(stream, size);
     }
     
-    public int lengthPrimitive(final float val, final Format format) {
+    public int lengthPrimitive(final float val) {
         return Float.toString(val).length();
     }
 
-    public int length(final Float val, final Format format) {
-        return val == null ? NULL_LENGTH : lengthPrimitive(val, format);
+    public int length(final Float val) {
+        return val == null ? NULL_LENGTH : lengthPrimitive(val);
     }
 
-    public void writePrimitive(final Stream stream, final float val, final Format format) {
+    public void writePrimitive(final Stream stream, final float val) {
         stream.putString(Float.toString(val));
     }
 
-    public void write(final Stream stream, final Float val, final Format format) {
-        writePrimitive(stream, val, format);
+    public void write(final Stream stream, final Float val) {
+        writePrimitive(stream, val);
     }
 
-    public Bindable bindable(final float val, final Format format) {
+    public Bindable bindable(final float val) {
         return new Bindable() {
-            public Format getFormat() { return format; }
-            public int getLength() { return lengthPrimitive(val, format); }
-            public void write(final Stream stream) { writePrimitive(stream, val, format); }
+            public int getLength() { return lengthPrimitive(val); }
+            public void write(final Stream stream) { writePrimitive(stream, val); }
         };
     }
 }

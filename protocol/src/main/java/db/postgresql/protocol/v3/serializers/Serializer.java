@@ -4,22 +4,32 @@ import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import java.nio.charset.Charset;
+import java.lang.reflect.Array;
 
 public abstract class Serializer<T> {
 
-    private final Class[] types;
+    private final Class<T> type;
     
-    public Class[] getTypes() {
-        return types;
+    public Class<T> getType() {
+        return type;
     }
 
-    public Serializer(final Class... types) {
-        this.types = types;
+    public Class getArrayType() {
+        return type;
     }
 
-    public abstract T read(Stream stream, int size, Format format);
-    public abstract void write(Stream stream, T val, Format format);
-    public abstract int length(T val, Format format);
+    public void putArray(final Object ary, final int index, final String val) {
+        Array.set(ary, index, fromString(val));
+    }
+
+    public Serializer(final Class<T> type) {
+        this.type = type;
+    }
+
+    public abstract T fromString(String str);
+    public abstract T read(Stream stream, int size);
+    public abstract void write(Stream stream, T val);
+    public abstract int length(T val);
     
     public static final Charset ASCII_ENCODING = Charset.forName("US-ASCII");
     public static final int NULL_LENGTH = -1;
@@ -54,29 +64,26 @@ public abstract class Serializer<T> {
         return size == NULL_LENGTH;
     }
 
-    public static Bindable bindable(final Format format) {
+    public static Bindable bindable() {
         return new Bindable() {
-            public Format getFormat() { return format; }
             public int getLength() { return -1; }
             public void write(final Stream stream) { }
         };
     }
 
-    public Bindable bindable(final T val, final Format format) {
+    public Bindable bindable(final T val) {
         return new Bindable() {
-
-            public Format getFormat() { return format; }
 
             public int getLength() {
                 if(val == null) {
                     return NULL_LENGTH;
                 }
                 else {
-                    return length(val, format);
+                    return length(val);
                 }
             }
             
-            public void write(final Stream stream) { Serializer.this.write(stream, val, format); }
+            public void write(final Stream stream) { Serializer.this.write(stream, val); }
         };
     }
 }

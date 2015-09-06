@@ -10,8 +10,8 @@ public class UdtParser implements UdtInput {
 
     final CompositeEngine engine;
     
-    private UdtParser(final CharSequence buffer, final BiFunction<Character,Integer,CompositeMeta> factory) {
-        this.engine = new CompositeEngine(buffer, factory);
+    private UdtParser(final CharSequence buffer, final BiFunction<Character,Integer,? extends CompositeMeta> factory) {
+        this.engine = new CompositeEngine<>(buffer, factory);
     }
 
     public static UdtParser forUdt(final CharSequence buffer) {

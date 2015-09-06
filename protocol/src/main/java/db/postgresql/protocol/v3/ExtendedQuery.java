@@ -1,16 +1,8 @@
 package db.postgresql.protocol.v3;
 
 import db.postgresql.protocol.v3.serializers.*;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.util.BitSet;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.UUID;
+
 
 public class ExtendedQuery extends Query {
 
@@ -38,30 +30,30 @@ public class ExtendedQuery extends Query {
     public <T> Bindable bind(final T val) {
         @SuppressWarnings("unchecked")
         Class<T> type = (Class<T>) val.getClass();
-        return stream.serializer(type).bindable(val, Format.TEXT);
+        return stream.serializer(type).bindable(val);
     }
     
     public Bindable bind(final boolean val) {
-        return BooleanSerializer.instance.bindable(val, Format.TEXT);
+        return BooleanSerializer.instance.bindable(val);
     }
 
     public Bindable bind(final double val) {
-        return DoubleSerializer.instance.bindable(val, Format.TEXT);
+        return DoubleSerializer.instance.bindable(val);
     }
 
     public Bindable bind(final float val) {
-        return FloatSerializer.instance.bindable(val, Format.TEXT);
+        return FloatSerializer.instance.bindable(val);
     }
 
     public Bindable bind(final int val) {
-        return IntSerializer.instance.bindable(val, Format.TEXT);
+        return IntSerializer.instance.bindable(val);
     }
 
     public Bindable bind(final long val) {
-        return LongSerializer.instance.bindable(val, Format.TEXT);
+        return LongSerializer.instance.bindable(val);
     }
 
     public Bindable bind(final short val) {
-        return ShortSerializer.instance.bindable(val, Format.TEXT);
+        return ShortSerializer.instance.bindable(val);
     }
 }

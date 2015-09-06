@@ -1,9 +1,6 @@
 package db.postgresql.protocol.v3.serializers;
 
-import db.postgresql.protocol.v3.Bindable;
-import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
-import java.nio.ByteBuffer;
 import db.postgresql.protocol.v3.typeinfo.PgType;
 import java.util.BitSet;
 
@@ -21,11 +18,21 @@ public class BitSetSerializer extends Serializer<BitSet> {
         super(BitSet.class);
     }
         
-    public int length(final BitSet bits, final Format format) {
+    public int length(final BitSet bits) {
         return (bits == null) ? NULL_LENGTH : bits.length();
     }
 
-    public BitSet read(final Stream stream, final int size, final Format format) {
+    public BitSet fromString(final String str) {
+        final int size = str.length();
+        BitSet ret = new BitSet(size);
+        for(int i = 0; i < size; ++i) {
+            ret.set(i, str.charAt(i) == '1' ? true : false);
+        }
+        
+        return ret;
+    }
+    
+    public BitSet read(final Stream stream, final int size) {
         if(size == NULL_LENGTH) {
             return null;
         }
@@ -40,7 +47,7 @@ public class BitSetSerializer extends Serializer<BitSet> {
         return ret;
     }
 
-    public void write(final Stream stream, final BitSet bits, final Format format) {
+    public void write(final Stream stream, final BitSet bits) {
         for(int i = 0; i < bits.length(); ++i) {
             stream.put(bits.get(i) ? (byte) '1' : (byte) '0');
         }

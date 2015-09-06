@@ -1,19 +1,8 @@
 package db.postgresql.protocol.v3;
 
 import db.postgresql.protocol.v3.serializers.*;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.temporal.TemporalAccessor;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+
 import java.util.NoSuchElementException;
-import java.util.UUID;
 import java.util.function.Function;
 
 public class DataRow extends Response {
@@ -92,12 +81,12 @@ public class DataRow extends Response {
         public Object next() {
             final FieldDescriptor field = field();
             final Serializer serializer = stream.serializer(field.typeOid);
-            return serializer.read(stream, stream.getInt(), field.format);
+            return serializer.read(stream, stream.getInt());
         }
 
         public <T> T next(Class<T> type) {
             final Serializer serializer = stream.serializer(type);
-            return type.cast(serializer.read(stream, stream.getInt(), field().format));
+            return type.cast(serializer.read(stream, stream.getInt()));
         }
         
         public void remove() {
@@ -105,27 +94,27 @@ public class DataRow extends Response {
         }
 
         public boolean nextBoolean() {
-            return BooleanSerializer.instance.read(stream, stream.getInt(), field().format);
+            return BooleanSerializer.instance.read(stream, stream.getInt());
         }
         
         public double nextDouble() {
-            return DoubleSerializer.instance.read(stream, stream.getInt(), field().format);
+            return DoubleSerializer.instance.read(stream, stream.getInt());
         }
 
         public float nextFloat() {
-            return FloatSerializer.instance.read(stream, stream.getInt(), field().format);
+            return FloatSerializer.instance.read(stream, stream.getInt());
         }
 
         public int nextInt() {
-            return IntSerializer.instance.read(stream, stream.getInt(), field().format);
+            return IntSerializer.instance.read(stream, stream.getInt());
         }
 
         public long nextLong() {
-            return LongSerializer.instance.read(stream, stream.getInt(), field().format);
+            return LongSerializer.instance.read(stream, stream.getInt());
         }
 
         public short nextShort() {
-            return ShortSerializer.instance.read(stream, stream.getInt(), field().format);
+            return ShortSerializer.instance.read(stream, stream.getInt());
         }
     }
 }

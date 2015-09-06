@@ -1,6 +1,5 @@
 package db.postgresql.protocol.v3.serializers;
 
-import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -25,11 +24,15 @@ public class StringSerializer extends Serializer<String> {
         this.encoder = encoding.newEncoder();
     }
 
-    public String read(final Stream stream, final int size, final Format format) {
+    public String fromString(final String str) {
+        return str;
+    }
+    
+    public String read(final Stream stream, final int size) {
         return size == NULL_LENGTH ? null : str(stream, size);
     }
 
-    public int length(final String str, final Format format) {
+    public int length(final String str) {
         encoder.reset();
         final CharBuffer charBuffer = CharBuffer.wrap(str);
         final ByteBuffer tmp = ByteBuffer.allocate(64);
@@ -49,7 +52,7 @@ public class StringSerializer extends Serializer<String> {
         return total;
     }
 
-    public void write(final Stream stream, final String val, final Format format) {
+    public void write(final Stream stream, final String val) {
         stream.putString(val);
     }
 }

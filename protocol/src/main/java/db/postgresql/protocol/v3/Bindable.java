@@ -8,7 +8,7 @@ public interface Bindable {
     public static final Bindable[] ZERO_ELEMENTS = new Bindable[0];
     public static final List<Bindable[]> EMPTY = Collections.singletonList(ZERO_ELEMENTS);
     
-    Format getFormat();
+    default Format getFormat() { return Format.TEXT; }
     int getLength();
     void write(Stream stream);
 }

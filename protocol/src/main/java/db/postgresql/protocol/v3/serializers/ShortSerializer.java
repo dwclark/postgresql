@@ -4,6 +4,7 @@ import db.postgresql.protocol.v3.Bindable;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.typeinfo.PgType;
+import java.lang.reflect.Array;
 
 public class ShortSerializer extends Serializer<Short> {
 
@@ -11,9 +12,19 @@ public class ShortSerializer extends Serializer<Short> {
         new PgType.Builder().name("int2").oid(21).arrayId(1005).build();
 
     public static final ShortSerializer instance = new ShortSerializer();
+
+    @Override
+    public Class getArrayType() {
+        return short.class;
+    }
+    
+    @Override
+    public void putArray(final Object ary, final int index, final String val) {
+        Array.setShort(ary, index, Short.parseShort(val));
+    }
     
     private ShortSerializer() {
-        super(short.class, Short.class);
+        super(Short.class);
     }
     
     private final static short[] powers = { 1, 10, 100, 1_000, 10_000, Short.MAX_VALUE };
@@ -22,8 +33,12 @@ public class ShortSerializer extends Serializer<Short> {
         assert(i < 6);
         return powers[i];
     }
+
+    public Short fromString(final String str) {
+        return Short.valueOf(str);
+    }
     
-    public short readPrimitive(final Stream stream, final int size, final Format format) {
+    public short readPrimitive(final Stream stream, final int size) {
         if(isNull(size)) {
             return 0;
         }
@@ -45,11 +60,11 @@ public class ShortSerializer extends Serializer<Short> {
         return negate ? (short) -accum : accum;
     }
 
-    public Short read(final Stream stream, final int size, final Format format) {
-        return size == NULL_LENGTH ? null : readPrimitive(stream, size, format);
+    public Short read(final Stream stream, final int size) {
+        return size == NULL_LENGTH ? null : readPrimitive(stream, size);
     }
 
-    public int lengthPrimitive(final short val, final Format f) {
+    public int lengthPrimitive(final short val) {
         if(val == Short.MIN_VALUE) {
             return 6;
         }
@@ -66,12 +81,12 @@ public class ShortSerializer extends Serializer<Short> {
         return digits + (includeSign ? 1 : 0);
     }
 
-    public int length(final Short val, final Format f) {
-        return val == null ? NULL_LENGTH : lengthPrimitive(val, f);
+    public int length(final Short val) {
+        return val == null ? NULL_LENGTH : lengthPrimitive(val);
     }
 
-    public void writePrimitive(final Stream stream, final short val, final Format format) {
-        final int size = length(val, format);
+    public void writePrimitive(final Stream stream, final short val) {
+        final int size = length(val);
         final byte[] bytes = new byte[size];
         final int startAt = size - 1;
         final int endAt = (val < 0) ? 1 : 0;
@@ -89,15 +104,14 @@ public class ShortSerializer extends Serializer<Short> {
         stream.put(bytes);
     }
 
-    public void write(final Stream stream, final Short val, final Format format) {
-        writePrimitive(stream, val, format);
+    public void write(final Stream stream, final Short val) {
+        writePrimitive(stream, val);
     }
 
-    public Bindable bindable(final short val, final Format format) {
+    public Bindable bindable(final short val) {
         return new Bindable() {
-            public Format getFormat() { return format; }
-            public int getLength() { return lengthPrimitive(val, format); }
-            public void write(final Stream stream) { writePrimitive(stream, val, format); }
+            public int getLength() { return lengthPrimitive(val); }
+            public void write(final Stream stream) { writePrimitive(stream, val); }
         };
     }
 }

@@ -1,6 +1,5 @@
 package db.postgresql.protocol.v3.serializers;
 
-import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
 import java.nio.charset.Charset;
 import db.postgresql.protocol.v3.types.Box;
@@ -8,14 +7,13 @@ import db.postgresql.protocol.v3.types.Point;
 
 public class BoxSerializer extends Serializer<Box> {
 
-    private final Charset encoding;
+    public static final BoxSerializer instance = new BoxSerializer();
     
-    public BoxSerializer(final Charset encoding) {
+    private BoxSerializer() {
         super(Box.class);
-        this.encoding = encoding;
     }
 
-    public static Box from(final String buffer) {
+    public Box fromString(final String buffer) {
         final int mid = buffer.indexOf(',', buffer.indexOf(',') + 1);
         final String first = buffer.substring(0, mid);
         final String second = buffer.substring(mid + 1);
@@ -23,20 +21,15 @@ public class BoxSerializer extends Serializer<Box> {
                        UdtParser.forGeometry(second).readUdt(Point.class));
     }
 
-    public Box read(final Stream stream, final int size, final Format format) {
-        if(isNull(size)) {
-            return null;
-        }
-        else {
-            return from(str(stream, size));
-        }
+    public Box read(final Stream stream, final int size) {
+        return isNull(size) ? null : fromString(str(stream, size));
     }
 
-    public int length(final Box val, final Format format) {
+    public int length(final Box val) {
         throw new UnsupportedOperationException();
     }
 
-    public void write(final Stream stream, final Box val, final Format format) {
+    public void write(final Stream stream, final Box val) {
         throw new UnsupportedOperationException();
     }
 }

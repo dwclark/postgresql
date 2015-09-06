@@ -74,7 +74,7 @@ public abstract class CompositeMeta {
         this.level = level;
     }
 
-    private static class UdtMeta extends CompositeMeta {
+    static class UdtMeta extends CompositeMeta {
         private static final char BEGIN = '(';
         private static final char END = ')';
 
@@ -103,7 +103,7 @@ public abstract class CompositeMeta {
         }
     }
 
-    private static class GeometryMeta extends CompositeMeta {
+    static class GeometryMeta extends CompositeMeta {
         public static final char[] BEGIN = { '(', '<', '{', '[' };
         public static final char[] END = { ')', '>', '}', ']' };
 
@@ -177,13 +177,13 @@ public abstract class CompositeMeta {
         }
     }
 
-    private static class ArrayMeta extends CompositeMeta {
+    static class Array extends CompositeMeta {
         private static final char BEGIN = '{';
         private static final char END = '}';
 
         private final char delimiter;
         
-        public ArrayMeta(final int level, final char delimiter) {
+        public Array(final int level, final char delimiter) {
             super(level);
             this.delimiter = delimiter;
         }
@@ -195,7 +195,7 @@ public abstract class CompositeMeta {
         public char getBegin() {
             return BEGIN;
         }
-        
+
         public char getEnd() {
             return END;
         }
@@ -209,15 +209,15 @@ public abstract class CompositeMeta {
         }
     }
 
-    public static BiFunction<Character,Integer,CompositeMeta> udt = (final Character begin, final Integer level) -> {
+    public static BiFunction<Character,Integer,UdtMeta> udt = (final Character begin, final Integer level) -> {
         return new UdtMeta(level);
     };
 
-    public static BiFunction<Character,Integer,CompositeMeta> geometry = (final Character begin, final Integer level) -> {
+    public static BiFunction<Character,Integer,GeometryMeta> geometry = (final Character begin, final Integer level) -> {
         return new GeometryMeta(begin, level);
     };
 
-    public static BiFunction<Character,Integer,CompositeMeta> array(final Character delimiter) {
-        return (final Character begin, final Integer level) -> { return new ArrayMeta(level, delimiter); };
+    public static BiFunction<Character,Integer,Array> array(final Character delimiter) {
+        return (final Character begin, final Integer level) -> { return new Array(level, delimiter); };
     }
 }

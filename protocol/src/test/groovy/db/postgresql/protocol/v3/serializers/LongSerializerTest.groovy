@@ -14,15 +14,15 @@ class LongSerializerTest extends Specification {
 
     def "Test Length"() {
         expect:
-        s.length(0, f) == 1;
-        s.length(Long.MIN_VALUE, f) == 20;
-        s.length(Long.MAX_VALUE, f) == 19;
-        s.length(9_999_999_999, f) == 10;
-        s.length(10_000_000_000, f) == 11;
-        s.length(-9_999_999_999, f) == 11;
-        s.length(-10_000_000_000, f) == 12;
-        s.length(9L, f) == 1;
-        s.length(10L, f) == 2;
+        s.length(0) == 1;
+        s.length(Long.MIN_VALUE) == 20;
+        s.length(Long.MAX_VALUE) == 19;
+        s.length(9_999_999_999) == 10;
+        s.length(10_000_000_000) == 11;
+        s.length(-9_999_999_999) == 11;
+        s.length(-10_000_000_000) == 12;
+        s.length(9L) == 1;
+        s.length(10L) == 2;
     }
 
     private String toString(final FixedStream fs) {
@@ -44,22 +44,22 @@ class LongSerializerTest extends Specification {
         def fs = new FixedStream(40, ascii);
 
         when:
-        s.write(fs, 100, f);
+        s.write(fs, 100);
         then:
         toString(fs) == '100';
 
         when:
-        s.write(fs, Long.MAX_VALUE, f);
+        s.write(fs, Long.MAX_VALUE);
         then:
         toString(fs)  == '9223372036854775807';
 
         when:
-        s.write(fs, 99_999, f);
+        s.write(fs, 99_999);
         then:
         toString(fs) == '99999';
 
         when:
-        s.write(fs, -1_000_000_000_001L, f);
+        s.write(fs, -1_000_000_000_001L);
         then:
         toString(fs) == '-1000000000001';
     }
@@ -71,21 +71,21 @@ class LongSerializerTest extends Specification {
         when:
         strToStream(fs, "999999");
         then:
-        s.read(fs, 6, f) == 999_999;
+        s.read(fs, 6) == 999_999;
 
         when:
         strToStream(fs, '-9223372036854775808');
         then:
-        s.read(fs, 20, f) == -9223372036854775808L;
+        s.read(fs, 20) == -9223372036854775808L;
 
         when:
         strToStream(fs, '9223372036854775807');
         then:
-        s.read(fs, 19, f) == 9223372036854775807L;
+        s.read(fs, 19) == 9223372036854775807L;
 
         when:
         strToStream(fs, '-12345');
         then:
-        s.read(fs, 6, f) == -12345;
+        s.read(fs, 6) == -12345;
     }
 }
