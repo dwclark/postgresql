@@ -125,10 +125,10 @@ class QueryTest extends Specification {
         setup:
         List<UdtMap> list = new SimpleQuery('select the_person from persons', session).manyRows {
             DataRow row -> row.iterator().next(); };
+        UdtMap entry = list[0];
         
         expect:
         list.size() == 1;
-        list.every { it instanceof UdtMap; }
-        list[0].the_address.lat_long == new Point(45.0d, 45.0d);
+        entry.the_address.lat_long == new Point(45.0d, 45.0d);
     }
 }
