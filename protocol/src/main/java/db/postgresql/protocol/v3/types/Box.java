@@ -19,7 +19,7 @@ public class Box implements Udt {
     public String getName() { return PGTYPE.getName(); }
     
     public Box(final UdtInput input) {
-        this(input.readUdt(Point.class), input.readUdt(Point.class));
+        this(input.read(Point.class), input.read(Point.class));
     }
 
     public Box(final Point upperRight, final Point lowerLeft) {

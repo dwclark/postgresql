@@ -3,12 +3,28 @@ package db.postgresql.protocol.v3.serializers;
 import spock.lang.*;
 import java.nio.*;
 import db.postgresql.protocol.v3.types.*;
+import db.postgresql.protocol.v3.Session;
+import db.postgresql.protocol.v3.Helper;
 
 class GeometryTest extends Specification {
+
+    @Shared Session session;
+
+    def setupSpec() {
+        session = Helper.noAuth();
+    }
+
+    def cleanupSpec() {
+        session.close();
+    }
+
+    public UdtParser parser(String str) {
+        return UdtParser.forGeometry(session, str);
+    }
     
     def "Test Point 1"() {
         setup:
-        Point p = UdtParser.forGeometry('(1,2)').readUdt(Point);
+        Point p = parser('(1,2)').read(Point);
         final Point shouldBe = new Point(1,2);
         
         expect:
@@ -19,7 +35,7 @@ class GeometryTest extends Specification {
 
     def "Test Point 2"() {
         setup:
-        Point p = UdtParser.forGeometry('(1.8,23.6)').readUdt(Point);
+        Point p = parser('(1.8,23.6)').read(Point);
         Point shouldBe = new Point(1.8d, 23.6d);
         
         expect:
@@ -30,7 +46,7 @@ class GeometryTest extends Specification {
 
     def "Test Line 1"() {
         setup:
-        Line line = UdtParser.forGeometry('{1,2,3}').readUdt(Line);
+        Line line = parser('{1,2,3}').read(Line);
         Line shouldBe = new Line(1d, 2d, 3d);
         
         expect:
@@ -41,7 +57,7 @@ class GeometryTest extends Specification {
 
     def "Test Line 2"() {
         setup:
-        Line line = UdtParser.forGeometry('{5.5,7.7,10.0}').readUdt(Line);
+        Line line = parser('{5.5,7.7,10.0}').read(Line);
         Line shouldBe = new Line(5.5d, 7.7d, 10.0d);
         
         expect:
@@ -52,7 +68,7 @@ class GeometryTest extends Specification {
 
     def "Test Line Segment 1"() {
         setup:
-        LineSegment lseg = UdtParser.forGeometry('((1,2),(3,4))').readUdt(LineSegment);
+        LineSegment lseg = parser('((1,2),(3,4))').read(LineSegment);
         LineSegment shouldBe = new LineSegment(new Point(1d,2d), new Point(3d,4d));
         
         expect:
@@ -63,7 +79,7 @@ class GeometryTest extends Specification {
 
     def "Test Line Segment 2"() {
         setup:
-        LineSegment lseg = UdtParser.forGeometry('((1.1,2.2),(3.3,4.4))').readUdt(LineSegment);
+        LineSegment lseg = parser('((1.1,2.2),(3.3,4.4))').read(LineSegment);
         LineSegment shouldBe = new LineSegment(new Point(1.1d,2.2d), new Point(3.3d,4.4d));
         
         expect:
@@ -74,7 +90,7 @@ class GeometryTest extends Specification {
 
     def "Test Box 1"() {
         setup:
-        Box box = new BoxSerializer().fromString('(1,1),(0,0)')
+        Box box = new BoxSerializer(session).fromString('(1,1),(0,0)')
         Box shouldBe = new Box(new Point(1d,1d), new Point(0d,0d));
             
         expect:
@@ -85,7 +101,7 @@ class GeometryTest extends Specification {
 
     def "Test Box 2"() {
         setup:
-        Box box = new BoxSerializer().fromString('(1,1),(-1.1,-1.1)');
+        Box box = new BoxSerializer(session).fromString('(1,1),(-1.1,-1.1)');
         Box shouldBe = new Box(new Point(1d,1d), new Point(-1.1d,-1.1d));
         
         expect:
@@ -96,7 +112,7 @@ class GeometryTest extends Specification {
 
     def "Test Open Path 1"() {
         setup:
-        Path p = UdtParser.forGeometry('[(0,0),(1,1),(0,2)]').readUdt(Path);
+        Path p = parser('[(0,0),(1,1),(0,2)]').read(Path);
         Path shouldBe = new Path([ new Point(0,0), new Point(1,1), new Point(0,2)], true);
         
         expect:
@@ -107,7 +123,7 @@ class GeometryTest extends Specification {
 
     def "Test Open Path 2"() {
         setup:
-        Path p = UdtParser.forGeometry('[(0.1,0.1),(1.1,1.1),(0.1,2.1)]').readUdt(Path);
+        Path p = parser('[(0.1,0.1),(1.1,1.1),(0.1,2.1)]').read(Path);
         Path shouldBe = new Path([ new Point(0.1d,0.1d), new Point(1.1d,1.1d), new Point(0.1d,2.1d)], true);
         
         expect:
@@ -118,7 +134,7 @@ class GeometryTest extends Specification {
 
     def "Test Closed Path 1"() {
         setup:
-        Path p = UdtParser.forGeometry('((0,0),(1,1),(0,2))').readUdt(Path);
+        Path p = parser('((0,0),(1,1),(0,2))').read(Path);
         Path shouldBe = new Path([ new Point(0,0), new Point(1,1), new Point(0,2)], false);
         
         expect:
@@ -129,7 +145,7 @@ class GeometryTest extends Specification {
 
     def "Test Closed Path 2"() {
         setup:
-        Path p = UdtParser.forGeometry('((0.1,0.1),(1.1,1.1),(0.1,2.1))').readUdt(Path);
+        Path p = parser('((0.1,0.1),(1.1,1.1),(0.1,2.1))').read(Path);
         Path shouldBe = new Path([ new Point(0.1d,0.1d), new Point(1.1d,1.1d), new Point(0.1d,2.1d)], false);
         
         expect:
@@ -140,7 +156,7 @@ class GeometryTest extends Specification {
 
     def "Test Polygon 1"() {
         setup:
-        Polygon p = UdtParser.forGeometry('((0,0),(1,1),(0,2))').readUdt(Polygon);
+        Polygon p = parser('((0,0),(1,1),(0,2))').read(Polygon);
         Polygon shouldBe = new Polygon([ new Point(0,0), new Point(1,1), new Point(0,2)]);
         
         expect:
@@ -151,7 +167,7 @@ class GeometryTest extends Specification {
 
     def "Test Polygon 2"() {
         setup:
-        Polygon p = UdtParser.forGeometry('((0.1,0.1),(1.1,1.1),(0.1,2.1))').readUdt(Polygon);
+        Polygon p = parser('((0.1,0.1),(1.1,1.1),(0.1,2.1))').read(Polygon);
         Polygon shouldBe = new Polygon([ new Point(0.1d,0.1d), new Point(1.1d,1.1d), new Point(0.1d,2.1d)]);
         
         expect:
@@ -162,7 +178,7 @@ class GeometryTest extends Specification {
 
     def "Test Circle 1"() {
         setup:
-        Circle c = UdtParser.forGeometry('<(1,1),5>').readUdt(Circle);
+        Circle c = parser('<(1,1),5>').read(Circle);
         Circle shouldBe = new Circle(new Point(1d,1d), 5d);
         
         expect:

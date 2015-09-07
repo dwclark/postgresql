@@ -1,7 +1,8 @@
 package db.postgresql.protocol.v3.serializers;
 
+import db.postgresql.protocol.v3.typeinfo.Registry;
+import db.postgresql.protocol.v3.Session;
 import db.postgresql.protocol.v3.ProtocolException;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.BiFunction;
@@ -9,73 +10,40 @@ import java.util.function.BiFunction;
 public class UdtParser implements UdtInput {
 
     final CompositeEngine engine;
+    final Session session;
     
-    private UdtParser(final CharSequence buffer, final BiFunction<Character,Integer,? extends CompositeMeta> factory) {
+    private UdtParser(final Session session, final CharSequence buffer, final BiFunction<Character,Integer,? extends CompositeMeta> factory) {
+        this.session = session;
         this.engine = new CompositeEngine<>(buffer, factory);
     }
 
-    public static UdtParser forUdt(final CharSequence buffer) {
-        return new UdtParser(buffer, CompositeMeta.udt);
+    public static UdtParser forUdt(final Session session, final CharSequence buffer) {
+        return new UdtParser(session, buffer, CompositeMeta.udt);
     }
 
-    public static UdtParser forGeometry(final CharSequence buffer) {
-        return new UdtParser(buffer, CompositeMeta.geometry);
+    public static UdtParser forGeometry(final Session session, final CharSequence buffer) {
+        return new UdtParser(session, buffer, CompositeMeta.geometry);
     }
     
-    public Boolean readBoolean() {
-        String s = engine.getField();
-        if(s == null) {
-            return null;
-        }
-        
-        if(s.length() != 1) {
-            throw new IllegalStateException("Field is too large to be a boolean");
-        }
-        
-        char val = s.charAt(0);
-        if(val == BooleanSerializer.T) {
-            return true;
-        }
-        else if(val == BooleanSerializer.F) {
-            return false;
-        }
-        else {
-            throw new IllegalStateException(val + " is not a valid boolean value");
-        }
-    }
-
-    public Short readShort() {
-        String s = engine.getField();
-        return (s == null) ? null : Short.valueOf(s);
-    }
-
-    public Integer readInteger() {
-        String s = engine.getField();
-        return (s == null) ? null : Integer.valueOf(s);
-    }
-
-    public Long readLong() {
-        String s = engine.getField();
-        return (s == null) ? null : Long.valueOf(s);
-    }
-
-    public Float readFloat() {
-        String s = engine.getField();
-        return (s == null) ? null : Float.valueOf(s);
-    }
-
-    public Double readDouble() {
-        String s = engine.getField();
-        return (s == null) ? null : Double.valueOf(s);
-    }
-
-    public String readString() {
-        return engine.getField();
-    }
-
     private static final Class[] CONSTRUCTOR_ARGS = new Class[] { UdtInput.class };
     
-    public <T extends Udt> T readUdt(Class<T> type) {
+    public <T> T read(Class<T> type) {
+        if(Udt.class.isAssignableFrom(type)) {
+            return readUdt(type);
+        }
+        else {
+            final String val = engine.getField();
+            final Serializer<T> serializer = Registry.serializer(session.getDatabase(), type);
+            if(val == null) {
+                return null;
+            }
+            else {
+                return serializer.fromString(val);
+            }
+        }
+    }
+
+    private <T> T readUdt(Class<T> type) {
         try {
             engine.beginUdt();
             Constructor<T> constructor = type.getConstructor(CONSTRUCTOR_ARGS);

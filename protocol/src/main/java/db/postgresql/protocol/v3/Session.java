@@ -454,13 +454,13 @@ public class Session extends PostgresqlStream implements AutoCloseable {
         builtinType(UUIDSerializer.PGTYPE, UUIDSerializer.instance);
 
         //geometry types
-        builtinType(Box.PGTYPE, BoxSerializer.instance);
-        builtinType(Circle.PGTYPE, new GeometrySerializer<>(Circle.class));
-        builtinType(Line.PGTYPE, new GeometrySerializer<>(Line.class));
-        builtinType(LineSegment.PGTYPE, new GeometrySerializer<>(LineSegment.class));
-        builtinType(Path.PGTYPE, new GeometrySerializer<>(Path.class));
-        builtinType(Point.PGTYPE, new GeometrySerializer<>(Point.class));
-        builtinType(Polygon.PGTYPE, new GeometrySerializer<>(Polygon.class));
+        builtinType(Box.PGTYPE, new BoxSerializer(this));
+        builtinType(Circle.PGTYPE, new GeometrySerializer<>(this, Circle.class));
+        builtinType(Line.PGTYPE, new GeometrySerializer<>(this, Line.class));
+        builtinType(LineSegment.PGTYPE, new GeometrySerializer<>(this, LineSegment.class));
+        builtinType(Path.PGTYPE, new GeometrySerializer<>(this, Path.class));
+        builtinType(Point.PGTYPE, new GeometrySerializer<>(this, Point.class));
+        builtinType(Polygon.PGTYPE, new GeometrySerializer<>(this, Polygon.class));
     }
 
     private Map<BackEnd,ResponseBuilder> builders() {

@@ -20,7 +20,7 @@ public class Point implements Udt {
     public String getName() { return PGTYPE.getName(); }
 
     public Point(final UdtInput input) {
-        this(input.readDouble(), input.readDouble());
+        this(input.read(Double.class), input.read(Double.class));
     }
 
     public Point(final double x, final double y) {

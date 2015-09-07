@@ -44,7 +44,7 @@ public class Path implements Udt {
         this.open = input.getCurrentDelimiter() == OPEN_DELIMITERS[0];
         List<Point> tmp = new ArrayList<>();
         while(input.hasNext()) {
-            tmp.add(input.readUdt(Point.class));
+            tmp.add(input.read(Point.class));
         }
 
         this.points = Collections.unmodifiableList(tmp);

@@ -28,7 +28,7 @@ public class Line implements Udt {
     public String getName() { return PGTYPE.getName(); }
     
     public Line(final UdtInput input) {
-        this(input.readDouble(), input.readDouble(), input.readDouble());
+        this(input.read(Double.class), input.read(Double.class), input.read(Double.class));
     }
 
     public Line(final double a, final double b, final double c) {

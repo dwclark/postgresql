@@ -4,8 +4,21 @@ import spock.lang.*;
 import java.nio.*;
 import db.postgresql.protocol.v3.types.Box;
 import db.postgresql.protocol.v3.types.Point;
+import db.postgresql.protocol.v3.Session;
+import db.postgresql.protocol.v3.Helper;
 
 class ArrayParserTest extends Specification {
+
+    @Shared Session session;
+
+    def setupSpec() {
+        session = Helper.noAuth();
+    }
+
+    def cleanupSpec() {
+        session.close();
+    }
+    
     StringSerializer sser = new StringSerializer(Serializer.ASCII_ENCODING);
     IntSerializer iser = IntSerializer.instance;
     char d = ',';
@@ -55,7 +68,7 @@ class ArrayParserTest extends Specification {
 
     def "Test Box Array"() {
         when:
-        Box[] ary = new ArrayParser('{(1,1),(0,0);(1,1),(-1.1,-1.1)}', new BoxSerializer(),
+        Box[] ary = new ArrayParser('{(1,1),(0,0);(1,1),(-1.1,-1.1)}', new BoxSerializer(session),
                                     Box.PGTYPE.getDelimiter()).toArray();
         then:
         ary[0] == new Box(new Point(1,1), new Point(0,0));

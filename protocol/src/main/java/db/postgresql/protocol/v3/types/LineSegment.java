@@ -19,7 +19,7 @@ public class LineSegment implements Udt {
     public String getName() { return PGTYPE.getName(); }
     
     public LineSegment(final UdtInput input) {
-        this(input.readUdt(Point.class), input.readUdt(Point.class));
+        this(input.read(Point.class), input.read(Point.class));
     }
 
     public LineSegment(final Point left, final Point right) {

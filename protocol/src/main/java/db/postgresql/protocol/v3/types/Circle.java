@@ -25,7 +25,7 @@ public class Circle implements Udt {
     public String getName() { return PGTYPE.getName(); }
     
     public Circle(final UdtInput input) {
-        this(input.readUdt(Point.class), input.readDouble());
+        this(input.read(Point.class), input.read(Double.class));
     }
 
     public Circle(final Point center, final double radius) {

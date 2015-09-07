@@ -1,17 +1,21 @@
 package db.postgresql.protocol.v3.serializers;
 
+import db.postgresql.protocol.v3.Session;
 import db.postgresql.protocol.v3.io.Stream;
 import java.nio.charset.Charset;
 
 public class GeometrySerializer<T extends Udt> extends Serializer<T> {
 
-    public GeometrySerializer(final Class<T> type) {
+    private final Session session;
+    
+    public GeometrySerializer(final Session session, final Class<T> type) {
         super(type);
+        this.session = session;
     }
 
     public T fromString(final String s) {
-        UdtParser parser = UdtParser.forGeometry(s);
-        return parser.readUdt(getType());
+        UdtParser parser = UdtParser.forGeometry(session, s);
+        return parser.read(getType());
     }
     
     public T read(final Stream stream, final int size) {
