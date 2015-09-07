@@ -7,6 +7,7 @@ import db.postgresql.protocol.v3.serializers.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import java.util.List;
+import java.util.TreeSet;
 
 public class Registry {
 
@@ -44,6 +45,23 @@ public class Registry {
         return pgComplexTypes.get(OidKey.threadLocal(session.getDatabase(), relId));
     }
 
+    public static Serializer serializer(final Session session, final int oid) {
+        return serializer(session, pgType(session, oid));
+    }
+
+    public static Serializer serializer(final Session session, final PgType pgType) {
+        final Serializer serializer = serializer(session.getDatabase(), pgType.getOid());
+        if(serializer != null) {
+            return serializer;
+        }
+        else if(pgType.isComplex()) {
+            return new UdtMapSerializer(session, pgType);
+        }
+        else {
+            return serializer(session.getDatabase(), String.class);
+        }
+    }
+    
     public static Serializer serializer(final String database, final int oid) {
         return databaseSerializers(database).get(oid);
     }
@@ -143,10 +161,11 @@ public class Registry {
 
     private static void populatePgComplexType(final Session session, final int relId) {
         final String sql = String.format("select attrelid, attname, atttypid, attnum " +
-                                         "from pg_attribute where attrelid = %d and attnum >= 1", relId);
+                                         "from pg_attribute where attrelid = %d and attnum >= 1 " +
+                                         "order by attnum asc", relId);
         final List<PgAttribute> attrs = new SimpleQuery(sql, session).manyResults((DataRow.Iterator iter) -> {
                 return new PgAttribute(iter.nextInt(), iter.next(String.class), iter.nextInt(), iter.nextInt()); });
-        final PgComplexType pg = new PgComplexType(session.getDatabase(), relId, attrs);
+        final PgComplexType pg = new PgComplexType(session.getDatabase(), relId, new TreeSet<>(attrs));
         
         add(pg);
         

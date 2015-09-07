@@ -3,7 +3,7 @@ package db.postgresql.protocol.v3.typeinfo;
 import db.postgresql.protocol.v3.Session;
 import db.postgresql.protocol.v3.Format;
 import db.postgresql.protocol.v3.io.Stream;
-import java.util.List;
+import java.util.SortedSet;
 
 public class PgType {
 
@@ -107,7 +107,7 @@ public class PgType {
         return sb.toString();
     }
 
-    public List<PgAttribute> getAttributes() {
+    public SortedSet<PgAttribute> getAttributes() {
         if(isComplex()) {
             return Registry.pgComplexType(getDatabase(), relId).getAttributes();
         }

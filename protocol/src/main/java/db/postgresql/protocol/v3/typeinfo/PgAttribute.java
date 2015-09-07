@@ -1,8 +1,9 @@
 package db.postgresql.protocol.v3.typeinfo;
 
+import db.postgresql.protocol.v3.ProtocolException;
 import db.postgresql.protocol.v3.Session;
 
-public class PgAttribute {
+public class PgAttribute implements Comparable<PgAttribute> {
 
     private final int relId;
     private final String name;
@@ -34,5 +35,13 @@ public class PgAttribute {
         sb.append("typeId: " + getTypeId() + ", ");
         sb.append("num: " + getNum() + ")");
         return sb.toString();
+    }
+
+    public int compareTo(final PgAttribute rhs) {
+        if(relId != rhs.relId) {
+            throw new IllegalArgumentException("You can't compare pg attributes with different rel ids");
+        }
+
+        return Integer.compare(num, rhs.num);
     }
 }

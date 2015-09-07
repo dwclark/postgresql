@@ -4,19 +4,15 @@ import db.postgresql.protocol.v3.Session;
 import db.postgresql.protocol.v3.io.Stream;
 import db.postgresql.protocol.v3.types.Udt;
 
-import java.nio.charset.Charset;
-
 public class UdtSerializer<T extends Udt> extends Serializer<T> {
 
     private final Session session;
     private final Class<T> type;
-    private final Charset encoding;
     
-    public UdtSerializer(final Session session, final Class<T> type, final Charset encoding) {
+    public UdtSerializer(final Session session, final Class<T> type) {
         super(type);
         this.session = session;
         this.type = type;
-        this.encoding = encoding;
     }
 
     public T fromString(final String str) {

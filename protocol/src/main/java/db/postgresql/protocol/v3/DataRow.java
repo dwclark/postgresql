@@ -81,7 +81,7 @@ public class DataRow extends Response {
         public Object next() {
             final FieldDescriptor field = field();
             final PgType pgType = Registry.pgType(session, field.typeOid);
-            final Serializer serializer = Registry.serializer(session.getDatabase(), field.typeOid);
+            final Serializer serializer = Registry.serializer(session, pgType);
             if(field.typeOid == pgType.getOid()) {
                 return serializer.read(session, session.getInt());
             }

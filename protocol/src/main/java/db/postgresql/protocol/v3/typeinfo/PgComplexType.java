@@ -1,26 +1,26 @@
 package db.postgresql.protocol.v3.typeinfo;
 
-import java.util.List;
 import java.util.Collections;
+import java.util.SortedSet;
 
 public class PgComplexType {
 
     private final OidKey oidKey;
-    private List<PgAttribute> attributes;
+    private SortedSet<PgAttribute> attributes;
 
-    private PgComplexType(final OidKey oidKey, final List<PgAttribute> attributes) {
+    private PgComplexType(final OidKey oidKey, final SortedSet<PgAttribute> attributes) {
         this.oidKey = oidKey;
-        this.attributes = Collections.unmodifiableList(attributes);
+        this.attributes = Collections.unmodifiableSortedSet(attributes);
     }
     
-    public PgComplexType(final String database, final int relId, final List<PgAttribute> attributes) {
+    public PgComplexType(final String database, final int relId, final SortedSet<PgAttribute> attributes) {
         this(OidKey.immutable(database, relId), attributes);
     }
 
     public OidKey getOidKey() { return oidKey; }
     public String getDatabase() { return oidKey.getDatabase(); }
     public int getRelId() { return oidKey.getOid(); }
-    public List<PgAttribute> getAttributes() { return attributes; }
+    public SortedSet<PgAttribute> getAttributes() { return attributes; }
 
     @Override
     public boolean equals(final Object rhs) {
