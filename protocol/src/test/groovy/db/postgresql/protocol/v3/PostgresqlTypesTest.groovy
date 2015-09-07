@@ -9,15 +9,19 @@ import db.postgresql.protocol.v3.serializers.*;
 
 class PostgresqlTypesTest extends Specification {
 
-    def host = '127.0.0.1';
-    def port = 5432;
-    def database = 'testdb';
+    @Shared Session session;
+
+    def setupSpec() {
+        session = Helper.noAuth();
+    }
+
+    def cleanupSpec() {
+        session.close();
+    }
+
     def testBitSet = new BitSet(6);
 
-    Session.Builder sb;
-
     def setup() {
-        sb = new Session.Builder().host(host).port(port).database(database);
         def index = 0;
         testBitSet.set(index++, true);
         testBitSet.set(index++, true);
@@ -28,11 +32,8 @@ class PostgresqlTypesTest extends Specification {
     }
 
     def "Test UUID and BitSet"() {
-        setup:
-        Session session = sb.user('noauth').build();
-
         when:
-        ExtendedQuery select = new ExtendedQuery('select * from extended_types;', session);
+        ExtendedQuery select = session.extended('select * from extended_types;');
         select.execute(Bindable.EMPTY);
         def row = select.singleResult { DataRow.Iterator iter ->
             return [ iter.next(BitSet), iter.next(UUID) ]; };
@@ -46,8 +47,7 @@ class PostgresqlTypesTest extends Specification {
         row[1] == UUID.fromString('aa81b166-c60f-4e4e-addb-17414a652733');
 
         when:
-        ExtendedQuery insert = new ExtendedQuery('insert into extended_types (my_bits, my_uuid) ' +
-                                                 'values ($1, $2)', session);
+        ExtendedQuery insert = session.extended('insert into extended_types (my_bits, my_uuid) values ($1, $2)');
         BitSet bitSet = new BitSet(3);
         bitSet.set(0, true);
         bitSet.set(1, false);
@@ -61,7 +61,7 @@ class PostgresqlTypesTest extends Specification {
         insert.complete.action == CommandComplete.Action.INSERT;
 
         when:
-        ExtendedQuery del = new ExtendedQuery('delete from extended_types where my_bits = $1', session);
+        ExtendedQuery del = session.extended('delete from extended_types where my_bits = $1');
         del.execute([ [ del.bind(bitSet) ] as Bindable[] ]).noResults();
 
         then:

@@ -6,6 +6,7 @@ drop table if exists extended_types;
 drop table if exists geometry_types;
 drop table if exists persons;
 drop table if exists my_arrays;
+drop table if exists numerals;
 drop type if exists person;
 drop type if exists address;
 
@@ -103,6 +104,33 @@ create table my_arrays (
 insert into my_arrays (int_array, string_array) values
 ('{{{1,2,3},{4,5,6},{7,8,9}},{{11,12,13},{14,15,16},{17,18,19}},{{21,22,23},{24,25,26},{27,28,29}}}',
 '{{foo,bar},{baz,fuzz}}');
+
+create table numerals (
+       id serial,
+       arabic int,
+       roman varchar(10)
+);
+
+insert into numerals (arabic, roman) values(1, 'i');
+insert into numerals (arabic, roman) values(2, 'ii');
+insert into numerals (arabic, roman) values(3, 'iii');
+insert into numerals (arabic, roman) values(4, 'iv');
+insert into numerals (arabic, roman) values(5, 'v');
+insert into numerals (arabic, roman) values(6, 'vi');
+insert into numerals (arabic, roman) values(7, 'vii');
+insert into numerals (arabic, roman) values(8, 'viii');
+insert into numerals (arabic, roman) values(9, 'ix');
+insert into numerals (arabic, roman) values(10, 'x');
+insert into numerals (arabic, roman) values(11, 'xi');
+insert into numerals (arabic, roman) values(12, 'xii');
+insert into numerals (arabic, roman) values(13, 'xiii');
+insert into numerals (arabic, roman) values(14, 'xiv');
+insert into numerals (arabic, roman) values(15, 'xv');
+insert into numerals (arabic, roman) values(16, 'xvi');
+insert into numerals (arabic, roman) values(17, 'xvii');
+insert into numerals (arabic, roman) values(18, 'xviii');
+insert into numerals (arabic, roman) values(19, 'xix');
+insert into numerals (arabic, roman) values(20, 'xx');
 
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO noauth;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO clearauth;

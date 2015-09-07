@@ -32,7 +32,12 @@ public class UdtMapSerializer extends Serializer<UdtMap> {
             final PgType attrPgType = attr.pgType(session);
             final Serializer serializer = Registry.serializer(session, attrPgType);
             final String field = parser.engine.getField();
-            entries.add(UdtMap.entry(attr.getName(), serializer.fromString(field)));
+            if(field == null) {
+                entries.add(UdtMap.entry(attr.getName(), null));
+            }
+            else {
+                entries.add(UdtMap.entry(attr.getName(), serializer.fromString(field)));
+            }
         }
         parser.engine.endUdt();
 

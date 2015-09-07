@@ -6,14 +6,24 @@ import db.postgresql.protocol.v3.typeinfo.Registry;
 
 public class ExtendedQuery extends Query {
 
-    public ExtendedQuery(final String query, final Session session) {
+    private final String id;
+
+    public String getId() {
+        return id;
+    }
+
+    public ExtendedQuery(final Session session) {
+        this("", session);
+    }
+    
+    public ExtendedQuery(final String id, final Session session) {
         super(session);
-        prepare(query);
+        this.id = id;
     }
 
     public ExtendedQuery execute(final List<Bindable[]> arguments) {
         for(Bindable[] ary : arguments) {
-            session.bind("", "", ary, Session.EMPTY_FORMATS);
+            session.bind(id, "", ary, Session.EMPTY_FORMATS);
             session.describePortal("");
             session.execute("");
         }
@@ -22,8 +32,9 @@ public class ExtendedQuery extends Query {
         return this;
     }
 
-    private void prepare(final String query) {
-        session.parse("", query, Session.EMPTY_OIDS);
+    public ExtendedQuery prepare(final String query) {
+        session.parse(id, query, Session.EMPTY_OIDS);
+        return this;
     }
 
     //binders

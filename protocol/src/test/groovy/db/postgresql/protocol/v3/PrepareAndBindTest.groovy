@@ -5,19 +5,18 @@ import db.postgresql.protocol.v3.serializers.*;
 
 class PrepareAndBindTest extends Specification {
 
-    def host = '127.0.0.1';
-    def port = 5432;
-    def database = 'testdb';
+    @Shared Session session;
+    
+    def setupSpec() {
+        session = Helper.noAuth();
+    }
 
-    Session.Builder sb;
-
-    def setup() {
-        sb = new Session.Builder().host(host).port(port).database(database);
+    def cleanupSpec() {
+        session.close();
     }
 
     def "Test Parse"() {
         setup:
-        Session session = sb.user('noauth').build();
         session.parse('_1', 'select * from items;', [] as int[]);
         session.sync();
         Response r = session.next(BackEnd.QUERY);
@@ -25,23 +24,17 @@ class PrepareAndBindTest extends Specification {
 
         expect:
         r;
-
-        cleanup:
-        session.close();
     }
 
     def "Test Multi Bind"() {
         setup:
         def NUM = 3;
-        Session session = sb.user('noauth').build();
         String insertName = 'insertIt';
         String deleteName = 'deleteIt';
 
         def willHandle = EnumSet.of(BackEnd.RowDescription, BackEnd.EmptyQueryResponse, BackEnd.ReadyForQuery,
-                                    BackEnd.CommandComplete, BackEnd.DataRow, BackEnd.ParseComplete, BackEnd.BindComplete);                                    
+                                    BackEnd.CommandComplete, BackEnd.DataRow, BackEnd.ParseComplete, BackEnd.BindComplete);
         session.parse(insertName, 'insert into items values ($1, $2)', Session.EMPTY_OIDS);
-        //session.sync();
-        
         
         IntSerializer intSerializer = IntSerializer.instance;
         StringSerializer strSerializer = session.stringSerializer;
@@ -64,23 +57,18 @@ class PrepareAndBindTest extends Specification {
 
         r = session.next(willHandle);
         println(r.backEnd); //ready for query
-        
-        cleanup:
-        session.close();
     }
 
     def "Test Extended Query"() {
         setup:
-        Session session = sb.user('noauth').build();
-        ExtendedQuery eq = new ExtendedQuery('insert into items values ($1, $2)', session);
+        ExtendedQuery eq = session.extended('insert into items values ($1, $2)');
         eq.execute([ [ eq.bind(3), eq.bind('three') ] as Bindable[] ]);
         eq.noResults();
     }
 
     def "Test Multi Extended Query"() {
         setup:
-        Session session = sb.user('noauth').build();
-        ExtendedQuery eq = new ExtendedQuery('insert into items values ($1, $2)', session);
+        ExtendedQuery eq = session.extended('insert into items values ($1, $2)');
         List<Bindable[]> bindings = [ [ eq.bind(3), eq.bind('three') ] as Bindable[],
                                       [ eq.bind(4), eq.bind('four') ] as Bindable[],
                                       [ eq.bind(5), eq.bind('five') ] as Bindable[],
@@ -88,7 +76,7 @@ class PrepareAndBindTest extends Specification {
         eq.execute(bindings);
         eq.noResults();
 
-        ExtendedQuery eqDelete = new ExtendedQuery('delete from items where id >= $1', session);
+        ExtendedQuery eqDelete = session.extended('delete from items where id >= $1');
         eqDelete.execute([ [ eqDelete.bind(3) ] as Bindable[] ]);
         eqDelete.noResults();
     }

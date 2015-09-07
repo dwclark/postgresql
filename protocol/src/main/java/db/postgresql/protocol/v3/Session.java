@@ -18,6 +18,7 @@ import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -47,6 +48,8 @@ public class Session extends PostgresqlStream implements AutoCloseable {
     private final Map<String,String> parameterStatuses = new ConcurrentHashMap<>(32, 0.75f, 1);
     private final ConcurrentLinkedQueue<Notification> notificationQueue = new ConcurrentLinkedQueue<>();
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final AtomicLong counter = new AtomicLong();
+    private final Map<String,String> statementCache = new ConcurrentHashMap<>(32, 0.75f, 1);
     private volatile TransactionStatus lastStatus;
     private volatile int pid;
     private volatile int secretKey;
@@ -489,5 +492,34 @@ public class Session extends PostgresqlStream implements AutoCloseable {
 
     protected final Map<BackEnd,ResponseBuilder> builders = builders();
 
+    public String queryId() {
+        return String.format("_%d", counter.getAndIncrement());
+    }
+
+    public SimpleQuery simple(final String query) {
+        return new SimpleQuery(query, this);
+    }
+
+    public ExtendedQuery extended(final String query) {
+        return extended(query, false);
+    }
+    
+    public ExtendedQuery extended(final String query, final boolean useCache) {
+        if(useCache) {
+            final String id = statementCache.get(query);
+            if(id == null) {
+                //need to prepare the query
+                ExtendedQuery eq = new ExtendedQuery(queryId(), this).prepare(query);
+                statementCache.put(query, eq.getId());
+                return eq;
+            }
+            else {
+                return new ExtendedQuery(id, this).prepare(query);
+            }
+        }
+        else {
+            return new ExtendedQuery("", this).prepare(query);
+        }
+    }
 }
 
