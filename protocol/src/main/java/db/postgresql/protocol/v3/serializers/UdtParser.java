@@ -3,6 +3,8 @@ package db.postgresql.protocol.v3.serializers;
 import db.postgresql.protocol.v3.typeinfo.Registry;
 import db.postgresql.protocol.v3.Session;
 import db.postgresql.protocol.v3.ProtocolException;
+import db.postgresql.protocol.v3.types.Udt;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.BiFunction;

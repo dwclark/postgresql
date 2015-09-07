@@ -1,6 +1,5 @@
 package db.postgresql.protocol.v3.types;
 
-import db.postgresql.protocol.v3.serializers.Udt;
 import db.postgresql.protocol.v3.serializers.UdtInput;
 import db.postgresql.protocol.v3.serializers.UdtOutput;
 import static db.postgresql.protocol.v3.types.UdtHashing.*;

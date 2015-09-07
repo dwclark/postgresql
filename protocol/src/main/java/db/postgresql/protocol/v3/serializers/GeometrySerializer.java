@@ -2,7 +2,7 @@ package db.postgresql.protocol.v3.serializers;
 
 import db.postgresql.protocol.v3.Session;
 import db.postgresql.protocol.v3.io.Stream;
-import java.nio.charset.Charset;
+import db.postgresql.protocol.v3.types.Udt;
 
 public class GeometrySerializer<T extends Udt> extends Serializer<T> {
 

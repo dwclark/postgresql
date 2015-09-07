@@ -4,9 +4,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Collections;
 import java.util.ArrayList;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
-import db.postgresql.protocol.v3.serializers.Udt;
+
 import db.postgresql.protocol.v3.serializers.UdtInput;
 import db.postgresql.protocol.v3.serializers.UdtOutput;
 import static db.postgresql.protocol.v3.types.UdtHashing.*;

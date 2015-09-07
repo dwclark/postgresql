@@ -1,4 +1,6 @@
-package db.postgresql.protocol.v3.serializers;
+package db.postgresql.protocol.v3.types;
+
+import db.postgresql.protocol.v3.serializers.UdtOutput;
 
 public interface Udt {
     String getName();

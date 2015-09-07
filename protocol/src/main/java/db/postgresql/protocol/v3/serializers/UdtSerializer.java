@@ -2,6 +2,8 @@ package db.postgresql.protocol.v3.serializers;
 
 import db.postgresql.protocol.v3.Session;
 import db.postgresql.protocol.v3.io.Stream;
+import db.postgresql.protocol.v3.types.Udt;
+
 import java.nio.charset.Charset;
 
 public class UdtSerializer<T extends Udt> extends Serializer<T> {
