@@ -31,4 +31,5 @@ class RegistryTest extends Specification {
         pgType.attributes.size() == 2;
         pgType.delimiter == ',';
     }
+
 }
