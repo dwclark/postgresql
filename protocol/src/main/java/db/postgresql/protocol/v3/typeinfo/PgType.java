@@ -90,6 +90,23 @@ public class PgType {
         return oidKey.hashCode();
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(256);
+        sb.append("PgType(");
+        sb.append("database: " + getDatabase() + ", ");
+        sb.append("schema: " + getSchema() + ", ");
+        sb.append("name: " + getName() + ", ");
+        sb.append("fullName: " + getFullName() + ", ");
+        sb.append("arrayId: " + getArrayId() + ", ");
+        sb.append("relId: " + getRelId() + ", ");
+        sb.append("delimiter: '" + getDelimiter() + "', ");
+        sb.append("complex: " + isComplex() + ", ");
+        sb.append("builtin: " + isBuiltin() + ", ");
+        sb.append("attributes: " + getAttributes() + ")"); 
+        return sb.toString();
+    }
+
     public List<PgAttribute> getAttributes() {
         if(isComplex()) {
             return Registry.pgComplexType(getDatabase(), relId).getAttributes();

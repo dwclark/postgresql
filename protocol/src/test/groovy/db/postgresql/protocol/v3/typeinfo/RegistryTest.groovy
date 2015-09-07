@@ -5,22 +5,22 @@ import db.postgresql.protocol.v3.*;
 
 class RegistryTest extends Specification {
 
-    def host = '127.0.0.1';
-    def port = 5432;
-    def database = 'testdb';
+    @Shared Session session;
+    
+    def setupSpec() {
+        session = Helper.noAuth();
+    }
 
-    Session.Builder sb;
-
-    def setup() {
-        sb = new Session.Builder().host(host).port(port).database(database);
+    def cleanupSpec() {
+        session.close();
     }
 
     def "Test Basic Type Load"() {
         setup:
-        Session session = sb.user('noauth').build();
         PgType pgType = Registry.pgType(session, 'public.items');
         PgType pgType2 = Registry.pgType(session, 'items');
         PgType pgType3 = Registry.pgType(session, pgType.getOid());
+        println(pgType);
         
         expect:
         pgType;

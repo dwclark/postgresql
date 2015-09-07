@@ -24,4 +24,15 @@ public class PgAttribute {
     public PgType pgType(final Session session) {
         return Registry.pgType(session, typeId);
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(96);
+        sb.append("PgAttribute(");
+        sb.append("name: " + getName() + ", ");
+        sb.append("relId: " + getRelId() + ", ");
+        sb.append("typeId: " + getTypeId() + ", ");
+        sb.append("num: " + getNum() + ")");
+        return sb.toString();
+    }
 }

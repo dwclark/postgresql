@@ -9,14 +9,16 @@ import java.util.function.Function;
 public class DataRow extends Response {
 
     private Session session;
-    private final int length;
+    private final int numberColumns;
+    private final int size;
     private boolean valid = true;
     private RowDescription rowDescription;
     
-    public DataRow(final Session session) {
+    public DataRow(final Session session, final int size) {
         super(BackEnd.DataRow);
         this.session = session;
-        this.length = session.getShort() & 0xFFFF;
+        this.size = size;
+        this.numberColumns = session.getShort() & 0xFFFF;
     }
 
     public DataRow setRowDescription(final RowDescription val) {
@@ -25,7 +27,7 @@ public class DataRow extends Response {
     }
 
     public static final ResponseBuilder builder = (BackEnd backEnd, int size, Session session) -> {
-        return new DataRow(session); };
+        return new DataRow(session, size); };
 
     private void validate() {
         if(!valid) {
@@ -42,15 +44,12 @@ public class DataRow extends Response {
 
     public void skip() {
         validate();
-        for(int i = 0; i < length; ++i) {
-            final int size = session.getInt();
-            session.advance(size);
-        }
+        session.advance(size);
     }
 
     public Object[] toArray() {
         return toObject((Iterator iter) -> {
-                Object [] ret = new Object[length];
+                Object [] ret = new Object[numberColumns];
                 int index = 0;
                 while(iter.hasNext()) {
                     ret[index++] = iter.next();
@@ -68,11 +67,11 @@ public class DataRow extends Response {
         private int index = 0;
 
         public boolean hasNext() {
-            return index < length;
+            return index < numberColumns;
         }
 
         private FieldDescriptor field() {
-            if(index == length) {
+            if(index == numberColumns) {
                 throw new NoSuchElementException();
             }
 
