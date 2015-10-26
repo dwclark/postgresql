@@ -1,5 +1,8 @@
 package db.postgresql.protocol.v3;
 
+import db.postgresql.protocol.v3.io.PostgresqlStream;
+import java.util.Queue;
+import java.util.function.BiPredicate;
 import java.util.Map;
 
 public class Notification extends Response {
@@ -20,16 +23,14 @@ public class Notification extends Response {
         return payload;
     }
 
-    private Notification(final int pid, final String channel, final String payload) {
-        super(BackEnd.NotificationResponse);
-        this.pid = pid;
-        this.channel = channel;
-        this.payload = payload;
+    public Notification(final PostgresqlStream stream, final int size) {
+        super(BackEnd.NotificationResponse, size);
+        this.pid = stream.getInt();
+        this.channel = stream.nullString();
+        this.payload = stream.nullString();
     }
 
-    public static final ResponseBuilder builder = new ResponseBuilder() {
-            public Notification build(final BackEnd backEnd, final int size, final Session session) {
-                return new Notification(session.getInt(), session.nullString(), session.nullString());
-            }
-        };
+    public static BiPredicate<PostgresqlStream,Response> addQueue(final Queue<Notification> queue) {
+        return (s,r) -> queue.offer((Notification) r);
+    }
 }

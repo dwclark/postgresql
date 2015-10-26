@@ -1,5 +1,6 @@
 package db.postgresql.protocol.v3;
 
+import db.postgresql.protocol.v3.io.PostgresqlStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -14,19 +15,11 @@ public class RowDescription extends Response {
         return fields[i];
     }
     
-    private RowDescription(final FieldDescriptor[] fields) {
-        super(BackEnd.RowDescription);
-        this.fields = fields;
+    public RowDescription(final PostgresqlStream stream, final int size) {
+        super(BackEnd.RowDescription, size);
+        fields = new FieldDescriptor[0xFFFF & stream.getShort()];
+        for(int i = 0; i < fields.length; ++i) {
+            fields[i] = new FieldDescriptor(stream);
+        }
     }
-
-    public static final ResponseBuilder builder = new ResponseBuilder() {
-            public RowDescription build(final BackEnd backEnd, final int size, final Session session) {
-                FieldDescriptor[] fields = new FieldDescriptor[0xFFFF & session.getShort()];
-                for(int i = 0; i < fields.length; ++i) {
-                    fields[i] = new FieldDescriptor(session);
-                }
-                
-                return new RowDescription(fields);
-            }
-        };
 }

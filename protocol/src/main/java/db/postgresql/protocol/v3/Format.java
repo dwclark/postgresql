@@ -21,4 +21,6 @@ public enum Format {
             throw new IllegalArgumentException("Not a valid format id: " + i);
         }
     }
+
+    public static final Format[] EMPTY_ARRAY = new Format[0];
 }

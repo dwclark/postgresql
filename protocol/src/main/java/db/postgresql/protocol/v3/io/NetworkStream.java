@@ -50,7 +50,11 @@ public class NetworkStream implements Stream {
         return encoding;
     }
 
-    public void send(final boolean sendAll) {
+    public NetworkStream send() {
+        return send(true);
+    }
+    
+    public NetworkStream send(final boolean sendAll) {
         sendBuffer.flip();
         io.write(sendBuffer);
 
@@ -61,6 +65,7 @@ public class NetworkStream implements Stream {
         }
         
         sendBuffer.compact();
+        return this;
     }
 
     public void recv() {

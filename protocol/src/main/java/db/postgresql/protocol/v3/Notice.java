@@ -1,8 +1,11 @@
 package db.postgresql.protocol.v3;
 
+import db.postgresql.protocol.v3.io.PostgresqlStream;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.BiPredicate;
 
 public class Notice extends Response {
 
@@ -12,23 +15,53 @@ public class Notice extends Response {
         return messages;
     }
 
-    public Notice(final BackEnd backEnd, final Session session, final int size) {
-        super(backEnd);
+    public Notice(final BackEnd backEnd, final PostgresqlStream stream, final int size) {
+        super(backEnd, size);
 
         final Map<NoticeType,String> map = new LinkedHashMap<>();
         byte byteType;
-        while((byteType = session.get()) != NULL) {
-            map.put(NoticeType.from(byteType), session.nullString());
+        while((byteType = stream.get()) != NULL) {
+            map.put(NoticeType.from(byteType), stream.nullString());
         }
 
         this.messages = Collections.unmodifiableMap(map);
     }
 
-    public final static ResponseBuilder builder = (final BackEnd backEnd, final int size, final Session session) -> {
-        return new Notice(backEnd, session, size);
-    };
+    public static BiPredicate<PostgresqlStream,Response> addMap(final Map<NoticeType,String> map) {
+        return addMap(map, false);
+    }
+    
+    public static Predicate<PostgresqlStream,Response> addMap(final Map<NoticeType,String> map,
+                                                              final boolean shouldContinue) {
+        return (s,r) -> {
+            map.putAll(((Notice) r).getMessages());
+            return shouldContinue;
+        };
+    }
 
-    public void throwMe() {
-        throw new PostgresqlException(messages);
+    public static Errors errors() {
+        return new Errors();
+    }
+
+    public static class Errors implements Predicate<Response> {
+        
+        private Map<NoticeType,String> cause;
+        
+        public boolean test(final PostgresqlStream s, final Response r) {
+            this.cause = ((Notice) r).messages;
+            return false;
+        }
+
+        public Map<NoticeType,String> getCause() {
+            return cause;
+        }
+
+        public boolean getHasAny() {
+            return cause != null;
+        }
+
+        public void reset() {
+            cause = null;
+        }
     }
 }

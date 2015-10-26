@@ -1,5 +1,7 @@
 package db.postgresql.protocol.v3;
 
+import db.postgresql.protocol.v3.io.PostgresqlStream;
+
 public class KeyData extends Response {
 
     private final int pid;
@@ -13,15 +15,9 @@ public class KeyData extends Response {
         return secretKey;
     }
     
-    private KeyData(final int pid, final int secretKey) {
-        super(BackEnd.BackendKeyData);
-        this.pid = pid;
-        this.secretKey = secretKey;
+    public KeyData(final PostgresqlStream stream) {
+        super(BackEnd.BackendKeyData, 8);
+        this.pid = stream.getInt();
+        this.secretKey = stream.getInt();
     }
-
-    public static final ResponseBuilder builder = new ResponseBuilder() {
-            public KeyData build(final BackEnd backEnd, final int size, final Session session) {
-                return new KeyData(session.getInt(), session.getInt());
-            }
-        };
 }

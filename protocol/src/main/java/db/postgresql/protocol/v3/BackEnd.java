@@ -8,7 +8,6 @@ import java.util.EnumSet;
 
 public enum BackEnd {
 
-    Authentication('R', -1), //dummy placeholder, never returned
     AuthenticationOk('R', 0),
     AuthenticationKerberosV5('R', 8),
     AuthenticationCleartextPassword('R', 3),

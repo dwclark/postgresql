@@ -16,7 +16,8 @@ public interface Stream {
 
     void close();
     Charset getEncoding();
-    void send(boolean sendAll);
+    Stream send();
+    Stream send(boolean sendAll);
     void recv();
     void recv(int atLeast);
     void recv(int atLeast, int tries);

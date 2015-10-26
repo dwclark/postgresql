@@ -1,23 +1,18 @@
-package db.postgresql.protocol.v3;
+package db.postgresql.protocol.v3.io;
 
-import db.postgresql.protocol.v3.io.IO;
-import db.postgresql.protocol.v3.io.NetworkStream;
-import db.postgresql.protocol.v3.io.NoData;
-import db.postgresql.protocol.v3.io.Stream;
+import db.postgresql.protocol.v3.Bindable;
+import db.postgresql.protocol.v3.Format;
+import db.postgresql.protocol.v3.FrontEnd;
+import db.postgresql.protocol.v3.ProtocolException;
 import db.postgresql.protocol.v3.serializers.*;
-import java.math.BigInteger;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 public class PostgresqlStream extends NetworkStream {
@@ -53,7 +48,6 @@ public class PostgresqlStream extends NetworkStream {
         }
 
         putNull();
-        send(true);
         return this;
     }
 
@@ -66,8 +60,6 @@ public class PostgresqlStream extends NetworkStream {
         put((byte) type);
         put(bytes);
         putNull();
-        send(true);
-
         return this;
     }
 
@@ -139,14 +131,12 @@ public class PostgresqlStream extends NetworkStream {
             put(buffer);
         }
 
-        send(true);
         return this;
     }
 
     public PostgresqlStream copyDone() {
         put(FrontEnd.CopyDone.toByte());
         putInt(4);
-        send(true);
         return this;
     }
 
@@ -155,7 +145,6 @@ public class PostgresqlStream extends NetworkStream {
         put(FrontEnd.CopyFail.toByte());
         putInt(4 + bytes.length + 1); //header + message length + null char
         putNull();
-        send(true);
         return this;
     }
 
@@ -166,7 +155,6 @@ public class PostgresqlStream extends NetworkStream {
         put((byte) type);
         put(bytes);
         putNull();
-        send(true);
         return this;
     }
 
@@ -189,14 +177,12 @@ public class PostgresqlStream extends NetworkStream {
         put(bytes);
         putNull();
         putInt(maxRows);
-        send(true);
         return this;
     }
 
     public PostgresqlStream flush() {
         put(FrontEnd.Flush.toByte());
         putInt(4);
-        send(true);
         return this;
     }
 
@@ -219,7 +205,6 @@ public class PostgresqlStream extends NetworkStream {
             putInt(oid);
         }
 
-        send(true);
         return this;
     }
 
@@ -231,7 +216,6 @@ public class PostgresqlStream extends NetworkStream {
         put(FrontEnd.Password.toByte());
         putInt(4 + bytes.length);
         put(bytes);
-        send(true);
         return this;
     }
 
@@ -243,6 +227,7 @@ public class PostgresqlStream extends NetworkStream {
 
         return sb.toString();
     }
+    
     private static String compute(ByteBuffer first, ByteBuffer second) {
         try {
             MessageDigest m = MessageDigest.getInstance("MD5");
@@ -271,21 +256,19 @@ public class PostgresqlStream extends NetworkStream {
         putInt(4 + bytes.length + 1); //header + bytes + null
         put(bytes);
         putNull();
-        send(true);
         return this;
     }
 
     public PostgresqlStream sync() {
         put(FrontEnd.Sync.toByte());
         putInt(4);
-        send(true);
         return this;
     }
 
     public PostgresqlStream terminate() {
         put(FrontEnd.Terminate.toByte());
         putInt(4);
-        send(true);
+        
         close();
         return this;
     }

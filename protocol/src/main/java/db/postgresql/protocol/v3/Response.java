@@ -1,12 +1,13 @@
 package db.postgresql.protocol.v3;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.nio.charset.Charset;
+import db.postgresql.protocol.v3.io.PostgresqlStream;
 
 public class Response {
+
+    @FunctionalInterface
+    public interface Build {
+        Response build(PostgresqlStream stream, int size);
+    }
 
     public BackEnd getBackEnd() {
         return backEnd;
@@ -14,36 +15,16 @@ public class Response {
 
     private final BackEnd backEnd;
 
-    protected Response(final BackEnd backEnd) {
+    public int getSize() {
+        return size;
+    }
+    
+    private final int size;
+
+    protected Response(final BackEnd backEnd, final int size) {
         this.backEnd = backEnd;
+        this.size;
     }
 
     public static final byte NULL = (byte) 0;
-
-    public boolean isNull(final int val) {
-        return val == -1;
-    }
-    
-    private static final Response bindComplete = new Response(BackEnd.BindComplete);
-    private static final Response closeComplete = new Response(BackEnd.CloseComplete);
-    private static final Response copyDone = new Response(BackEnd.CopyDone);
-    private static final Response emptyQueryResponse = new Response(BackEnd.EmptyQueryResponse);
-    private static final Response noData = new Response(BackEnd.NoData);
-    private static final Response parseComplete = new Response(BackEnd.ParseComplete);
-    private static final Response portalSuspended = new Response(BackEnd.PortalSuspended);
-
-    public static final ResponseBuilder builder = new ResponseBuilder() {
-            public Response build(final BackEnd backEnd, final int size, final Session session) {
-                switch(backEnd) {
-                case BindComplete: return bindComplete;
-                case CloseComplete: return closeComplete;
-                case CopyDone: return copyDone;
-                case EmptyQueryResponse: return emptyQueryResponse;
-                case NoData: return noData;
-                case ParseComplete: return parseComplete;
-                case PortalSuspended: return portalSuspended;
-                default: throw new IllegalArgumentException("" + backEnd + " not supported");
-                }
-            }
-        };
 }

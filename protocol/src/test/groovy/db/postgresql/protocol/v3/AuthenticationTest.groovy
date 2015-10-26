@@ -1,12 +1,11 @@
-package db.postgresql.protocol.v3;
+package db.postgresql.protocol.v3
 
-import spock.lang.*;
-import java.nio.channels.*;
-import java.net.InetSocketAddress;
-import java.net.InetAddress;
+import db.postgresql.protocol.v3.io.PostgresqlStream;
+import spock.lang.*
+
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.security.*;
+import java.nio.charset.Charset
+
 import static db.postgresql.protocol.v3.ssl.ContextCreation.*;
 
 class AuthenticationTest extends Specification {

@@ -12,7 +12,7 @@ public class FieldDescriptor {
     final Format format;
 
     private FieldDescriptor(final String name, final int tableOid, final short columnOid,
-                           final int typeOid, final short typeSize, final int typeModifier, final Format format) {
+                            final int typeOid, final short typeSize, final int typeModifier, final Format format) {
         this.name = name;
         this.tableOid = tableOid;
         this.columnOid = columnOid;

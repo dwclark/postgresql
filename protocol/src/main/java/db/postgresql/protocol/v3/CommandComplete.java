@@ -1,6 +1,7 @@
 package db.postgresql.protocol.v3;
 
 import java.nio.ByteBuffer;
+import db.postgresql.protocol.v3.io.PostgresqlStream;
 
 public class CommandComplete extends Response {
 
@@ -22,25 +23,18 @@ public class CommandComplete extends Response {
         return action;
     }
     
-    private CommandComplete(final Action action, final int oid, final int rows) {
-        super(BackEnd.CommandComplete);
-        this.action = action;
-        this.oid = oid;
-        this.rows = rows;
+    public CommandComplete(final PostgresqlStream stream, final int size) {
+        super(BackEnd.CommandComplete, size);
+        final String[] ary = stream.nullString().split(" ");
+        if(ary.length == 2) {
+            action = Action.valueOf(ary[0]);
+            rows = 0;
+            oid = Integer.parseInt(ary[1]);
+        }
+        else {
+            action = Action.valueOf(ary[0]);
+            rows = Integer.parseInt(ary[1]);
+            oid = Integer.parseInt(ary[2]);
+        }
     }
-
-    public static final ResponseBuilder builder = new ResponseBuilder() {
-            public CommandComplete build(final BackEnd backEnd, final int size, final Session session) {
-                final String[] ary = session.nullString().split(" ");
-                if(ary.length == 2) {
-                    return new CommandComplete(Action.valueOf(ary[0]), 0, Integer.valueOf(ary[1]));
-                }
-                else if(ary.length == 3) {
-                    return new CommandComplete(Action.valueOf(ary[0]), Integer.valueOf(ary[1]), Integer.valueOf(ary[2]));
-                }
-                else {
-                    throw new ProtocolException();
-                }
-            }
-        };
 }

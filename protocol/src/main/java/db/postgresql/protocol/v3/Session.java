@@ -4,15 +4,9 @@ import db.postgresql.protocol.v3.serializers.*;
 import db.postgresql.protocol.v3.typeinfo.*;
 import db.postgresql.protocol.v3.types.*;
 import db.postgresql.protocol.v3.io.*;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
+
 import java.nio.ByteBuffer;
-import java.nio.channels.GatheringByteChannel;
-import java.nio.channels.ScatteringByteChannel;
-import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
